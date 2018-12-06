@@ -14,18 +14,13 @@ Perform a single sequential run
 >>> hp = HydPy('LahnH')
 
 >>> pub.timegrids = '1996-01-01', '1997-01-01', '1d'
->>> pub.sequencemanager.inputfiletype = 'nc'
 
 >>> hp.prepare_network()
 >>> hp.init_models()
 >>> hp.load_conditions()
 >>> hp.prepare_inputseries()
 >>> hp.prepare_simseries()
-
->>> pub.sequencemanager.open_netcdf_reader(
-...     flatten=True, isolate=True, timeaxis=0)
 >>> hp.load_inputseries()
->>> pub.sequencemanager.close_netcdf_reader()
 
 >>> hp.elements.land_lahn_1.model.parameters.control.alpha(2.0)
 

@@ -15,18 +15,13 @@ Prepare artificial data
 >>> hp = HydPy('LahnH')
 
 >>> pub.timegrids = '1996-01-01', '1996-02-10', '1d'
->>> pub.sequencemanager.inputfiletype = 'nc'
 
 >>> hp.prepare_network()
 >>> hp.init_models()
 >>> hp.load_conditions()
 >>> hp.prepare_modelseries()
 >>> hp.prepare_simseries()
-
->>> pub.sequencemanager.open_netcdf_reader(
-...     flatten=True, isolate=True, timeaxis=0)
 >>> hp.load_inputseries()
->>> pub.sequencemanager.close_netcdf_reader()
 
 >>> element = hp.elements.land_lahn_1
 >>> node = hp.nodes.lahn_1

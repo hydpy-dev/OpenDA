@@ -61,16 +61,11 @@ Assimilate
 ----------
 
 >>> import runpy, subprocess
-
->>> for filename in os.listdir('.'):
-...     if filename.endswith('.log'):
-...         os.remove(filename)
 >>> process = subprocess.Popen(
 ...     'hyd.py start_server 8080 LahnH 1996-01-01 1996-02-10 1d',
 ...     shell=True)
->>> from hydpy import print_latest_logfile
->>> print_latest_logfile(wait=10.0)
-<BLANKLINE>
+>>> _ = subprocess.run('hyd.py await_server 8080 10', shell=True)
+
 >>> os.chdir('../openda_projects/EnKF')
 
 >>> _ = subprocess.run('oda_run_batch main.oda > temp.txt', shell=True)

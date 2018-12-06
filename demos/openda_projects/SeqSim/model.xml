@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blackBoxStochModel xmlns="http://www.openda.org"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/blackBoxStochModelConfig.xsd">
+
+	<modelConfig>
+		<file>./HydPyModel.xml</file>
+	</modelConfig>
+
+	<vectorSpecification>
+        <state>
+            <vector id="alpha"/>
+        </state>
+		<predictor>
+			<vector id="lahn_1.discharge" />
+		</predictor>
+	</vectorSpecification>
+
+
+</blackBoxStochModel>

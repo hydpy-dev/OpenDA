@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blackBoxWrapperConfig xmlns="http://www.openda.org"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/blackBoxWrapperConfig.xsd">
+
+	<aliasDefinitions
+			defaultKeyPrefix="%"
+			defaultKeySuffix="%"/>
+
+	<run>
+
+		<initializeActionsUsingDirClone
+			instanceDir="results/temp%instanceNumber%"
+			templateDir="data/start" />
+
+		<computeActions>
+			<action windowsExe="run_hydpy.bat"
+					workingDirectory="results/temp">
+				<arg>"../openda_projects/SeqSim/results/temp%instanceNumber%"</arg>
+				<checkOutput file="hydpy.exchange" />
+			</action>
+		</computeActions>
+
+		<additionalComputeActions></additionalComputeActions>
+
+		<finalizeActions></finalizeActions>
+
+	</run>
+
+	<inputOutput>
+
+		<ioObject className="org.openda.hydpywrapper.HydPyWrapper">
+			<file>hydpy.exchange</file>
+			<id>hydpywrapper</id>
+			<arg></arg>
+		</ioObject>
+
+	</inputOutput>
+
+</blackBoxWrapperConfig>

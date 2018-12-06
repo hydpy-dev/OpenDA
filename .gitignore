@@ -1,0 +1,11 @@
+.idea
+*.pyc
+*__pycache__*
+.pytest_cache/*
+temp.txt
+test.txt
+temp.py
+test.py
+main.orp
+hydpy*.log
+demos/openda_projects/*/results/*

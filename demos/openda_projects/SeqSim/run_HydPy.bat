@@ -1,1 +1,1 @@
-curl -d %1 -X POST http://localhost:8080/process_input
+curl -v --data-binary "@C:\HydPy\OpenDA\demos\openda_projects\SeqSim\results/temp0/hydpy.exchange" http://localhost:8080/process_input?id=test -o C:\HydPy\OpenDA\demos\openda_projects\SeqSim\results/temp0/hydpy.exchange

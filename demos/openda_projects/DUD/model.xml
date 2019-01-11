@@ -10,7 +10,7 @@
 		<arg>initializeWaitSeconds:5</arg>
 		<arg>projectPath:../../hydpy_projects</arg>
 		<arg>projectName:LahnH</arg>
-		<arg>configFile:dud.xml</arg>
+		<arg>configFile:DUD.xml</arg>
 	</modelFactory>
 
 	<vectorSpecification>

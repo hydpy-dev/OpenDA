@@ -3,9 +3,15 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/blackBoxStochModelConfig.xsd">
 
-	<modelConfig>
-		<file>./HydPyModel.xml</file>
-	</modelConfig>
+	<modelFactory
+			className="org.hydpy.openda.HydPyModelConfigFactory"
+			workingDirectory=".">
+		<arg>serverPort:8080</arg>
+		<arg>initializeWaitSeconds:5</arg>
+		<arg>projectPath:../../hydpy_projects</arg>
+		<arg>projectName:LahnH</arg>
+		<arg>configFile:dud.xml</arg>
+	</modelFactory>
 
 	<vectorSpecification>
 		<parameters>
@@ -16,7 +22,7 @@
 			</regularisationConstant>
 		</parameters>
 		<predictor>
-			<vector id="dill.discharge" />
+			<vector id="dill_nodes_sim_series" />
 		</predictor>
 	</vectorSpecification>
 

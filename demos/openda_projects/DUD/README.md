@@ -35,7 +35,9 @@ alpha(1.0)
 11.658511, 8.842278, 7.103614, 6.00763, 5.313751
 
 >>> with open('../openda_projects/DUD/data/series/dill.discharge.noos', 'w') as noosfile:
+...     _ = noosfile.write('# TimeZone:GMT+1\n')
 ...     for date, discharge in zip(pub.timegrids.init, true_discharge):
+...         date = date + '1d'
 ...         line = f'{date.datetime.strftime("%Y%m%d%H%M%S")}   {discharge}\n'
 ...         _ = noosfile.write(line)
 
@@ -43,10 +45,6 @@ Calibrate
 ---------
 
 >>> import runpy, subprocess
->>> process = subprocess.Popen(
-...     'hyd.py start_server 8080 LahnH 1996-01-01 1997-01-01 1d',
-...     shell=True)
->>> _ = subprocess.run('hyd.py await_server 8080 10', shell=True)
 >>> os.chdir('../openda_projects/DUD')
 
 >>> _ = subprocess.run('oda_run_batch main.oda > temp.txt', shell=True)
@@ -63,9 +61,3 @@ Calibrate
 
 >>> print_values(results['predicted'][-1, :5])
 11.658511, 8.842278, 7.103614, 6.00763, 5.313751
-
-
->>> from urllib import request
->>> _ = request.urlopen('http://localhost:8080/close_server')
->>> process.kill()
->>> _ = process.communicate()

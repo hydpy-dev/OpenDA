@@ -44,7 +44,9 @@ Prepare artificial data
 >>> numpy.savetxt('orig_q.txt', node.sequences.sim.series)
 
 >>> with open('../openda_projects/EnKF/data/series/lahn_1.discharge.noos', 'w') as noosfile:
+...     _ = noosfile.write('# TimeZone:GMT+1\n')
 ...     for date, discharge in zip(pub.timegrids.init, true_discharge):
+...         date = date + '1d'
 ...         line = f'{date.datetime.strftime("%Y%m%d%H%M%S")}   {discharge}\n'
 ...         _ = noosfile.write(line)
 

@@ -4,7 +4,7 @@
 	<timeSeries id="lahn_1_nodes_sim_series"
                 status="use"
                 standardDeviation="2.0">
-		data/series/lahn_1.discharge.noos
+		data/lahn_1.discharge.noos
 	</timeSeries>
 
 </noosObserver>

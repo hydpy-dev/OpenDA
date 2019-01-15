@@ -57,7 +57,7 @@
                     <alpha>
                         <alias>alpha</alias>
                         <dim>0</dim>
-                        <init>1.0</init>
+                        <init>2.0</init>
                     </alpha>
                 </control>
             </hland_v1>

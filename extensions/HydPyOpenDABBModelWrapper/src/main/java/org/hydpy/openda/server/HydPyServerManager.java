@@ -164,9 +164,8 @@ public final class HydPyServerManager
         if( server.checkStatus( timeoutMillis ) )
           return;
       }
-      catch( final HydPyServerException e )
+      catch( final HydPyServerException ignored )
       {
-        // e.printStackTrace();
         System.out.println( "Waiting for HyPy-Server: " + i );
         /* continue waiting */
       }

@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2019 by
- * - Bundesanstalt für Gewässerkunde
- * - Björnsen Beratende Ingenieure GmbH
+ * - Bundesanstalt fÃ¼r GewÃ¤sserkunde
+ * - BjÃ¶rnsen Beratende Ingenieure GmbH
  * All rights reserved.
  *
  * This file is Free Software under the under the terms of the

@@ -34,7 +34,8 @@ alpha(1.0)
 >>> print_values(true_discharge[:5])
 11.658511, 8.842278, 7.103614, 6.00763, 5.313751
 
->>> with open('../openda_projects/DUD/data/series/dill.discharge.noos', 'w') as noosfile:
+>>> filepath = '../openda_projects/DUD/data/dill.discharge.noos'
+>>> with open(filepath, 'w') as noosfile:
 ...     _ = noosfile.write('# TimeZone:GMT+1\n')
 ...     for date, discharge in zip(pub.timegrids.init, true_discharge):
 ...         date = date + '1d'

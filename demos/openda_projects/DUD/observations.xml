@@ -4,7 +4,7 @@
 	<timeSeries id="dill_nodes_sim_series"
                 status="use"
                 standardDeviation="2.0">
-		data/series/dill.discharge.noos
+		data/dill.discharge.noos
 	</timeSeries>
 
 </noosObserver>

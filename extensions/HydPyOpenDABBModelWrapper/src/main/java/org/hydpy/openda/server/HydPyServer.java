@@ -269,7 +269,7 @@ public final class HydPyServer
 
   public List<IPrevExchangeItem> getItemValues( final String instanceId ) throws HydPyServerException
   {
-    System.out.format( "GetItemValues: %s%n", instanceId );
+    // System.out.println( String.format( "Retrieving HydPy-Model State - InstanceId = '%s'", instanceId ) );
 
     final URI endpoint = buildEndpoint( PATH_ITEM_VALUES, instanceId );
 
@@ -298,8 +298,8 @@ public final class HydPyServer
       final IPrevExchangeItem value = item.toExchangeItem( startTime, endTime, stepSeconds, preValue );
       values.add( value );
 
-      final String valueText = item.printValue( value, stepSeconds );
-      System.out.format( "%s = %s%n", value.getId(), valueText );
+      // final String valueText = item.printValue( value, stepSeconds );
+      // System.out.format( "%s = %s%n", value.getId(), valueText );
     }
 
     return values;
@@ -324,7 +324,7 @@ public final class HydPyServer
 
   public void setItemValues( final String instanceId, final Collection<IPrevExchangeItem> values ) throws HydPyServerException
   {
-    System.out.format( "SetItemValues: %s%n", instanceId );
+    // System.out.println( String.format( "Setting HydPy-Model State - InstanceId = '%s'", instanceId ) );
 
     final long stepSeconds = findStepSeconds( values );
 
@@ -336,7 +336,7 @@ public final class HydPyServer
       final AbstractServerItem item = getItem( id );
       final String valueText = item.printValue( exItem, stepSeconds );
 
-      System.out.format( "%s = %s%n", item.getId(), valueText );
+      // System.out.format( "%s = %s%n", item.getId(), valueText );
 
       body.append( id );
       body.append( '=' );

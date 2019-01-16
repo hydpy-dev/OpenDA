@@ -88,4 +88,5 @@ The HyPy wrapper will in turn start HydPy in a special server mode, which is opt
 Depending on your HyPy and [Python](https://www.python.org/) installation two additional system environment variables can be set:
 * HYD_PY_PYTHON_EXE: Path to the python.exe (defaults to 'python.exe') 
 * HYD_PY_SCRIPT_PATH: Path to the hyd.py script. (defaults to 'hyd.py')
+
 If [Python](https://www.python.org/) is already on your system path, you may not need to configure these system variables.

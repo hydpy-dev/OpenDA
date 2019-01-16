@@ -29,6 +29,9 @@ dependencies {
 }
 
 jar {
+	// name the main jar file according to OpenDA convention
+	baseName  = 'model_hydpy'
+
     manifest {
         attributes(
             'Build-Timestamp': new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),

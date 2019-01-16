@@ -45,6 +45,15 @@ public final class HydPyUtils
     return value;
   }
 
+  public static String getOptionalSystemProperty( final String key, final String defaultValue )
+  {
+    final String value = System.getenv( key );
+    if( StringUtils.isBlank( value ) )
+      return defaultValue;
+
+    return value;
+  }
+
   public static String getRequiredProperty( final Properties properties, final String key )
   {
     final String value = properties.getProperty( key );

@@ -43,6 +43,10 @@ public final class HydPyServerManager
 
   private static final String PROPERTY_CONFIG_FILE = "configFile"; //$NON-NLS-1$
 
+  private static final String HYD_PY_PYTHON_EXE_DEFAULT = "python.exe"; //$NON-NLS-1$
+
+  private static final String HYD_PY_SCRIPT_PATH_DEFAULT = "hy.py"; //$NON-NLS-1$
+
   private static HydPyServerManager INSTANCE = null;
 
   public static synchronized void create( final Path baseDir, final Properties args )
@@ -103,8 +107,8 @@ public final class HydPyServerManager
     m_host = "localhost";
 
     /* absolute paths from system environment */
-    m_serverExe = HydPyUtils.getRequiredSystemProperty( ENVIRONMENT_HYD_PY_PYTHON_EXE );
-    m_hydPyScript = HydPyUtils.getRequiredSystemProperty( ENVIRONMENT_HYD_PY_SCRIPT_PATH );
+    m_serverExe = HydPyUtils.getOptionalSystemProperty( ENVIRONMENT_HYD_PY_PYTHON_EXE, HYD_PY_PYTHON_EXE_DEFAULT );
+    m_hydPyScript = HydPyUtils.getOptionalSystemProperty( ENVIRONMENT_HYD_PY_SCRIPT_PATH, HYD_PY_SCRIPT_PATH_DEFAULT );
 
     /* Everything else from model.xml arguments */
     m_port = HydPyUtils.getRequiredPropertyAsInt( args, PROPERTY_SERVER_PORT );

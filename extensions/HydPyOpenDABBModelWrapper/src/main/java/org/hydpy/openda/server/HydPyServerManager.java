@@ -29,7 +29,7 @@ import org.hydpy.openda.HydPyUtils;
  */
 public final class HydPyServerManager
 {
-  private static final String ENVIRONMENT_HYD_PY_EXE = "HYD_PY_EXE"; //$NON-NLS-1$
+  private static final String ENVIRONMENT_HYD_PY_PYTHON_EXE = "HYD_PY_PYTHON_EXE"; //$NON-NLS-1$
 
   private static final String ENVIRONMENT_HYD_PY_SCRIPT_PATH = "HYD_PY_SCRIPT_PATH"; //$NON-NLS-1$
 
@@ -103,7 +103,7 @@ public final class HydPyServerManager
     m_host = "localhost";
 
     /* absolute paths from system environment */
-    m_serverExe = HydPyUtils.getRequiredSystemProperty( ENVIRONMENT_HYD_PY_EXE );
+    m_serverExe = HydPyUtils.getRequiredSystemProperty( ENVIRONMENT_HYD_PY_PYTHON_EXE );
     m_hydPyScript = HydPyUtils.getRequiredSystemProperty( ENVIRONMENT_HYD_PY_SCRIPT_PATH );
 
     /* Everything else from model.xml arguments */

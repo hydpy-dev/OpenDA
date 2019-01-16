@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <noosObserver xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-	<timeSeries id="lahn_1.discharge"
+	<timeSeries id="lahn_1_nodes_sim_series"
                 status="use"
                 standardDeviation="2.0">
-		data/series/lahn_1.discharge.noos
+		data/lahn_1.discharge.noos
 	</timeSeries>
 
 </noosObserver>

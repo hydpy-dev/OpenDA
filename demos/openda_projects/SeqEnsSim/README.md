@@ -14,36 +14,18 @@ Perform an ensemble of sequential runs
 >>> pub.options.reprdigits = 6
 
 >>> hp = HydPy('LahnH')
-
 >>> pub.timegrids = '1996-01-01', '1997-01-01', '1d'
-
->>> hp.prepare_network()
->>> hp.init_models()
->>> hp.load_conditions()
->>> hp.prepare_inputseries()
->>> hp.prepare_simseries()
->>> hp.load_inputseries()
-
+>>> hp.prepare_everything()
 >>> hp.elements.land_lahn_1.model.parameters.control.alpha(2.0)
-
 >>> hp.doit()
-
->>> import runpy, subprocess
->>> process = subprocess.Popen(
-...     'hyd.py start_server 8080 LahnH 1996-01-01 1997-01-01 1d',
-...     shell=True)
->>> _ = subprocess.run('hyd.py await_server 8080 10', shell=True)
 
 >>> os.chdir('../openda_projects/SeqEnsSim')
 
-
-
-
->>> call = 'oda_run_batch main.oda > temp.txt'
->>> _ = subprocess.run(call, shell=True)
+>>> import runpy, subprocess
+>>> _ = subprocess.run('oda_run_batch main.oda > temp.txt', shell=True)
+>>> results = runpy.run_path('results/final.py')
 
 >>> ext_sims = {}
->>> results = runpy.run_path('results/final.py')
 >>> for idx in range(1, 4):
 ...     ext_sims[idx] = results[f'pred_f_{idx-1}'][1:, 0]
 ...     print(f'worker {idx}:', end=' ')
@@ -91,8 +73,3 @@ worker 3: 16.842996, 9.545965, 7.583282, 7.106425, 6.824685
 worker 1: True
 worker 2: True
 worker 3: True
-    
->>> from urllib import request
->>> _ = request.urlopen('http://localhost:8080/close_server')
->>> process.kill()
->>> _ = process.communicate()

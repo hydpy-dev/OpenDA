@@ -23,7 +23,7 @@ In order to install the _HydPyOpenDABBModelWrapper_ into [OpenDA](http://openda.
 
 ## Usage
 
-Please refer to the [HydPy-OpenDA example projects](../../examples).
+Please refer to the [HydPy-OpenDA example projects](../../demos/).
 
 ### Prerequisites
 * a HydPy installation, see [HydPy documentation](https://hydpy-dev.github.io/hydpy/)
@@ -51,9 +51,7 @@ In order to activate and configure the HydPy-Wrapper, the class `org.hydpy.opend
 
 Example:
 ```xml
-	<modelFactory
-			className="org.hydpy.openda.HydPyModelConfigFactory"
-			workingDirectory=".">
+	<modelFactory className="org.hydpy.openda.HydPyModelConfigFactory" workingDirectory=".">
 		<arg>serverPort:8080</arg>
 		<arg>initializeWaitSeconds:5</arg>
 		<arg>projectPath:../../hydpy_projects</arg>
@@ -68,6 +66,10 @@ The following arguments have to be configured:
 * projectPath: The path to the HydPy project directory, relative to the working dir of the _model_xml_.
 * projectName: The name of the HydPy project within the project directory.
 * configFile: The name of the HydPy multi-run configuration file, relative to the given project directory (see below). 
+* templateDir (optional): the template directory for model instances, relative to the _model.xml_ working dir  
+* instanceDir (optional): the instance directory for model instances, relative to the _model.xml_ working dir. The actual directories will be post-fixed with the instance number. 
+
+Usually the template and instance directories not used by the HyPyWrapper, but some algorithms will write some (debug) output to the instances dirs. If this output should be written, both directories have to be configured.
 
 ### HydPy Project Configuration 
 	
@@ -76,3 +78,11 @@ Part of the usual OpenDa Black-Box-Model configuration is instead situated in th
 The HydPy-Server will exhibit the configured parameter names, which in turn will be configured as OpenDA-exchange-item by the wrapper implementation. 
 
 Main starting point is the 'multi-run' xml file configuration. See ???TODO???.  
+
+### Running OpenDA
+TODO
+* normal way: TODO
+* additional environment variables:
+  	HYD_PY_EXE
+	HYD_PY_SCRIPT_PATH
+

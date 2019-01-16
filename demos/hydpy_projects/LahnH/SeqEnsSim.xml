@@ -4,7 +4,7 @@
     <options/>
     <timegrid>
         <firstdate>1996-01-01T00:00:00</firstdate>
-        <lastdate>1997-02-10T00:00:00</lastdate>
+        <lastdate>1996-02-10T00:00:00</lastdate>
         <stepsize>1d</stepsize>
     </timegrid>
     <selections/>
@@ -57,7 +57,7 @@
                     <alpha>
                         <alias>alpha</alias>
                         <dim>0</dim>
-                        <init>1.0</init>
+                        <init>2.0</init>
                     </alpha>
                 </control>
             </hland_v1>

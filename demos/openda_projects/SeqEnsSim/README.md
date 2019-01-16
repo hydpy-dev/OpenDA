@@ -14,7 +14,7 @@ Perform an ensemble of sequential runs
 >>> pub.options.reprdigits = 6
 
 >>> hp = HydPy('LahnH')
->>> pub.timegrids = '1996-01-01', '1997-01-01', '1d'
+>>> pub.timegrids = '1996-01-01', '1996-02-10', '1d'
 >>> hp.prepare_everything()
 >>> hp.elements.land_lahn_1.model.parameters.control.alpha(2.0)
 >>> hp.doit()
@@ -27,25 +27,24 @@ Perform an ensemble of sequential runs
 
 >>> ext_sims = {}
 >>> for idx in range(1, 4):
-...     ext_sims[idx] = results[f'pred_f_{idx-1}'][1:, 0]
+...     ext_sims[idx] = results[f'pred_f_{idx-1}'][:, 0]
 ...     print(f'worker {idx}:', end=' ')
 ...     print_values(ext_sims[idx][:5])
-worker 1: 19.794427, 9.413089, 7.37961, 7.025074, 6.720015
-worker 2: 14.577521, 9.424086, 7.723374, 7.166622, 6.916414
-worker 3: 16.842996, 9.545965, 7.583282, 7.106425, 6.824685
+worker 1: 19.794427, 8.985969, 7.372045, 7.048461, 6.737002
+worker 2: 14.577521, 10.222372, 7.794734, 7.142355, 6.880434
+worker 3: 16.842996, 9.663802, 7.589468, 7.103641, 6.819666
 
 >>> import numpy
 >>> ext_alphas = {}
 >>> for idx in range(1, 4):
-...     with open(f'results/temp{idx}/ArmaNoiseModel-log.txt') as logfile:
-...         deltas = [float(noise) for noise in logfile.readlines()[3::2]]
-...         alphas = 2.0 + numpy.cumsum(deltas)
+...     with open(f'results/instance{idx}/ArmaNoiseModel-log.txt') as logfile:
+...         alphas = [2.0+float(noise) for noise in logfile.readlines()[3::2]]
 ...         ext_alphas[idx] = alphas
 ...     print(f'worker {idx}:', end=' ')
 ...     print_values(alphas[:5])
-worker 1: 2.220929, 2.253608, 2.258441, 2.259156, 2.259262
-worker 2: 1.728765, 1.688646, 1.682711, 1.681833, 1.681704
-worker 3: 1.953494, 1.946615, 1.945598, 1.945447, 1.945425
+worker 1: 2.220929, 2.032679, 2.004834, 2.000715, 2.000106
+worker 2: 1.728765, 1.95988, 1.994066, 1.999122, 1.99987
+worker 3: 1.953494, 1.993121, 1.998982, 1.999849, 1.999978
 
 >>> int_sims = {}
 >>> for idx, alphas in ext_alphas.items():
@@ -58,18 +57,17 @@ worker 3: 1.953494, 1.946615, 1.945598, 1.945447, 1.945425
 ...         hp.doit()
 ...         pub.timegrids.sim.firstdate += '1d'
 ...         pub.timegrids.sim.lastdate += '1d'
-...     int_sims[idx] = hp.nodes.lahn_1.sequences.sim.series[:-1].copy()
+...     int_sims[idx] = hp.nodes.lahn_1.sequences.sim.series.copy()
 ...     print(f'worker {idx}:', end=' ')
 ...     print_values(int_sims[idx][:5])
-worker 1: 19.794427, 9.413089, 7.37961, 7.025074, 6.720015
-worker 2: 14.577521, 9.424086, 7.723374, 7.166622, 6.916414
-worker 3: 16.842996, 9.545965, 7.583282, 7.106425, 6.824685
+worker 1: 19.794427, 8.985969, 7.372045, 7.048461, 6.737002
+worker 2: 14.577521, 10.222372, 7.794734, 7.142355, 6.880434
+worker 3: 16.842996, 9.663802, 7.589468, 7.103641, 6.819666
 
 >>> for idx in range(1, 4):
 ...     print(f'worker {idx}:', end=' ')
-...     numpy.all(numpy.round(int_sims[idx], 6) == numpy.round(ext_sims[idx], 6))
-...     numpy.savetxt(f'int_sim_{idx}.log', int_sims[idx])
-...     numpy.savetxt(f'ext_sim_{idx}.log', ext_sims[idx])
+...     numpy.all(
+...         numpy.round(int_sims[idx], 6) == numpy.round(ext_sims[idx], 6))
 worker 1: True
 worker 2: True
 worker 3: True

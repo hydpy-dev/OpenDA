@@ -49,6 +49,10 @@ import org.openda.interfaces.ITime;
  */
 public class HydPyModelConfigFactory implements IModelFactory
 {
+  private static final String PROPERTY_TEMPLATE_DIR_PATH = "templateDir"; //$NON-NLS-1$
+
+  private static final String PROPERTY_INSTANCE_DIR_PATH = "instanceDir"; //$NON-NLS-1$
+
   private static final String IO_OBJECT_ID = "hydPyIo"; //$NON-NLS-1$
 
   private BBModelFactory m_bbFactory;
@@ -60,12 +64,15 @@ public class HydPyModelConfigFactory implements IModelFactory
     {
       final Properties args = parseArguments( arguments );
 
+      final String templateDirPath = args.getProperty( PROPERTY_TEMPLATE_DIR_PATH );
+      final String instanceDirPath = args.getProperty( PROPERTY_INSTANCE_DIR_PATH );
+
       HydPyServerManager.create( workingDir.toPath(), args );
 
       final HydPyServer server = HydPyServerManager.instance().getOrCreateServer();
       final List<IServerItem> items = server.getItems();
 
-      final BBWrapperConfig wrapperConfig = initializeWrapperConfig( workingDir );
+      final BBWrapperConfig wrapperConfig = initializeWrapperConfig( workingDir, templateDirPath, instanceDirPath );
 
       final BBModelConfig bbModelConfig = initializeModelConfig( workingDir, wrapperConfig, items );
 
@@ -91,7 +98,7 @@ public class HydPyModelConfigFactory implements IModelFactory
     return properties;
   }
 
-  private BBWrapperConfig initializeWrapperConfig( final File workingDir )
+  private BBWrapperConfig initializeWrapperConfig( final File workingDir, final String templateDirPath, final String instanceDirPath )
   {
     // REMARK: the alias definition comes normally from the wrapper-config-xml, but this does not exist
     // using our dedicated model factory.
@@ -106,17 +113,28 @@ public class HydPyModelConfigFactory implements IModelFactory
     aliasDefinitions.add( "currentTime", keyPrefix, keySuffix, "0.0", null );
     aliasDefinitions.add( "targetTime", keyPrefix, keySuffix, "0.0", null );
 
-//    // FIXME: from example, maybe we need some dirs later?
-//    aliasDefinitions.add( "templateDir", keyPrefix, keySuffix, "input", null );
-//    aliasDefinitions.add( "instanceDir", keyPrefix, keySuffix, "output/work", null );
+    if( templateDirPath != null )
+      aliasDefinitions.add( "templateDir", keyPrefix, keySuffix, templateDirPath, null );
+    if( instanceDirPath != null )
+      aliasDefinitions.add( "instanceDir", keyPrefix, keySuffix, instanceDirPath, null );
 //    aliasDefinitions.add( "inputFile", keyPrefix, keySuffix, "reactive_pollution_model.input", null );
 //    aliasDefinitions.add( "outputFile", keyPrefix, keySuffix, "reactive_pollution_model.output", null );
 
+    // REMARK: some algorithms (e.g. Sequrntial) need instance dirs in order to write some intermediate output
+    // like the armaNoiseModel-log.txt. This only works if we actually define the dirs.
+    final boolean hasDirs = templateDirPath != null && instanceDirPath != null;
+    if( hasDirs )
+    {
+      // Actually create the empty template dir, else we get problems later
+      final File templateDir = new File( workingDir, templateDirPath );
+      templateDir.mkdirs();
+    }
+
     /* initialize-actions: do we need to clone a template directory or such? */
-    final CloneType cloneType = BBWrapperConfig.CloneType.None;
+    final CloneType cloneType = hasDirs ? BBWrapperConfig.CloneType.Directory : BBWrapperConfig.CloneType.None;
+    final String templateName = hasDirs ? "%templateDir%" : null;
+    final String instanceName = hasDirs ? "%instanceDir%%instanceNumber%" : null;
     final Collection<BBAction> initializeActions = Collections.emptyList();
-    final String templateName = null;// "%templateDir%";
-    final String instanceName = null;// "%instanceDir%%instanceNumber%";
 
     final BBAction computeAction = initializeComputeAction( workingDir, aliasDefinitions );
     final Collection<BBAction> computeActions = Collections.singleton( computeAction );

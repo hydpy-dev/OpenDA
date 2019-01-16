@@ -69,11 +69,10 @@ public class HydPyModelConfigFactory implements IModelFactory
 
       HydPyServerManager.create( workingDir.toPath(), args );
 
-      final HydPyServer server = HydPyServerManager.instance().getOrCreateServer();
-      final List<IServerItem> items = server.getItems();
-
       final BBWrapperConfig wrapperConfig = initializeWrapperConfig( workingDir, templateDirPath, instanceDirPath );
 
+      final HydPyServer server = HydPyServerManager.instance().getOrCreateServer();
+      final List<IServerItem> items = server.getItems();
       final BBModelConfig bbModelConfig = initializeModelConfig( workingDir, wrapperConfig, items );
 
       m_bbFactory = new BBModelFactory( bbModelConfig );
@@ -113,21 +112,30 @@ public class HydPyModelConfigFactory implements IModelFactory
     aliasDefinitions.add( "currentTime", keyPrefix, keySuffix, "0.0", null );
     aliasDefinitions.add( "targetTime", keyPrefix, keySuffix, "0.0", null );
 
+    // REMARK: some algorithms (e.g. Sequential) need instance dirs in order to write some intermediate output
+    // like the armaNoiseModel-log.txt. This only works if we actually define the dirs.
     if( templateDirPath != null )
       aliasDefinitions.add( "templateDir", keyPrefix, keySuffix, templateDirPath, null );
     if( instanceDirPath != null )
       aliasDefinitions.add( "instanceDir", keyPrefix, keySuffix, instanceDirPath, null );
-//    aliasDefinitions.add( "inputFile", keyPrefix, keySuffix, "reactive_pollution_model.input", null );
-//    aliasDefinitions.add( "outputFile", keyPrefix, keySuffix, "reactive_pollution_model.output", null );
+    // aliasDefinitions.add( "inputFile", keyPrefix, keySuffix, "reactive_pollution_model.input", null );
+    // aliasDefinitions.add( "outputFile", keyPrefix, keySuffix, "reactive_pollution_model.output", null );
 
-    // REMARK: some algorithms (e.g. Sequrntial) need instance dirs in order to write some intermediate output
-    // like the armaNoiseModel-log.txt. This only works if we actually define the dirs.
     final boolean hasDirs = templateDirPath != null && instanceDirPath != null;
     if( hasDirs )
     {
       // Actually create the empty template dir, else we get problems later
       final File templateDir = new File( workingDir, templateDirPath );
       templateDir.mkdirs();
+    }
+    else if( templateDirPath == null && instanceDirPath == null )
+    {
+      /* good case */
+    }
+    else
+    {
+      final String message = String.format( "Either '%s' and '%s' must be both defined or none of them.", PROPERTY_TEMPLATE_DIR_PATH, PROPERTY_INSTANCE_DIR_PATH );
+      throw new RuntimeException( message );
     }
 
     /* initialize-actions: do we need to clone a template directory or such? */

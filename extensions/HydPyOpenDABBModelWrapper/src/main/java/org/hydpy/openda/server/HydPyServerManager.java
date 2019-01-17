@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Properties;
 
 import org.apache.http.client.utils.URIBuilder;
@@ -49,9 +50,19 @@ public final class HydPyServerManager
 
   private static HydPyServerManager INSTANCE = null;
 
+  private static Collection<String> FIXED_PARAMETERS = null;
+
+  public static void initFixedParameters( final Collection<String> fixedParameters )
+  {
+    FIXED_PARAMETERS = fixedParameters;
+  }
+
   public static synchronized void create( final Path baseDir, final Properties args )
   {
-    INSTANCE = new HydPyServerManager( baseDir, args );
+    if( FIXED_PARAMETERS == null )
+      throw new IllegalStateException( "initFixedParameters was never called" );
+
+    INSTANCE = new HydPyServerManager( baseDir, args, FIXED_PARAMETERS );
   }
 
   public synchronized static HydPyServerManager instance( )
@@ -98,8 +109,12 @@ public final class HydPyServerManager
 
   private final String m_configFile;
 
-  private HydPyServerManager( final Path baseDir, final Properties args )
+  private final Collection<String> m_fixedParameters;
+
+  private HydPyServerManager( final Path baseDir, final Properties args, final Collection<String> fixedParameters )
   {
+    m_fixedParameters = fixedParameters;
+
     // REMARK: always try to shutdown the running hyd
     Runtime.getRuntime().addShutdownHook( new ShutdownThread( this ) );
 
@@ -142,7 +157,7 @@ public final class HydPyServerManager
       /* start the real server */
       final Process process = startHydPyProcess();
 
-      final HydPyServer server = new HydPyServer( address, process );
+      final HydPyServer server = new HydPyServer( address, process, m_fixedParameters );
 
       tryCallServer( server );
 

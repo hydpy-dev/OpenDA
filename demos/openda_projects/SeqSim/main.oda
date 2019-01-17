@@ -8,7 +8,7 @@
 		<configFile>observations.xml</configFile>
 	</stochObserver>
 	<stochModelFactory
-			className="org.openda.blackbox.wrapper.BBStochModelFactory">
+			className="org.hydpy.openda.HydPyStochModelFactory">
 		<workingDirectory></workingDirectory>
 		<configFile>model.xml</configFile>
 	</stochModelFactory>

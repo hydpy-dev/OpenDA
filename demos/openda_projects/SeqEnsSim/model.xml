@@ -4,7 +4,7 @@
 	xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/blackBoxStochModelConfig.xsd">
 
 	<modelFactory
-			className="org.hydpy.openda.HydPyModelConfigFactory"
+			className="org.hydpy.openda.HydPyModelFactory"
 			workingDirectory=".">
 		<arg>serverPort:8080</arg>
 		<arg>initializeWaitSeconds:5</arg>

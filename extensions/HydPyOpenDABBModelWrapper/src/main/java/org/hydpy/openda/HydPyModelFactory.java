@@ -47,7 +47,7 @@ import org.openda.interfaces.ITime;
  *
  * @author Gernot Belger
  */
-public class HydPyModelConfigFactory implements IModelFactory
+public class HydPyModelFactory implements IModelFactory
 {
   private static final String PROPERTY_TEMPLATE_DIR_PATH = "templateDir"; //$NON-NLS-1$
 

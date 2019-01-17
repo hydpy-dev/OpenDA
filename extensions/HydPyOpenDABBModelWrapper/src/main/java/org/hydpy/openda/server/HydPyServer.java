@@ -46,13 +46,13 @@ public final class HydPyServer
 {
   private static final String PATH_STATUS = "status"; //$NON-NLS-1$
 
-  private static final String PATH_ITEM_TYPES = "itemtypes"; //$NON-NLS-1$
+  private static final String PATH_ITEM_TYPES = "itemtypes__openda"; //$NON-NLS-1$
 
-  private static final String PATH_CHANGE_ITEMS = "changeitems"; //$NON-NLS-1$
+//  private static final String PATH_CHANGE_ITEMS = "changeitems__openda"; //$NON-NLS-1$
 
-  private static final String PATH_ITEM_VALUES = "itemvalues"; //$NON-NLS-1$
+  private static final String PATH_ITEM_VALUES = "itemvalues__openda"; //$NON-NLS-1$
 
-  private static final String PATH_SIMULATE = "simulate"; //$NON-NLS-1$
+  private static final String PATH_SIMULATE = "simulate__openda"; //$NON-NLS-1$
 
   private static final String PATH_CLOSE_SERVER = "close_server"; //$NON-NLS-1$
 
@@ -76,10 +76,13 @@ public final class HydPyServer
 
   private Map<String, Object> m_fixedItems;
 
-  public HydPyServer( final URI address, final Process process )
+  private final Collection<String> m_fixedParameters;
+
+  public HydPyServer( final URI address, final Process process, final Collection<String> fixedParameters )
   {
     m_address = address;
     m_process = process;
+    m_fixedParameters = fixedParameters;
   }
 
   private void checkProcess( ) throws HydPyServerProcessException
@@ -259,12 +262,17 @@ public final class HydPyServer
 
   private Map<String, Object> requestFixedItems( ) throws HydPyServerException
   {
-    final URI endpoint = buildEndpoint( PATH_CHANGE_ITEMS, null );
+    final URI endpoint = buildEndpoint( PATH_ITEM_VALUES, null );
 
     final Properties props = callGetAndParse( endpoint, m_timeoutMillis );
 
     /* pre-parse items */
-    return preParseValues( props );
+    final Map<String, Object> values = preParseValues( props );
+
+    /* only use those as 'fixed' that are really declared as those */
+    values.keySet().retainAll( m_fixedParameters );
+
+    return values;
   }
 
   public List<IPrevExchangeItem> getItemValues( final String instanceId ) throws HydPyServerException

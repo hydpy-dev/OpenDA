@@ -13,7 +13,7 @@ Prepare artificial data
 >>> pub.options.reprdigits = 6
 
 >>> hp = HydPy('LahnH')
->>> pub.timegrids = '1996-01-01', '1996-02-10', '1d'
+>>> pub.timegrids = '1996-01-01', '1997-01-01', '1d'
 >>> hp.prepare_everything()
 
 >>> element = hp.elements.land_lahn_1
@@ -23,7 +23,7 @@ Prepare artificial data
 >>> conditions = hp.conditions
 >>> element.model.sequences.states.lz += 4.0
 >>> pub.timegrids.sim.firstdate = '1996-01-06'
->>> pub.timegrids.sim.lastdate = '1996-02-10'
+>>> pub.timegrids.sim.lastdate = '1997-01-01'
 >>> hp.doit()
 
 >>> print_values(element.model.sequences.states.lz.series[:10])

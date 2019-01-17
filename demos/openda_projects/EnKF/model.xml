@@ -18,7 +18,7 @@
             <noiseModel>
             <vector id="lz"/>
                 <ar1Model operation="add">
-					<stdDevColouredNoised value="1.0"/>
+					<stdDevColouredNoised value="0.0001"/>
 					<decorrelationTimeScale>P1D</decorrelationTimeScale>
 					<noiseModelPeriod>P1D</noiseModelPeriod>
                 </ar1Model>

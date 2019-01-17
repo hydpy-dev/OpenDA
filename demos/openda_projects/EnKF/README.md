@@ -13,7 +13,7 @@ Prepare artificial data
 >>> pub.options.reprdigits = 6
 
 >>> hp = HydPy('LahnH')
->>> pub.timegrids = '1996-01-01', '1997-01-01', '1d'
+>>> pub.timegrids = '1996-01-01', '1996-02-10', '1d'
 >>> hp.prepare_everything()
 
 >>> element = hp.elements.land_lahn_1
@@ -23,7 +23,7 @@ Prepare artificial data
 >>> conditions = hp.conditions
 >>> element.model.sequences.states.lz += 4.0
 >>> pub.timegrids.sim.firstdate = '1996-01-06'
->>> pub.timegrids.sim.lastdate = '1997-01-01'
+>>> pub.timegrids.sim.lastdate = '1996-02-10'
 >>> hp.doit()
 
 >>> print_values(element.model.sequences.states.lz.series[:10])
@@ -57,11 +57,11 @@ Assimilate
 >>> _ = subprocess.run('oda_run_batch main.oda > temp.txt', shell=True)
 >>> results = runpy.run_path('results/final.py')
 
->>> filtered_discharge = results['pred_f'][1:, 0]
+>>> filtered_discharge = results['pred_f'][:, 0]
 
 >>> print_values(true_discharge[-7:])
 3.093177, 2.965429, 2.842957, 2.725542, 2.612978, 2.505062, 2.401603
 >>> print_values(predicted_discharge[-7:])
 2.118697, 2.031194, 1.947306, 1.866882, 1.78978, 1.715862, 1.644997
 >>> print_values(filtered_discharge[-7:])
-2.779301, 2.742948, 2.720687, 2.547681, 2.460633, 2.419408, 2.359929
+2.859875, 2.838286, 2.662556, 2.574135, 2.529551, 2.462996, 2.477771

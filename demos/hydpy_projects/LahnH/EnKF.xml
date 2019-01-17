@@ -4,7 +4,7 @@
     <options/>
     <timegrid>
         <firstdate>1996-01-01T00:00:00</firstdate>
-        <lastdate>1997-01-01T00:00:00</lastdate>
+        <lastdate>1996-02-10T00:00:00</lastdate>
         <stepsize>1d</stepsize>
     </timegrid>
     <selections/>

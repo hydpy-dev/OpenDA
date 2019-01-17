@@ -53,13 +53,6 @@
     <exchange>
         <setitems>
             <hland_v1>
-                <control>
-                    <alpha>
-                        <alias>alpha</alias>
-                        <dim>0</dim>
-                        <init>1.0</init>
-                    </alpha>
-                </control>
                 <states>
                     <lz>
                         <alias>lz</alias>

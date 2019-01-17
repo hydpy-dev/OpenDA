@@ -13,15 +13,8 @@ Prepare artificial data
 >>> pub.options.reprdigits = 6
 
 >>> hp = HydPy('LahnH')
-
 >>> pub.timegrids = '1996-01-01', '1996-02-10', '1d'
-
->>> hp.prepare_network()
->>> hp.init_models()
->>> hp.load_conditions()
->>> hp.prepare_modelseries()
->>> hp.prepare_simseries()
->>> hp.load_inputseries()
+>>> hp.prepare_everything()
 
 >>> element = hp.elements.land_lahn_1
 >>> node = hp.nodes.lahn_1
@@ -43,7 +36,8 @@ Prepare artificial data
 >>> numpy.savetxt('orig_lz.txt', element.model.sequences.states.lz.series)
 >>> numpy.savetxt('orig_q.txt', node.sequences.sim.series)
 
->>> with open('../openda_projects/EnKF/data/series/lahn_1.discharge.noos', 'w') as noosfile:
+>>> filepath = '../openda_projects/EnKF/data/lahn_1.discharge.noos'
+>>> with open(filepath, 'w') as noosfile:
 ...     _ = noosfile.write('# TimeZone:GMT+1\n')
 ...     for date, discharge in zip(pub.timegrids.init, true_discharge):
 ...         date = date + '1d'
@@ -57,16 +51,12 @@ Prepare artificial data
 Assimilate
 ----------
 
->>> import runpy, subprocess
->>> process = subprocess.Popen(
-...     'hyd.py start_server 8080 LahnH 1996-01-01 1996-02-10 1d',
-...     shell=True)
->>> _ = subprocess.run('hyd.py await_server 8080 10', shell=True)
-
 >>> os.chdir('../openda_projects/EnKF')
 
+>>> import runpy, subprocess
 >>> _ = subprocess.run('oda_run_batch main.oda > temp.txt', shell=True)
 >>> results = runpy.run_path('results/final.py')
+
 >>> filtered_discharge = results['pred_f'][1:, 0]
 
 >>> print_values(true_discharge[-7:])
@@ -75,9 +65,3 @@ Assimilate
 2.118697, 2.031194, 1.947306, 1.866882, 1.78978, 1.715862, 1.644997
 >>> print_values(filtered_discharge[-7:])
 2.779301, 2.742948, 2.720687, 2.547681, 2.460633, 2.419408, 2.359929
-
-
->>> from urllib import request
->>> _ = request.urlopen('http://localhost:8080/close_server')
->>> process.kill()
->>> _ = process.communicate()

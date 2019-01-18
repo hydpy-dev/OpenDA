@@ -5,6 +5,8 @@ language:
 os:
   - linux
 
+sudo: true
+
 include:
   - python: 3.7
 

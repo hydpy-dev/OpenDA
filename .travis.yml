@@ -33,8 +33,10 @@ script:
 
 deploy:
   provider: releases
-  api_key: 5bUVF4y25DBrmoEg6fNmjA
-  file: $HOME/extensions/HydPyOpenDABBModelWrapper/build/distributions/*
-  skip_cleanup: true
+  api_key:
+    secure: lNm+ZO9djz4vfgkD4EQPEyG5pArIUsi4baESNQXwMKQHS9kTKhwbaVu5YRh316dBtgTMC5YcjavjktLwHmcEFDC1DEqiZ+CMe9Mje4cA4shfu56ex8nr2wSwXyZVTogbJgg3OpU86t9oaBTpeRjmZGrxKFoVKcKYji6kcDWZPxpe2nYlf+0ZuoEAoCrDwNWS9US8ufZIFkiu0aYt5NadIjVUCNnWTiQulQY2Y8ZeOc+O8eB7R4vN3LCNz4y1wW32nw6r1Wwv5dzfDCuZcM3JHa9xQkozu6bAd75WVZFbEZhWWvlfYoyXS4vDKKIvhVWW2kpYrrfq7vnyYoqQNG47xwQJzvTmEkzbSYHneceh3lFvcnVcSh1dXNovY0vS2NaRICFC7uHRYc6CLfG+C999eGKXFC3pqXV2t6gYTrrxRbt4K6ZcFs/X/EGkwrDoD4fy2kgBVUo0v/qDBpNMM4l8Uf8t3DHUa9grZ/FPWBxA0AZoTv1SrA5RJml4IBU+6zOpfbpcGSLH3j6JHg4i5CiM/os4SB2bJy0GCF7g7U3plMxx0KxSGR4t/9YQiY8Ocycqfpb7KUTaDZXiRYiezepdwPbpU8bDw1DBtg1X5VP8gnzdb7K6jDm/VaciLhnNWw9Y0K7I1YzkVDhNI+Jrxz6enVajqPJp84dY9W/MR/2DCw4=
+  file: build/distributions/*
+  skip_cleanup: true  
   on:
+    repo: hydpy-dev/OpenDA
     tags: true

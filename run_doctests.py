@@ -9,7 +9,7 @@ homedir = os.path.abspath('.')
 counter = numpy.zeros(2, dtype=int)
 
 for root, _, filenames in os.walk('.'):
-    filenames = [fn for fn in filenames if fn == 'README.md']
+    filenames = [fn for fn in filenames if fn in ('README.md', 'README.rst')]
     for filename in filenames:
         path = os.path.join(root, filename)
         print(path)

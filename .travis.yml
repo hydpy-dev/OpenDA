@@ -9,7 +9,7 @@ os:
 #  include:
 #    - python: 3.7  
 
-#install:
+#install:	
 #  - pip install --upgrade pip
 #  - pip install hydpy==3.2a4
 
@@ -30,3 +30,11 @@ script:
   - ./gradlew build
 #  - cd ../..
 #  - python run_doctests.py
+
+deploy:
+  provider: releases
+  api_key: 5bUVF4y25DBrmoEg6fNmjA
+  file: $HOME/extensions/HydPyOpenDABBModelWrapper/build/distributions/*
+  skip_cleanup: true
+  on:
+    tags: true

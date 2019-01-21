@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Properties;
@@ -101,7 +102,7 @@ public final class HydPyServerManager
 
   private final String m_hydPyScript;
 
-  private final String m_projectPath;
+  private final String m_projectDir;
 
   private final String m_projectName;
 
@@ -129,11 +130,19 @@ public final class HydPyServerManager
     m_port = HydPyUtils.getRequiredPropertyAsInt( args, PROPERTY_SERVER_PORT );
     m_initRetrySeconds = HydPyUtils.getRequiredPropertyAsInt( args, PROPERTY_INITIALIZE_SECONDS );
 
-    final String projectPath = HydPyUtils.getRequiredProperty( args, PROPERTY_PROJECT_PATH );
-    m_projectPath = baseDir.resolve( projectPath ).normalize().toString();
+    final String projectDirArgument = HydPyUtils.getRequiredProperty( args, PROPERTY_PROJECT_PATH );
+    final Path projectDir = baseDir.resolve( projectDirArgument ).normalize();
+    if( !Files.isDirectory( projectDir ) )
+      throw new RuntimeException( String.format( "Argument '%s': Directory does not exist: %s", PROPERTY_PROJECT_PATH, projectDir ) );
+    m_projectDir = projectDir.toString();
 
     m_projectName = HydPyUtils.getRequiredProperty( args, PROPERTY_PROJECT_NAME );
-    m_configFile = HydPyUtils.getRequiredProperty( args, PROPERTY_CONFIG_FILE );
+
+    final String configFileArgument = HydPyUtils.getRequiredProperty( args, PROPERTY_CONFIG_FILE );
+    final Path configFile = baseDir.resolve( configFileArgument ).normalize();
+    if( !Files.isRegularFile( configFile ) )
+      throw new RuntimeException( String.format( "Argument '%s': File does not exist: %s", PROPERTY_CONFIG_FILE, configFile ) );
+    m_configFile = configFile.toString();
   }
 
   public synchronized HydPyServer getOrCreateServer( )
@@ -204,7 +213,7 @@ public final class HydPyServerManager
 
   private Process startHydPyProcess( ) throws IOException
   {
-    final File projectDir = new File( m_projectPath );
+    final File projectDir = new File( m_projectDir );
     final File workingDir = projectDir;
 
     final String command = m_serverExe;

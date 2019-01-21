@@ -63,11 +63,13 @@ Example:
 The following arguments have to be configured for the model factory:
 * serverPort: The web port on which the HydPy server will be started. Use any free port on your machine. 
 * initializeWaitSeconds: The time in seconds the wrapper implementation will wait for the HydPy-Server to start up. This may depend on the actual HydPy project.
-* projectPath: The path to the HydPy project directory, relative to the working dir of the factory.
+* projectPath: The path to the HydPy project directory.
 * projectName: The name of the HydPy project within the project directory.
-* configFile: The name of the HydPy multi-run configuration file, relative to the HydPy project directory. 
-* templateDir (optional): the template directory for model instances, relative to the working dir of the factory.  
-* instanceDir (optional): the instance directory for model instances, relative to the working dir of the factory. The actual directories will be post-fixed with the instance number. 
+* configFile: The name of the HydPy multi-run configuration file. 
+* templateDir (optional): the template directory for model instances.  
+* instanceDir (optional): the instance directory for model instances. The actual directories will be post-fixed with the instance number. 
+
+All arguments denoting files or directories are resolved relative to the working directory of the factory.
 
 The template and instance directories are not used by the HyPy wrapper, but some algorithms will write (debug) output to the instances directories. If this output should be written, both directories have to be configured.
 

@@ -262,7 +262,8 @@ public final class HydPyServer
 
   private Map<String, Object> requestFixedItems( ) throws HydPyServerException
   {
-    final URI endpoint = buildEndpoint( PATH_ITEM_VALUES, null );
+    // REMARK: HydPy always need instanceId; we give fake one here
+    final URI endpoint = buildEndpoint( PATH_ITEM_VALUES, "initializing" ); //$NON-NLS-1$
 
     final Properties props = callGetAndParse( endpoint, m_timeoutMillis );
 

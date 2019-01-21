@@ -1,6 +1,6 @@
 # HydPyOpenDABBModelWrapper
 
-Allows to run a [HydPy](../../..) model as a BlackBoxModel in [OpenDA](http://openda.org/).
+Allows to run a [HydPy](https://github.com/hydpy-dev/hydpy) model as a BlackBoxModel in [OpenDA](http://openda.org/).
 
 ## Compilation
 

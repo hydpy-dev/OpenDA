@@ -18,7 +18,6 @@ os:
 
 cache:
    directories:
-     - /home/travis/.rvm/
      - $TRAVIS_BUILD_DIR/extensions/HydPyOpenDABBModelWrapper/.gradle
 
 script:

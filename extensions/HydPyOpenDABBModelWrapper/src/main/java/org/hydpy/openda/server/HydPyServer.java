@@ -48,8 +48,6 @@ public final class HydPyServer
 
   private static final String PATH_ITEM_TYPES = "itemtypes__openda"; //$NON-NLS-1$
 
-//  private static final String PATH_CHANGE_ITEMS = "changeitems__openda"; //$NON-NLS-1$
-
   private static final String PATH_ITEM_VALUES = "itemvalues__openda"; //$NON-NLS-1$
 
   private static final String PATH_SIMULATE = "simulate__openda"; //$NON-NLS-1$

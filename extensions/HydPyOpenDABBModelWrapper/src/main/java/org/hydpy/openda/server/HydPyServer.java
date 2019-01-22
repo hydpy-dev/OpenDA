@@ -46,21 +46,48 @@ public final class HydPyServer
 {
   private static final String PATH_STATUS = "status"; //$NON-NLS-1$
 
-  private static final String PATH_ITEM_TYPES = "itemtypes__openda"; //$NON-NLS-1$
-
-  private static final String PATH_ITEM_VALUES = "itemvalues__openda"; //$NON-NLS-1$
-
-  private static final String PATH_SIMULATE = "simulate__openda"; //$NON-NLS-1$
+  private static final String PATH_EXECUTE = "execute"; //$NON-NLS-1$
 
   private static final String PATH_CLOSE_SERVER = "close_server"; //$NON-NLS-1$
 
   private static final String PARAMETER_INSTANCE_NUMBER = "id"; //$NON-NLS-1$
+
+  private static final String PARAMETER_METHODS = "methods"; //$NON-NLS-1$
 
   public static final String ITEM_ID_FIRST_DATE = "firstdate"; //$NON-NLS-1$
 
   public static final String ITEM_ID_LAST_DATE = "lastdate"; //$NON-NLS-1$
 
   public static final String ITEM_ID_STEP_SIZE = "stepsize"; //$NON-NLS-1$
+
+  // REMARK: The life-cycle of the OpenDA model-instances enforce a very specific way, on
+  // how the model must be called and specifically on how the internal model state must be
+  // preserved and restored.
+
+  private static final String METHODS_GET_ITEMTYPES__OPENDA = //
+      "GET_parameteritemtypes," + //
+          "GET_conditionitemtypes," + //
+          "GET_getitemtypes";
+
+  private static final String METHODS_GET_SIMULATE__OPENDA = //
+      "GET_simulate," + //
+          "GET_save_timegrid," + //
+          "GET_save_parameteritemvalues," + //
+          "GET_save_conditionvalues," + //
+          "GET_save_modifiedconditionitemvalues," + //
+          "GET_save_getitemvalues"; //
+
+  private static final String METHODS_GET_ITEMVALUES__OPENDA = //
+      "GET_savedtimegrid," + //
+          "GET_savedparameteritemvalues," + //
+          "GET_savedmodifiedconditionitemvalues," + //
+          "GET_savedgetitemvalues";
+
+  private static final String METHODS_POST_ITEMVALUES__OPENDA = //
+      "POST_timegrid," + //
+          "POST_parameteritemvalues," + //
+          "GET_load_conditionvalues," + //
+          "POST_conditionitemvalues";
 
   private final URI m_address;
 
@@ -147,13 +174,15 @@ public final class HydPyServer
     }
   }
 
-  private URI buildEndpoint( final String path, final String instanceId ) throws HydPyServerException
+  private URI buildEndpoint( final String path, final String instanceId, final String methods ) throws HydPyServerException
   {
     try
     {
       final URIBuilder builder = new URIBuilder( m_address ).setPath( path );
       if( instanceId != null )
         builder.addParameter( PARAMETER_INSTANCE_NUMBER, instanceId );
+      if( methods != null )
+        builder.addParameter( PARAMETER_METHODS, methods );
 
       return builder.build();
     }
@@ -237,7 +266,7 @@ public final class HydPyServer
 
   private List<AbstractServerItem> requestItems( ) throws HydPyServerException
   {
-    final URI endpoint = buildEndpoint( PATH_ITEM_TYPES, null );
+    final URI endpoint = buildEndpoint( PATH_EXECUTE, "initializing", METHODS_GET_ITEMTYPES__OPENDA );
 
     final Properties props = callGetAndParse( endpoint, m_timeoutMillis );
 
@@ -261,7 +290,7 @@ public final class HydPyServer
   private Map<String, Object> requestFixedItems( ) throws HydPyServerException
   {
     // REMARK: HydPy always need instanceId; we give fake one here
-    final URI endpoint = buildEndpoint( PATH_ITEM_VALUES, "initializing" ); //$NON-NLS-1$
+    final URI endpoint = buildEndpoint( PATH_EXECUTE, "initializing", METHODS_GET_ITEMVALUES__OPENDA ); //$NON-NLS-1$
 
     final Properties props = callGetAndParse( endpoint, m_timeoutMillis );
 
@@ -278,7 +307,7 @@ public final class HydPyServer
   {
     // System.out.println( String.format( "Retrieving HydPy-Model State - InstanceId = '%s'", instanceId ) );
 
-    final URI endpoint = buildEndpoint( PATH_ITEM_VALUES, instanceId );
+    final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, METHODS_GET_ITEMVALUES__OPENDA );
 
     final Properties props = callGetAndParse( endpoint, m_timeoutMillis );
 
@@ -352,7 +381,7 @@ public final class HydPyServer
       body.append( '\n' );
     }
 
-    final URI endpoint = buildEndpoint( PATH_ITEM_VALUES, instanceId );
+    final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, METHODS_POST_ITEMVALUES__OPENDA );
     callPost( endpoint, m_timeoutMillis, body.toString() );
   }
 
@@ -375,7 +404,7 @@ public final class HydPyServer
     // REMARK: extra check process so we get the special exception
     checkProcess();
 
-    final URI endpoint = buildEndpoint( PATH_STATUS, null );
+    final URI endpoint = buildEndpoint( PATH_STATUS, null, null );
     final HttpEntity entity = callGet( endpoint, timeout );
 
     try
@@ -392,13 +421,13 @@ public final class HydPyServer
 
   public void simulate( final String instanceId ) throws HydPyServerException
   {
-    final URI endpoint = buildEndpoint( PATH_SIMULATE, instanceId );
+    final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, METHODS_GET_SIMULATE__OPENDA );
     callGet( endpoint, m_timeoutMillis );
   }
 
   void shutdown( ) throws HydPyServerException
   {
-    final URI endpoint = buildEndpoint( PATH_CLOSE_SERVER, null );
+    final URI endpoint = buildEndpoint( PATH_CLOSE_SERVER, null, null );
     callGet( endpoint, m_timeoutMillis );
   }
 }

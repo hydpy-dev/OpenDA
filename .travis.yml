@@ -16,14 +16,10 @@ os:
 # jdk:
  #  - oraclejdk7
 
-#before_cache:
-#  - rm -f  $HOME/extensions/HydPyOpenDABBModelWrapper/.gradle/caches/modules-2/modules-2.lock
-#  - rm -fr $HOME/extensions/HydPyOpenDABBModelWrapper/.gradle/caches/*/plugin-resolution/
-
-#cache:
-#  directories:
-#    - $HOME/extensions/HydPyOpenDABBModelWrapper/.gradle/caches/
-#    - $HOME/.g
+cache:
+   directories:
+     - /home/travis/.rvm/
+     - $TRAVIS_BUILD_DIR/extensions/HydPyOpenDABBModelWrapper/.gradle
 
 script:
   - cd extensions/HydPyOpenDABBModelWrapper

@@ -1,10 +1,36 @@
 
+.. _`DUD`: https://www.jstor.org/stable/1268154?seq=1#page_scan_tab_contents
+.. _`Alpha`: https://hydpy-dev.github.io/hydpy/hland.html#hydpy.models.hland.\
+hland_control.Alpha
+.. _`hland_v1`: https://hydpy-dev.github.io/hydpy/hland_v1.html
+.. _`LahnH`: https://hydpy-dev.github.io/hydpy/examples.html#hydpy.core.\
+examples.prepare_full_example_1
+.. _`observation file`: ../data/dill.discharge.noos
 
-Calibrate with DUD
-------------------
+Calibrating model parameters with DUD
+-------------------------------------
+
+`DUD`_ stands for "doesn't use derivates".  It is a - as the name suggests -
+derivative-free optimisation algorith.  This example shows how to use its
+`OpenDA`_ implementation for calibrating parameters of `HydPy`_ models.
+To keep the configuration as simple as possible, we calibrate a single
+model parameter, the nonlinearity parameter `Alpha`_ of the *HydPy* model
+`hland_v1`_, affecting the generation of direct discharge, within a single
+headwater catchment of the `LahnH`_ example project.
 
 Prepare artificial data
 .......................
+
+This is an artificial data example.  In order to proof the `DUD`_ actually
+finds the "true" value of `Alpha`_, we simulate a "true" discharge time
+series this this value of `Alpha`_.  Afterwards, we start a `DUD`_ run
+with another `Alpha`_ value, using the previously simulated discharge as
+"artificial observations".
+
+You can generate this (or a similar) discharge time series by yourself by
+executing the following commands in your Python console.  However, this is
+not necessary to run `DUD`_, as the resulting `observation file`_ is already
+available.
 
 >>> import os
 >>> os.chdir('../../hydpy_projects')

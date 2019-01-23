@@ -1,17 +1,17 @@
 
 .. _`DUD`: https://www.jstor.org/stable/1268154?seq=1#page_scan_tab_contents
-.. _`Alpha`: https://hydpy-dev.github.io/hydpy/hland.html#hydpy.models.hland.\
-hland_control.Alpha
+.. _`HydPy`: https://github.com/hydpy-dev/hydpy
+.. _`OpenDA`: https://www.openda.org/
+.. _`Alpha`: https://hydpy-dev.github.io/hydpy/hland.html#hydpy.models.hland.hland_control.Alpha
 .. _`hland_v1`: https://hydpy-dev.github.io/hydpy/hland_v1.html
-.. _`LahnH`: https://hydpy-dev.github.io/hydpy/examples.html#hydpy.core.\
-examples.prepare_full_example_1
-.. _`observation file`: ../data/dill.discharge.noos
+.. _`LahnH`: https://hydpy-dev.github.io/hydpy/examples.html#hydpy.core.examples.prepare_full_example_1
+.. _`observation file`: data/dill.discharge.noos
 
 Calibrating model parameters with DUD
 -------------------------------------
 
 `DUD`_ stands for "doesn't use derivates".  It is a - as the name suggests -
-derivative-free optimisation algorith.  This example shows how to use its
+derivative-free optimisation algorithm.  This example shows how to use its
 `OpenDA`_ implementation for calibrating parameters of `HydPy`_ models.
 To keep the configuration as simple as possible, we calibrate a single
 model parameter, the nonlinearity parameter `Alpha`_ of the *HydPy* model

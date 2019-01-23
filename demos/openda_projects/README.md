@@ -11,5 +11,5 @@ OpenDA projects in the following order:
 Note that all examples are thought to explaing the basic configuration of the
 OpenDa-HydPy wrapper and to check that it is working correctly (at least for
 the four used algorithms).  Hence, all example are very simple and do not
-serve well to evaluate the strengths or weaknesses of the the applied
-HydPy models and OpenDA algorithms.
+serve well to evaluate the strengths or weaknesses of the applied HydPy 
+models and OpenDA algorithms.

@@ -9,3 +9,4 @@ test.py
 main.orp
 hydpy*.log
 demos/openda_projects/*/results/instance*
+*final.py

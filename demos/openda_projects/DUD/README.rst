@@ -105,7 +105,7 @@ applying `DUD`_:
 
 
 Calibrate parameter Alpha
--------------------------
+.........................
 
 To start `OpenDA`_, one has to write the following command into a command
 line tool:

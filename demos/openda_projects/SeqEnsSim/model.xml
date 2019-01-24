@@ -10,10 +10,10 @@
 		<arg>initializeWaitSeconds:5</arg>
 		<arg>projectPath:../../hydpy_projects</arg>
 		<arg>projectName:LahnH</arg>
-		<arg>configFile:SeqEnsSim.xml</arg>
+		<arg>configFile:hydpy.xml</arg>
 		<!-- Only activate those if you want the armaNoiseModell-log.txt -->
 		<arg>templateDir:results/template</arg>
-		<arg>instanceDir:results/instance</arg>
+		<arg>instanceDir:results/member_</arg>
 	</modelFactory>
 
 	<vectorSpecification>
@@ -22,7 +22,7 @@
             	<vector id="alpha"/>
                 <ar1Model operation="add">
 					<stdDevColouredNoised value="1.0"/>
-					<decorrelationTimeScale>PT3600M</decorrelationTimeScale>
+					<decorrelationTimeScale>P5D</decorrelationTimeScale>
 					<noiseModelPeriod>PT1317600M</noiseModelPeriod>
                 </ar1Model>
             </noiseModel>

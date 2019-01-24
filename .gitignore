@@ -10,3 +10,4 @@ main.orp
 hydpy*.log
 demos/openda_projects/*/results/instance*
 *final.py
+*ArmaNoiseModel-log.txt

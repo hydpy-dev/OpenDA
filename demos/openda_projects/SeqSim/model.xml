@@ -11,9 +11,6 @@
 		<arg>projectPath:../../hydpy_projects</arg>
 		<arg>projectName:LahnH</arg>
 		<arg>configFile:hydpy.xml</arg>
-		<!-- Only activate those if you want the armaNoiseModell-log.txt -->
-		<arg>templateDir:results/template</arg>
-		<arg>instanceDir:results/instance</arg>		
 	</modelFactory>
 
 	<vectorSpecification>

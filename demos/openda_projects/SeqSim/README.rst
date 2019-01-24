@@ -18,16 +18,16 @@ simulate the first initialised day only, then simulate the second day,
 and so on.  `OpenDA`_ does not change any parameter or condition values
 between successive simulation runs.  Hence, the final simulation results
 must be identical to one covering the whole initialisation period right
-away.  Of course, this is not a real life example on coupling of `OpenDA`_
-and `HydPy`_, but it serves well for the educational and testing purposes.
+away.  Of course, this is not a real-life example of the coupling of `OpenDA`_
+and `HydPy`_, but it serves well for educational and testing purposes.
 
-When new to using `HydPy`_ or `OpenDA`_, we suggest to start with the the
+When new to using `HydPy`_ or `OpenDA`_, we suggest starting with the
 `calibration example`_.
 
 As suggested above, we want to compare the results of a complete simulation
-run (which we will perform within a Python process) with a sequential
-run (controlled by `OpenDA`_ and the `HydPyOpenDABBModelWrapper`_.  We
-first prepare a working instance of the `HydPy main class`_:
+run (performed within a Python process) with a sequential run (controlled
+by `OpenDA`_ and the `HydPyOpenDABBModelWrapper`_).  We first prepare a
+working instance of the `HydPy main class`_:
 
 >>> import os
 >>> os.chdir('../../hydpy_projects')
@@ -38,11 +38,11 @@ first prepare a working instance of the `HydPy main class`_:
 >>> pub.timegrids = '1996-01-01', '1997-01-01', '1d'
 >>> hp.prepare_everything()
 
-So far, everythings corresponds to the calibration example, except we are
-focussing on the first Lahn subcatchment this time.  The value of parameter
-`Alpha`_ of subcatchment Lahn 1 equals 2.0, ass defined within the
-configuration file `hydpy.xml`,.  Hence, we do have to set this value
-within the Python process, too, before performing the simulation run:
+So far, everything corresponds to the calibration example, except we are
+focussing on the headwater "Lahn 1" this time.  The value of parameter
+`Alpha`_ of subcatchment Lahn 1 equals 2.0, as defined within the
+configuration file `hydpy.xml`_.  Hence, we must also set this value
+within the Python process, before performing the simulation run:
 
 >>> hp.elements.land_lahn_1.model.parameters.control.alpha(2.0)
 >>> hp.doit()
@@ -55,10 +55,10 @@ We save the complete simulated discharge series for later comparisons:
 >>> os.chdir('../openda_projects/SeqSim')
 
 The `OpenDA`_ configuration of this example is very much similar to the
-one of the `calibration example`_.  One notable difference is, that instead
-`main.oda`_ selects the `SequentialSimulation` algorithm instead of `DUD`_.
-The command to execute `OpenDA`_ is also identical and the way to load
-the results into Python is also identical:
+one of the `calibration example`_.  One notable difference is that the
+`main.oda`_ file selects the `SequentialSimulation` algorithm instead
+of `DUD`_.  The command to execute `OpenDA`_ and the way to load the
+results into Python are also identical:
 
 >>> run_subprocess('oda_run_batch main.oda', verbose=False)
 >>> import runpy
@@ -66,9 +66,9 @@ the results into Python is also identical:
 >>> sim_external = results['pred_a_central'][:, 0]
 
 As to be expected, are the results of the `OpenDA`_ based sequential run
-identical to the ones gained above.  This is not only true for the first
-five values, but also for the complete discharge series of one year
-within a precision of six decimal places:
+identical to the ones gained above, which is not only true for the first
+five values but also the complete discharge series of one year within a
+precision of six decimal places:
 
 >>> print_values(sim_external[:5])
 17.342381, 9.544265, 7.548786, 7.096891, 6.805922

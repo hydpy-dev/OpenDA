@@ -16,7 +16,7 @@
 .. _`main.oda`: main.oda
 .. _`HydPyOpenDABBModelWrapper`: ./../../../extensions/HydPyOpenDABBModelWrapper
 .. _`HydPy server`: https://hydpy-dev.github.io/hydpy/servertools.html#hydpy.exe.servertools.HydPyServer
-.. _`model.xml`: main.oda
+.. _`model.xml`: model.xml
 .. _`GetItem`: https://hydpy-dev.github.io/hydpy/itemtools.html#hydpy.core.itemtools.GetItem
 .. _`hydpy.xml`: hydpy.xml
 .. _`SetItem`: https://hydpy-dev.github.io/hydpy/itemtools.html#hydpy.core.itemtools.SetItem
@@ -104,8 +104,8 @@ applying `DUD`_:
 >>> os.chdir('../openda_projects/DUD')
 
 
-Calibrate `Alpha`_
-------------------
+Calibrate parameter Alpha
+-------------------------
 
 To start `OpenDA`_, one has to write the following command into a command
 line tool:

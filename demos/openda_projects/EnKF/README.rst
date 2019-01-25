@@ -125,3 +125,19 @@ closely than the uncorrected discharge:
 2.859875, 2.838286, 2.662556, 2.574135, 2.529551, 2.462996, 2.477771
 >>> print_values(sim_true[-7:])
 3.093177, 2.965429, 2.842957, 2.725542, 2.612978, 2.505062, 2.401603
+
+Inspecting the complete simulation period, one realises that there is
+a short subperiod where the "corrected" results are actually worse than
+the uncorrected ones and that the "corrected" discharge is generally
+too noisy, which is at least partly be due to the chosen ensemble size:
+
+>>> from matplotlib import pyplot
+>>> _ = pyplot.plot(sim_true, 'red', label='true')
+>>> _ = pyplot.plot(sim_uncorrected, 'green', label='uncorrected')
+>>> _ = pyplot.plot(sim_corrected, 'black', label='corrected')
+>>> _ = pyplot.ylabel('Q [m3/s]')
+>>> _ = pyplot.xlabel('day')
+>>> _ = pyplot.legend()
+>>> pyplot.savefig('results/discharge_lahn_1.png')
+
+.. image:: results/discharge_lahn_1.png

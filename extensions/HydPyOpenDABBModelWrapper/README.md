@@ -44,7 +44,7 @@ Please see to the [HydPy-OpenDA example projects](../../demos).
 
 ### OpenDA configuration 
 
-(ToDo: outdated, HydPyStochModelFactory instead ofBBStochModelFactory)
+(ToDo: outdated, describe HydPyStochModelFactory instead of BBStochModelFactory)
 
 OpenDA must be configured and run as usual via its main _.oda_ file.
 

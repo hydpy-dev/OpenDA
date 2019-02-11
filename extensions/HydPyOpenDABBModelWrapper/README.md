@@ -60,7 +60,7 @@ For example:
 ```
 
 The `org.hydpy.openda.HydPyStochModelFactory` uses the same XML file format as `org.openda.blackbox.wrapper.BBStochModelFactory`,
-for the model configuration (here `main.xml`).  However we need to use the HydPy specific  `org.hydpy.openda.HydPyModelFactory`  instead of the usual `org.openda.blackbox.wrapper.BBModelFactory`.
+as the model configuration (here `main.xml`). However we need to use the HydPy specific `org.hydpy.openda.HydPyModelFactory`  instead of the usual `org.openda.blackbox.wrapper.BBModelFactory`.
 
 Usually, the _model.xml_ file refers to two additional configuration files, the
 _stochModel.xml_ and _wrapper.xml_. However, the HydPy wrapper generates 
@@ -101,12 +101,12 @@ be specified.
 
 ### HydPy Project Configuration 
 
-The HydPy OpenDA wrapper is based on the [HydPY servertools](https://hydpy-dev.github.io/hydpy/servertools.html), 
+The HydPy OpenDA wrapper is based on the [HydPy servertools](https://hydpy-dev.github.io/hydpy/servertools.html), 
 which starts HydPy in a REST-full server mode, which in turn is controlled by the OpenDA wrapper. 
 This requires the HydPy project to be set-up in the servertools specific way.
 
 In particular, part of the usual OpenDa BlackBoxModel configuration (i.e. _stochModel.xml_ and _wrapper.xml_) is situated in the 
-HydPy project itself, as the HydPy server must know which model parameters,
+HydPy project itself (in form of the _hydpy.xml_ file), as the HydPy server must know which model parameters,
 states, and time series have to be manipulated by OpenDA, and how.
 
 The HydPy server exhibits the configured HydPy exchange items, 

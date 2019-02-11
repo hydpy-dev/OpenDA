@@ -5,7 +5,7 @@ Use the following examples for a quick start on coupling OpenDA and HydPy.
 There are four [OpenDa demo projects](openda_projects), each one relying on
 a different algorithm.  We apply each algorithm either to the "Dill" or 
 the "Lahn 1" headwater catchment of the 
-[HydPy demo project "LahnH"][hydpy_projects/LahnH).
+[HydPy demo project "LahnH"](hydpy_projects/LahnH).
 
 Note that all examples are thought to explain the basic configuration 
 of the [HydPyOpenDABBModelWrapper](../extensions/HydPyOpenDABBModelWrapper) 

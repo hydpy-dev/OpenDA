@@ -44,16 +44,12 @@ Please see to the [HydPy-OpenDA example projects](../../demos).
 
 ### OpenDA configuration 
 
-(ToDo: outdated, describe HydPyStochModelFactory instead of BBStochModelFactory)
-
 OpenDA must be configured and run as usual via its main _.oda_ file.
 
-HydPy is integrated as an OpenDA "BlackBoxModel", so the _stochModelFactory_ 
-entry of the _.oda_ file needs to select the 
-`org.openda.blackbox.wrapper.BBStochModelFactory` class. The rest of the 
-_model.xml_ file (e.g. the `vectorSpecification`) is configured in the usual 
-OpenDA way. Use the id's from the _hydpy.xml_ configuration file (see below) 
-as parameters id's here.
+HydPy is integrated as an OpenDA "BlackBoxModel", but changes it in some subtle ways.
+
+So the _stochModelFactory_ entry of the _.oda_ file needs to select the HydPy specific
+`org.hydpy.openda.HydPyStochModelFactory` class (instead of the usual `org.openda.blackbox.wrapper.BBStochModelFactory`).
 
 For example:
 ```xml
@@ -63,19 +59,20 @@ For example:
 	</stochModelFactory> 
 ```
 
-The referred _model.xml_ file configures the BlackBoxModel. Usually, the 
-_model.xml_ file refers to two additional configuration files, the
+The `org.hydpy.openda.HydPyStochModelFactory` uses the same XML file format as `org.openda.blackbox.wrapper.BBStochModelFactory`,
+for the model configuration (here `main.xml`).  However we need to use the HydPy specific  `org.hydpy.openda.HydPyModelFactory`  instead of the usual `org.openda.blackbox.wrapper.BBModelFactory`.
+
+Usually, the _model.xml_ file refers to two additional configuration files, the
 _stochModel.xml_ and _wrapper.xml_. However, the HydPy wrapper generates 
 both files internally, as it retrieves all information from the HydPy 
 project configuration (see below). 
 
-To activate and configure the HydPy wrapper, the class 
-`org.hydpy.openda.HydPyModelConfigFactory` has to be configured as 
-`modelFactory` in the _model.xml_ file.
+The rest of the _model.xml_ file (e.g. the `vectorSpecification`) is configured in the usual way. 
+Use the id's from the _hydpy.xml_ configuration file (see below) as parameters id's here.
 
 Example:
 ```xml
-	<modelFactory className="org.hydpy.openda.HydPyModelConfigFactory" workingDirectory=".">
+	<modelFactory className="org.hydpy.openda.HydPyModelFactory" workingDirectory=".">
 		<arg>serverPort:8080</arg>
 		<arg>initializeWaitSeconds:5</arg>
 		<arg>projectPath:../../hydpy_projects</arg>
@@ -90,7 +87,7 @@ The model factory requires the following arguments
 * initializeWaitSeconds: The maximum time in seconds the wrapper implementation should wait for the HydPy server to start up. This time may depend on the actual HydPy project.
 * projectPath: The path to the HydPy project directory.
 * projectName: The name of the HydPy project within the project directory.
-* configFile: The name of the HydPy configuration file).
+* configFile: The name of the [HydPy servertools](https://hydpy-dev.github.io/hydpy/servertools.html) configuration file.
 * templateDir (optional): The template directory for model instances.  
 * instanceDir (optional): The instance directory for model instances. The actual directories are post-fixed with the instance number. 
 
@@ -103,8 +100,12 @@ existing. If this output is of interest, both directory arguments must
 be specified.
 
 ### HydPy Project Configuration 
-	
-Part of the usual OpenDa BlackBoxModel configuration is situated in the 
+
+The HydPy OpenDA wrapper is based on the [HydPY servertools](https://hydpy-dev.github.io/hydpy/servertools.html), 
+which starts HydPy in a REST-full server mode, which in turn is controlled by the OpenDA wrapper. 
+This requires the HydPy project to be set-up in the servertools specific way.
+
+In particular, part of the usual OpenDa BlackBoxModel configuration (i.e. _stochModel.xml_ and _wrapper.xml_) is situated in the 
 HydPy project itself, as the HydPy server must know which model parameters,
 states, and time series have to be manipulated by OpenDA, and how.
 

@@ -46,10 +46,12 @@ Please see to the [HydPy-OpenDA example projects](../../demos).
 
 OpenDA must be configured and run as usual via its main _.oda_ file.
 
-HydPy is integrated as an OpenDA "BlackBoxModel", but changes it in some subtle ways.
+HydPy is integrated as an OpenDA "BlackBoxModel" but changes it in some subtle
+ways.
 
-So the _stochModelFactory_ entry of the _.oda_ file needs to select the HydPy specific
-`org.hydpy.openda.HydPyStochModelFactory` class (instead of the usual `org.openda.blackbox.wrapper.BBStochModelFactory`).
+So the _stochModelFactory_ entry of the _.oda_ file needs to select the HydPy 
+specific `org.hydpy.openda.HydPyStochModelFactory` class (instead of the usual 
+`org.openda.blackbox.wrapper.BBStochModelFactory`).
 
 For example:
 ```xml
@@ -59,8 +61,11 @@ For example:
 	</stochModelFactory> 
 ```
 
-The `org.hydpy.openda.HydPyStochModelFactory` uses the same XML file format as `org.openda.blackbox.wrapper.BBStochModelFactory`,
-as the model configuration (here `main.xml`). However we need to use the HydPy specific `org.hydpy.openda.HydPyModelFactory`  instead of the usual `org.openda.blackbox.wrapper.BBModelFactory`.
+The `org.hydpy.openda.HydPyStochModelFactory` uses the same XML file format as 
+`org.openda.blackbox.wrapper.BBStochModelFactory`, as the model configuration 
+(here `main.xml`). However, we need to use the HydPy specific 
+`org.hydpy.openda.HydPyModelFactory`  instead of the usual 
+`org.openda.blackbox.wrapper.BBModelFactory`.
 
 Usually, the _model.xml_ file refers to two additional configuration files, the
 _stochModel.xml_ and _wrapper.xml_. However, the HydPy wrapper generates 

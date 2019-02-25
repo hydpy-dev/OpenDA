@@ -120,7 +120,7 @@ From within a Python process, one can use function `run_subprocess`_ instead:
 Its path must either be added to the environment variable *PATH* or prefixed
 to the filename.
 
-`main_oda`_ is the entry point for `OpenDA`_, selecting the
+`main.oda`_ is the entry point for `OpenDA`_, selecting the
 `NoosTimeSeriesObserver` (see above), the `DUD`_ algorithm, and the
 `PythonResultWriter`.  Using the `HydPyStochModelFactory` ensures that
 the `HydPyOpenDABBModelWrapper`_ starts and controls the `HydPy server`_.

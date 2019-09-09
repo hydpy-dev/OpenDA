@@ -70,11 +70,12 @@ value in the following:
 
 >>> hp = HydPy('LahnH')
 >>> pub.timegrids = '1996-01-01', '1997-01-01', '1d'
+>>> pub.conditionmanager.currentdir = 'init_1996_01_01'
 >>> hp.prepare_everything()
 >>> hp.elements.land_dill.model.parameters.control.alpha
 alpha(1.0)
 
-Forth, we perform a simulation run and show the first five discharge
+Fourth, we perform a simulation run and show the first five discharge
 values simulated for the outlet of the Dill catchment, serving as the
 "true" discharge values in the following:
 

@@ -37,6 +37,7 @@ previous examples:
 >>> pub.options.reprdigits = 6
 >>> hp = HydPy('LahnH')
 >>> pub.timegrids = '1996-01-01', '1996-02-10', '1d'
+>>> pub.conditionmanager.currentdir = 'init_1996_01_01'
 >>> hp.prepare_everything()
 
 We now perform two consecutive simulation runs, the first one throughout

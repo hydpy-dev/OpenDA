@@ -79,6 +79,7 @@ value between subsequent timesteps):
 >>> os.chdir('../../hydpy_projects')
 >>> hp = HydPy('LahnH')
 >>> pub.timegrids = '1996-01-01', '1996-02-10', '1d'
+>>> pub.conditionmanager.currentdir = 'init_1996_01_01'
 >>> hp.prepare_everything()
 >>> initialconditions = hp.conditions
 >>> os.chdir('../openda_projects/SeqEnsSim')

@@ -36,6 +36,7 @@ working instance of the `HydPy main class`_:
 >>> pub.options.reprdigits = 6
 >>> hp = HydPy('LahnH')
 >>> pub.timegrids = '1996-01-01', '1997-01-01', '1d'
+>>> pub.conditionmanager.currentdir = 'init_1996_01_01'
 >>> hp.prepare_everything()
 
 So far, everything corresponds to the calibration example, except we are

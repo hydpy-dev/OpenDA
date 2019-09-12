@@ -15,13 +15,18 @@
 
 	<vectorSpecification>
         <state>
-            <noiseModel>
-            <vector id="lz"/>
-                <ar1Model operation="add">
-					<stdDevColouredNoised value="1.0"/>
-					<decorrelationTimeScale>P1D</decorrelationTimeScale>
-					<noiseModelPeriod>P1D</noiseModelPeriod>
-                </ar1Model>
+            <noiseModel
+					id="something"
+					className="org.openda.noiseModels.MapsNoiseModelFactory"
+					workingDirectory=".">
+				<configFile>noise.xml</configFile>
+				<exchangeItems>
+					<exchangeItem
+							id="lz"
+							operation="add">
+						<modelExchangeItem id="lz"/>
+					</exchangeItem>
+				</exchangeItems>
             </noiseModel>
         </state>
 		<predictor>

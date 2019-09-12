@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MapsNoiseModelConfig>
+    <noiseItem
+            id="lz"
+            quantity="something"
+            unit="something"
+            standardDeviation="1.0"
+            timeCorrelationScale="1"
+            timeCorrelationScaleUnit="hours"
+            initialValue="1.0"
+            horizontalCorrelationScale="1"
+            horizontalCorrelationScaleUnit="m">
+        <grid
+                type="cartesian"
+                coordinates="xy">
+            <x>0</x>
+            <y>0</y>
+        </grid>
+    </noiseItem>
+</MapsNoiseModelConfig>

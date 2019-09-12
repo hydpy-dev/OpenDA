@@ -110,7 +110,7 @@ an exchange item for changing the value of state `LZ`_ instead of parameter
 the stochastic perturbations, the Ensemble Kalman Filter returns the
 following corrected discharge series:
 
->>> run_subprocess('oda_run_batch main.oda', verbose=False)
+>>> run_subprocess('oda_run_batch main.oda', verbose=True)
 >>> import runpy
 >>> results = runpy.run_path('results/final.py')
 >>> sim_corrected = results['pred_f'][:, 0]

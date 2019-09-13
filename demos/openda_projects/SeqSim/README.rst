@@ -36,7 +36,6 @@ working instance of the `HydPy main class`_:
 >>> pub.options.reprdigits = 6
 >>> hp = HydPy('LahnH')
 >>> pub.timegrids = '1996-01-01', '1997-01-01', '1d'
->>> pub.conditionmanager.currentdir = 'init_1996_01_01'
 >>> hp.prepare_everything()
 
 So far, everything corresponds to the calibration example, except we are
@@ -46,7 +45,7 @@ configuration file `hydpy.xml`_.  Hence, we must also set this value
 within the Python process, before performing the simulation run:
 
 >>> hp.elements.land_lahn_1.model.parameters.control.alpha(2.0)
->>> hp.doit()
+>>> hp.simulate()
 
 We save the complete simulated discharge series for later comparisons:
 

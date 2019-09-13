@@ -13,8 +13,8 @@
         land_dill
     </devices>
     <conditions_io>
-        <inputdir>init_1996_01_01</inputdir>
-        <outputdir>init_1997-01-01</outputdir>
+        <inputdir>init_1996_01_01_00_00_00</inputdir>
+        <outputdir>init_1997-01-01_00_00_00</outputdir>
         <zip>false</zip>
     </conditions_io>
     <series_io>

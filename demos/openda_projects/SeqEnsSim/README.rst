@@ -79,7 +79,6 @@ value between subsequent timesteps):
 >>> os.chdir('../../hydpy_projects')
 >>> hp = HydPy('LahnH')
 >>> pub.timegrids = '1996-01-01', '1996-02-10', '1d'
->>> pub.conditionmanager.currentdir = 'init_1996_01_01'
 >>> hp.prepare_everything()
 >>> initialconditions = hp.conditions
 >>> os.chdir('../openda_projects/SeqEnsSim')
@@ -91,7 +90,7 @@ value between subsequent timesteps):
 ...     for alpha in alphas:
 ...         model = hp.elements.land_lahn_1.model
 ...         model.parameters.control.alpha(alpha)
-...         hp.doit()
+...         hp.simulate()
 ...         pub.timegrids.sim.firstdate += '1d'
 ...         pub.timegrids.sim.lastdate += '1d'
 ...     int_sims[idx] = hp.nodes.lahn_1.sequences.sim.series.copy()

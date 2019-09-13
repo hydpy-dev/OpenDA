@@ -37,7 +37,6 @@ previous examples:
 >>> pub.options.reprdigits = 6
 >>> hp = HydPy('LahnH')
 >>> pub.timegrids = '1996-01-01', '1996-02-10', '1d'
->>> pub.conditionmanager.currentdir = 'init_1996_01_01'
 >>> hp.prepare_everything()
 
 We now perform two consecutive simulation runs, the first one throughout
@@ -46,7 +45,7 @@ the first five initialised days:
 >>> element = hp.elements.land_lahn_1
 >>> node = hp.nodes.lahn_1
 >>> pub.timegrids.sim.lastdate = '1996-01-06'
->>> hp.doit()
+>>> hp.simulate()
 
 We save the current model state for later:
 
@@ -57,7 +56,7 @@ Before continuing the simulation, we add 4 mm to the base flow storage `LZ`_:
 >>> element.model.sequences.states.lz += 4.0
 >>> pub.timegrids.sim.firstdate = '1996-01-06'
 >>> pub.timegrids.sim.lastdate = '1996-02-10'
->>> hp.doit()
+>>> hp.simulate()
 
 The modified series of `LZ`_ looks as follows:
 
@@ -79,7 +78,7 @@ value of `LZ`_) and recalculate the discharge series, taken as the
 "uncorrected" simulation result:
 
 >>> hp.conditions = conditions
->>> hp.doit()
+>>> hp.simulate()
 >>> sim_uncorrected = node.sequences.sim.series.copy()
 >>> print_values(sim_uncorrected[:10])
 9.621296, 8.503069, 7.774927, 7.34503, 7.15879, 6.852588, 6.569539,

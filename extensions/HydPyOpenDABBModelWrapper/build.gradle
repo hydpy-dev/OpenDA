@@ -33,7 +33,7 @@ dependencies {
 
 jar {
 	// name the main jar file according to OpenDA convention
-	baseName  = 'model_hydpy'
+	archiveBaseName  = 'model_hydpy'
 
     manifest {
         attributes(

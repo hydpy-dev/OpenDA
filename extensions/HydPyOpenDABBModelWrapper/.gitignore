@@ -6,3 +6,6 @@ build
 
 # Ignore Eclipse build output directory
 bin
+
+# Ignore generated external libs directory
+externalLibs

@@ -1,10 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<noosObserver xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-
-	<timeSeries id="dill_nodes_sim_series"
-                status="use"
-                standardDeviation="2.0">
-		data/dill.discharge.noos
-	</timeSeries>
-
+<noosObserver xmlns="http://www.openda.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/observation/noosObservations.xsd">
+  <timeSeries id="dill_nodes_sim_series" status="use" standardDeviation="2.0">data/dill.discharge.noos</timeSeries>
 </noosObserver>

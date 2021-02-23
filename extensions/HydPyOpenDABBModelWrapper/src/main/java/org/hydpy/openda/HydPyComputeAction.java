@@ -13,8 +13,7 @@ package org.hydpy.openda;
 
 import java.io.File;
 
-import org.hydpy.openda.server.HydPyServer;
-import org.hydpy.openda.server.HydPyServerException;
+import org.hydpy.openda.server.HydPyModelInstance;
 import org.hydpy.openda.server.HydPyServerManager;
 import org.openda.interfaces.IConfigurable;
 
@@ -32,14 +31,7 @@ public class HydPyComputeAction implements IConfigurable
   {
     final String instanceId = arguments[0];
 
-    try
-    {
-      final HydPyServer server = HydPyServerManager.instance().getOrCreateServer();
-      server.simulate( instanceId );
-    }
-    catch( final HydPyServerException e )
-    {
-      throw new RuntimeException( e );
-    }
+    final HydPyModelInstance server = HydPyServerManager.instance().getOrCreateInstance( instanceId );
+    server.simulate();
   }
 }

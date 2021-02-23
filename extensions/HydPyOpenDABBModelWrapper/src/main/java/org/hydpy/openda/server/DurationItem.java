@@ -40,7 +40,7 @@ final class DurationItem extends AbstractServerItem
   }
 
   @Override
-  public String printValue( final IPrevExchangeItem exItem, final long stepSeconds )
+  public String printValue( final IPrevExchangeItem exItem )
   {
     final DoubleExchangeItem dblItem = (DoubleExchangeItem)exItem;
     final double value = dblItem.getValue();

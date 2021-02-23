@@ -11,7 +11,6 @@
  */
 package org.hydpy.openda.server;
 
-import org.hydpy.openda.HydPyUtils;
 import org.joda.time.Instant;
 import org.openda.exchange.DoublesExchangeItem;
 import org.openda.interfaces.IPrevExchangeItem;
@@ -41,7 +40,7 @@ final class Double1DItem extends AbstractServerItem
   }
 
   @Override
-  public String printValue( final IPrevExchangeItem exItem, final long stepSeconds )
+  public String printValue( final IPrevExchangeItem exItem )
   {
     final DoublesExchangeItem dblItem = (DoublesExchangeItem)exItem;
     final double[] doubles = dblItem.getValuesAsDoubles();

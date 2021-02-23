@@ -79,20 +79,26 @@ Example:
 ```xml
 	<modelFactory className="org.hydpy.openda.HydPyModelFactory" workingDirectory=".">
 		<arg>serverPort:8080</arg>
+		<arg>serverInstances:60</arg>
+		<arg>serverParallelStartup:true</arg>
 		<arg>initializeWaitSeconds:5</arg>
 		<arg>projectPath:../../hydpy_projects</arg>
 		<arg>projectName:LahnH</arg>
 		<arg>configFile:hydpy.xml</arg>
+		<arg>logDirectory:results/logs</arg>
 	</modelFactory>
 ```
 
 The model factory requires the following arguments
 
 * serverPort: The web port on which to start the HydPy server. Use any free port on your machine. 
+* serverInstances (optional): The number of HydPy server processes that will be started (maximal). Defaults to 1. If greater 1 and the chosen algorithm allows multiple instances, _HydPyOpenDABBModelWrapper_ will automatically start several server instances and run simulations in parallel. Server instances will run on web ports starting with _serverPort_ up-to _serverPort+serverInstances-1_.
+* serverParallelStartup (optional): If server instances should be startet in parallel at the beginning of the simulation. Default to false. If true, ALL instances (regardless of how many are really used) will be startet directly and parallel to each other on startup which can be significantly faster for many instances.      
 * initializeWaitSeconds: The maximum time in seconds the wrapper implementation should wait for the HydPy server to start up. This time may depend on the actual HydPy project.
 * projectPath: The path to the HydPy project directory.
 * projectName: The name of the HydPy project within the project directory.
 * configFile: The name of the [HydPy servertools](https://hydpy-dev.github.io/hydpy/servertools.html) configuration file.
+* logDirectory (optional): The path to the directory where the output of the HydPy server processes will be written. If specified, for each server instance, two log files (one for the standard output and one for the error output) will be written. If omitted, all server outputs will be written to the console output streams of the java process.
 * templateDir (optional): The template directory for model instances.  
 * instanceDir (optional): The instance directory for model instances. The actual directories are post-fixed with the instance number. 
 
@@ -103,6 +109,15 @@ The HyPy wrapper does not use the template and instance directories, but
 some algorithms write (debug) output to the instances directories if 
 existing. If this output is of interest, both directory arguments must
 be specified.
+
+#### Note on parallelisation
+The HydPyOpenDABBModelWrapper may parallelize and hence run faster by distributing simulation runs onto multiple running HydPy Servers (see e.g. option 'serverInstances'). 
+This however depends strongly on the chosen stochastic model, which in turn determines the call order to the underlying model. 
+Especially for ensemble based algorithms (e.g. Ensemble Kalman Filter) this might result in a tremendous speed up. Advised number of server instances is the number of
+simulated ensemble members (note that e.g. in case of ENKF this is the configured number plus one extra 'mean' member), which is equal to the number of 
+model-instances created by OpenDA, or whole divisors of that number.
+Apart from the chosen algorithm, also the number of physical available processors and the execution time of one single model simulation do influence the optimal number
+of server instances.
 
 ### HydPy Project Configuration 
 

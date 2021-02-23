@@ -2,13 +2,20 @@ plugins {
     id 'java-library'
 }
 
-project.version = '0.7.0'
+project.version = '0.8.0'
 project.description = 'The HydPy BlackBoxModel wrapper for OpenDA'
 
 // OpenDA is currrently distributed with Java 1.7
 def javaVersion = JavaVersion.VERSION_1_7;
 sourceCompatibility = javaVersion;
 targetCompatibility = javaVersion; // defaults to sourceCompatibility
+
+eclipse {
+    classpath {
+        downloadJavadoc = false
+        downloadSources = true
+    }
+}
 
 repositories {
     jcenter()

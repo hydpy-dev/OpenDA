@@ -11,6 +11,11 @@
 .. _`model.xml`: model.xml
 .. _`hydpy.xml`: hydpy.xml
 
+Run in parallel
+---------------
+This is also an example on how-to setup the model wrapper to distribute
+ensemble simulation onto several HydPy server instances. See 'model.xml'.
+
 Adjust model states with the Ensemble Kalman Filter
 ---------------------------------------------------
 

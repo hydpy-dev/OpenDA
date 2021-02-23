@@ -94,5 +94,5 @@ abstract class AbstractServerItem implements IServerItem
 
   public abstract IPrevExchangeItem toExchangeItem( Instant startTime, Instant endTime, long stepSeconds, final Object value ) throws HydPyServerException;
 
-  public abstract String printValue( IPrevExchangeItem exItem, long stepSeconds ) throws HydPyServerException;
+  public abstract String printValue( IPrevExchangeItem exItem ) throws HydPyServerException;
 }

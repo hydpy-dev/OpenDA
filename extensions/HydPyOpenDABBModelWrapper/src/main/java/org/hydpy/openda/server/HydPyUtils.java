@@ -9,7 +9,7 @@
  * and comes with ABSOLUTELY NO WARRANTY! Check out the
  * documentation coming with HydPy for details.
  */
-package org.hydpy.openda;
+package org.hydpy.openda.server;
 
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -22,7 +22,7 @@ import org.joda.time.Instant;
  *
  * @author Gernot Belger
  */
-public final class HydPyUtils
+final class HydPyUtils
 {
   // REMARK: copied from Observer OpenDA, API, which is sadly not public
   private static final double millisToDays = 1.0 / (1000 * 60 * 60 * 24);
@@ -34,15 +34,6 @@ public final class HydPyUtils
   private HydPyUtils( )
   {
     throw new UnsupportedOperationException();
-  }
-
-  public static String getRequiredSystemProperty( final String key )
-  {
-    final String value = System.getenv( key );
-    if( StringUtils.isBlank( value ) )
-      throw new RuntimeException( String.format( "Missing environment variable: %s", key ) );
-
-    return value;
   }
 
   public static String getOptionalSystemProperty( final String key, final String defaultValue )
@@ -66,7 +57,29 @@ public final class HydPyUtils
   public static int getRequiredPropertyAsInt( final Properties properties, final String key )
   {
     final String value = getRequiredProperty( properties, key );
+    return parseInt( key, value );
+  }
 
+  public static int getOptionalPropertyAsInt( final Properties properties, final String key, final int defaultValue )
+  {
+    final String value = properties.getProperty( key );
+    if( StringUtils.isBlank( value ) )
+      return defaultValue;
+
+    return parseInt( key, value );
+  }
+
+  public static boolean getOptionalPropertyAsBoolean( final Properties properties, final String key, final boolean defaultValue )
+  {
+    final String value = properties.getProperty( key );
+    if( StringUtils.isBlank( value ) )
+      return defaultValue;
+
+    return Boolean.parseBoolean( value );
+  }
+
+  private static int parseInt( final String key, final String value )
+  {
     try
     {
       return Integer.parseInt( value );

@@ -16,12 +16,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hydpy.openda.server.HydPyServer;
-import org.hydpy.openda.server.HydPyServerException;
+import org.hydpy.openda.server.HydPyModelInstance;
 import org.hydpy.openda.server.HydPyServerManager;
 import org.hydpy.openda.server.IServerItem;
 import org.openda.blackbox.config.AliasDefinitions;
@@ -55,32 +53,17 @@ public class HydPyModelFactory implements IModelFactory
 
   private static final String IO_OBJECT_ID = "hydPyIo"; //$NON-NLS-1$
 
-  private BBModelFactory m_bbFactory;
+  private BBModelFactory m_bbFactory = null;
+
+  private Properties m_args;
+
+  private File m_workingDir;
 
   @Override
   public void initialize( final File workingDir, final String[] arguments )
   {
-    try
-    {
-      final Properties args = parseArguments( arguments );
-
-      final String templateDirPath = args.getProperty( PROPERTY_TEMPLATE_DIR_PATH );
-      final String instanceDirPath = args.getProperty( PROPERTY_INSTANCE_DIR_PATH );
-
-      HydPyServerManager.create( workingDir.toPath(), args );
-
-      final BBWrapperConfig wrapperConfig = initializeWrapperConfig( workingDir, templateDirPath, instanceDirPath );
-
-      final HydPyServer server = HydPyServerManager.instance().getOrCreateServer();
-      final List<IServerItem> items = server.getItems();
-      final BBModelConfig bbModelConfig = initializeModelConfig( workingDir, wrapperConfig, items );
-
-      m_bbFactory = new BBModelFactory( bbModelConfig );
-    }
-    catch( final HydPyServerException e )
-    {
-      throw new RuntimeException( e );
-    }
+    m_workingDir = workingDir;
+    m_args = parseArguments( arguments );
   }
 
   private Properties parseArguments( final String[] arguments )
@@ -95,6 +78,37 @@ public class HydPyModelFactory implements IModelFactory
     }
 
     return properties;
+  }
+
+  /**
+   * Create factory on demand and not in {@link #initialize(File, String[])}, in order to avoid throwing exception in initialize.
+   * This makes sure finish will more likely to be called in case of error, and so HydPy server instances will be shut down instead of beeing killed.
+   */
+  private synchronized BBModelFactory getFactory( )
+  {
+    if( m_bbFactory == null )
+      m_bbFactory = createFactory();
+
+    return m_bbFactory;
+  }
+
+  private BBModelFactory createFactory( )
+  {
+    if( m_args == null )
+      throw new IllegalStateException( "initialize was never called" );
+
+    final String templateDirPath = m_args.getProperty( PROPERTY_TEMPLATE_DIR_PATH );
+    final String instanceDirPath = m_args.getProperty( PROPERTY_INSTANCE_DIR_PATH );
+
+    HydPyServerManager.create( m_workingDir.toPath(), m_args );
+
+    final BBWrapperConfig wrapperConfig = initializeWrapperConfig( m_workingDir, templateDirPath, instanceDirPath );
+
+    final HydPyModelInstance server = HydPyServerManager.instance().getOrCreateInstance( HydPyServerManager.ANY_INSTANCE );
+    final Collection<IServerItem> items = server.getItems();
+    final BBModelConfig bbModelConfig = initializeModelConfig( m_workingDir, wrapperConfig, items );
+
+    return new BBModelFactory( bbModelConfig );
   }
 
   private BBWrapperConfig initializeWrapperConfig( final File workingDir, final String templateDirPath, final String instanceDirPath )
@@ -184,7 +198,7 @@ public class HydPyModelFactory implements IModelFactory
     return ioObjects;
   }
 
-  private BBModelConfig initializeModelConfig( final File workingDir, final BBWrapperConfig wrapperConfig, final List<IServerItem> items )
+  private BBModelConfig initializeModelConfig( final File workingDir, final BBWrapperConfig wrapperConfig, final Collection<IServerItem> items )
   {
     final File configRootDir = workingDir;
     final String instanceNumberFormat = "0";
@@ -194,9 +208,9 @@ public class HydPyModelFactory implements IModelFactory
     final double timeStepMJD = Double.NaN;
 
     // REMARK: we always use these fixed exchange items to initially retrieve the simulation time span from the model.
-    final String[] startTimeExchangeItemIds = new String[] { HydPyServer.ITEM_ID_FIRST_DATE };
-    final String[] endTimeExchangeItemIds = new String[] { HydPyServer.ITEM_ID_LAST_DATE };
-    final String[] timeStepExchangeItemIds = new String[] { HydPyServer.ITEM_ID_STEP_SIZE };
+    final String[] startTimeExchangeItemIds = new String[] { HydPyModelInstance.ITEM_ID_FIRST_DATE };
+    final String[] endTimeExchangeItemIds = new String[] { HydPyModelInstance.ITEM_ID_LAST_DATE };
+    final String[] timeStepExchangeItemIds = new String[] { HydPyModelInstance.ITEM_ID_STEP_SIZE };
 
     final Collection<BBModelVectorConfig> vectorConfigs = initializeVectorConfigs( wrapperConfig, items );
 
@@ -209,7 +223,7 @@ public class HydPyModelFactory implements IModelFactory
     return new BBModelConfig( configRootDir, wrapperConfig, instanceNumberFormat, startTime, endTime, timeStepMJD, startTimeExchangeItemIds, endTimeExchangeItemIds, timeStepExchangeItemIds, vectorConfigs, skipModelActionsIfInstanceDirExists, doCleanUp, restartFileNames, savedStatesDirPrefix );
   }
 
-  private Collection<BBModelVectorConfig> initializeVectorConfigs( final BBWrapperConfig wrapperConfig, final List<IServerItem> items )
+  private Collection<BBModelVectorConfig> initializeVectorConfigs( final BBWrapperConfig wrapperConfig, final Collection<IServerItem> items )
   {
     final Collection<BBModelVectorConfig> vectorConfigs = new ArrayList<>();
 
@@ -226,13 +240,15 @@ public class HydPyModelFactory implements IModelFactory
   @Override
   public IModelInstance getInstance( final String[] arguments, final OutputLevel outputLevel )
   {
-    return m_bbFactory.getInstance( arguments, outputLevel );
+    final BBModelFactory factory = getFactory();
+    return factory.getInstance( arguments, outputLevel );
   }
 
   @Override
   public void finish( )
   {
-    m_bbFactory.finish();
+    if( m_bbFactory != null )
+      m_bbFactory.finish();
   }
 
   public static void main( final String[] args )

@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<sequentialAlgorithm>
-	<analysisTimes
-            type="fromObservationTimes"/>
-	<mainModel
-			stochParameter="false"
-			stochForcing="false"
-			stochInit="false"/>
+<!-- REMARK: there seems to be no schema defining this algorithm -->
+<sequentialAlgorithm xmlns="http://www.openda.org">
+  <analysisTimes type="fromObservationTimes" />
+  <mainModel stochParameter="false" stochForcing="false" stochInit="false" />
 </sequentialAlgorithm>

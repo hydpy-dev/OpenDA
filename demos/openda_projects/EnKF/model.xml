@@ -1,33 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<blackBoxStochModel xmlns="http://www.openda.org"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/blackBoxStochModelConfig.xsd">
-
-	<modelFactory
-			className="org.hydpy.openda.HydPyModelFactory"
-			workingDirectory=".">
-		<arg>serverPort:8080</arg>
-		<arg>initializeWaitSeconds:5</arg>
-		<arg>projectPath:../../hydpy_projects</arg>
-		<arg>projectName:LahnH</arg>
-		<arg>configFile:hydpy.xml</arg>
-	</modelFactory>
-
-	<vectorSpecification>
-        <state>
-            <noiseModel>
-            <vector id="lz"/>
-                <ar1Model operation="add">
-					<stdDevColouredNoised value="1.0"/>
-					<decorrelationTimeScale>P1D</decorrelationTimeScale>
-					<noiseModelPeriod>P1D</noiseModelPeriod>
-                </ar1Model>
-            </noiseModel>
-        </state>
-		<predictor>
-			<vector id="lahn_1_nodes_sim_series" />
-		</predictor>
-	</vectorSpecification>
-
-
+<blackBoxStochModel xmlns="http://www.openda.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/blackBoxStochModelConfig.xsd">
+  <modelFactory className="org.hydpy.openda.HydPyModelFactory" workingDirectory=".">
+    <arg>serverPort:8080</arg>
+    <arg>serverInstances:5</arg>
+    <arg>serverParallelStartup:true</arg>    
+    <arg>initializeWaitSeconds:120</arg>
+    <arg>projectPath:../../hydpy_projects</arg>
+    <arg>projectName:LahnH</arg>
+    <arg>configFile:hydpy.xml</arg>
+    <arg>logDirectory:results</arg>
+  </modelFactory>
+  <vectorSpecification>
+    <state>
+      <noiseModel>
+        <vector id="lz" />
+        <ar1Model operation="add">
+          <stdDevColouredNoised value="1.0" />
+          <decorrelationTimeScale>P1D</decorrelationTimeScale>
+          <noiseModelPeriod>P1D</noiseModelPeriod>
+        </ar1Model>
+      </noiseModel>
+    </state>
+    <predictor>
+      <vector id="lahn_1_nodes_sim_series" />
+    </predictor>
+  </vectorSpecification>
 </blackBoxStochModel>

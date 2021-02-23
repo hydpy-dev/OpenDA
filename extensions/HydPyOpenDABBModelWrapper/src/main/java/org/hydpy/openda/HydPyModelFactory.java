@@ -55,32 +55,17 @@ public class HydPyModelFactory implements IModelFactory
 
   private static final String IO_OBJECT_ID = "hydPyIo"; //$NON-NLS-1$
 
-  private BBModelFactory m_bbFactory;
+  private BBModelFactory m_bbFactory = null;
+
+  private Properties m_args;
+
+  private File m_workingDir;
 
   @Override
   public void initialize( final File workingDir, final String[] arguments )
   {
-    try
-    {
-      final Properties args = parseArguments( arguments );
-
-      final String templateDirPath = args.getProperty( PROPERTY_TEMPLATE_DIR_PATH );
-      final String instanceDirPath = args.getProperty( PROPERTY_INSTANCE_DIR_PATH );
-
-      HydPyServerManager.create( workingDir.toPath(), args );
-
-      final BBWrapperConfig wrapperConfig = initializeWrapperConfig( workingDir, templateDirPath, instanceDirPath );
-
-      final IHydPyServer server = HydPyServerManager.instance().getOrCreateServer( HydPyServerManager.ANY_INSTANCE );
-      final List<IServerItem> items = server.getItems();
-      final BBModelConfig bbModelConfig = initializeModelConfig( workingDir, wrapperConfig, items );
-
-      m_bbFactory = new BBModelFactory( bbModelConfig );
-    }
-    catch( final HydPyServerException e )
-    {
-      throw new RuntimeException( e );
-    }
+    m_workingDir = workingDir;
+    m_args = parseArguments( arguments );
   }
 
   private Properties parseArguments( final String[] arguments )
@@ -95,6 +80,40 @@ public class HydPyModelFactory implements IModelFactory
     }
 
     return properties;
+  }
+
+  private synchronized BBModelFactory getFactory( )
+  {
+    if( m_bbFactory == null )
+      m_bbFactory = createFactory();
+
+    return m_bbFactory;
+  }
+
+  private BBModelFactory createFactory( )
+  {
+    try
+    {
+      if( m_args == null )
+        throw new IllegalStateException( "initialize was never called" );
+
+      final String templateDirPath = m_args.getProperty( PROPERTY_TEMPLATE_DIR_PATH );
+      final String instanceDirPath = m_args.getProperty( PROPERTY_INSTANCE_DIR_PATH );
+
+      HydPyServerManager.create( m_workingDir.toPath(), m_args );
+
+      final BBWrapperConfig wrapperConfig = initializeWrapperConfig( m_workingDir, templateDirPath, instanceDirPath );
+
+      final IHydPyServer server = HydPyServerManager.instance().getOrCreateServer( HydPyServerManager.ANY_INSTANCE );
+      final List<IServerItem> items = server.getItems();
+      final BBModelConfig bbModelConfig = initializeModelConfig( m_workingDir, wrapperConfig, items );
+
+      return new BBModelFactory( bbModelConfig );
+    }
+    catch( final HydPyServerException e )
+    {
+      throw new RuntimeException( e );
+    }
   }
 
   private BBWrapperConfig initializeWrapperConfig( final File workingDir, final String templateDirPath, final String instanceDirPath )
@@ -226,13 +245,15 @@ public class HydPyModelFactory implements IModelFactory
   @Override
   public IModelInstance getInstance( final String[] arguments, final OutputLevel outputLevel )
   {
-    return m_bbFactory.getInstance( arguments, outputLevel );
+    final BBModelFactory factory = getFactory();
+    return factory.getInstance( arguments, outputLevel );
   }
 
   @Override
   public void finish( )
   {
-    m_bbFactory.finish();
+    if( m_bbFactory != null )
+      m_bbFactory.finish();
   }
 
   public static void main( final String[] args )

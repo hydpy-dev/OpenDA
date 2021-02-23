@@ -26,12 +26,12 @@ interface IHydPyServerProcess
   /**
    * Request all known exchange items from the server.
    */
-  List<IServerItem> getItems( ) throws HydPyServerException;
+  List<IServerItem> getItems( );
 
   /**
    * Tells HydPy to initialize the state for instanceId with the defined start values. Should be called exactly once per unique instanceId.
    */
-  void initializeItems( String instanceId ) throws HydPyServerException;
+  void initializeInstance( String instanceId ) throws HydPyServerException;
 
   List<IPrevExchangeItem> getItemValues( String instanceId ) throws HydPyServerException;
 

@@ -21,13 +21,13 @@ import org.openda.interfaces.IPrevExchangeItem;
  */
 public interface IHydPyServer
 {
-  String ITEM_ID_FIRST_DATE = "firstdate"; //$NON-NLS-1$
+  String ITEM_ID_FIRST_DATE = "firstdate_sim"; //$NON-NLS-1$
 
-  String ITEM_ID_LAST_DATE = "lastdate"; //$NON-NLS-1$
+  String ITEM_ID_LAST_DATE = "lastdate_sim"; //$NON-NLS-1$
 
   String ITEM_ID_STEP_SIZE = "stepsize"; //$NON-NLS-1$
 
-  List<IServerItem> getItems( ) throws HydPyServerException;
+  List<IServerItem> getItems( );
 
   List<IPrevExchangeItem> getItemValues( String instanceId ) throws HydPyServerException;
 

@@ -64,19 +64,19 @@ public final class HydPyServerManager
 
   private static HydPyServerManager INSTANCE = null;
 
-  private static Collection<String> FIXED_PARAMETERS = null;
+  private static Collection<String> FIXED_ITEMS = null;
 
-  public static void initFixedParameters( final Collection<String> fixedParameters )
+  public static void initFixedItems( final Collection<String> fixedItems )
   {
-    FIXED_PARAMETERS = fixedParameters;
+    FIXED_ITEMS = fixedItems;
   }
 
   public static synchronized void create( final Path baseDir, final Properties args )
   {
-    if( FIXED_PARAMETERS == null )
+    if( FIXED_ITEMS == null )
       throw new IllegalStateException( "initFixedParameters was never called" );
 
-    INSTANCE = new HydPyServerManager( baseDir, args, FIXED_PARAMETERS );
+    INSTANCE = new HydPyServerManager( baseDir, args, FIXED_ITEMS );
   }
 
   public synchronized static HydPyServerManager instance( )
@@ -133,9 +133,9 @@ public final class HydPyServerManager
 
   private final Path m_logDirectory;
 
-  private HydPyServerManager( final Path baseDir, final Properties args, final Collection<String> fixedParameters )
+  private HydPyServerManager( final Path baseDir, final Properties args, final Collection<String> fixedItemIds )
   {
-    m_fixedParameters = fixedParameters;
+    m_fixedParameters = fixedItemIds;
 
     // REMARK: always try to shutdown the running HydPy servers.
     Runtime.getRuntime().addShutdownHook( new ShutdownThread( this ) );
@@ -279,8 +279,6 @@ public final class HydPyServerManager
         throw new HydPyServerException( e.getMessage() );
       }
     }
-
-    server.killServer();
 
     final String message = String.format( "Timeout waiting for HydPy-Server after %d seconds", m_initRetrySeconds );
     throw new HydPyServerException( message );

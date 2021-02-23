@@ -30,7 +30,7 @@ class HydPyServerInstance implements IHydPyServer
   public static IHydPyServer create( final String instanceId, final IHydPyServerProcess server ) throws HydPyServerException
   {
     // needs to be called once per instanceId.
-    server.initializeItems( instanceId );
+    server.initializeInstance( instanceId );
 
     return new HydPyServerInstance( instanceId, server );
   }
@@ -42,7 +42,7 @@ class HydPyServerInstance implements IHydPyServer
   }
 
   @Override
-  public List<IServerItem> getItems( ) throws HydPyServerException
+  public List<IServerItem> getItems( )
   {
     return m_server.getItems();
   }

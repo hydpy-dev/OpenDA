@@ -44,8 +44,6 @@ import org.openda.interfaces.IPrevExchangeItem;
  */
 final class HydPyServerProcess implements IHydPyServerProcess
 {
-  private static final String INSTANCE_ID_FIXED_ITEMS = "fixedItems"; //$NON-NLS-1$
-
   private static final String PATH_STATUS = "status"; //$NON-NLS-1$
 
   private static final String PATH_EXECUTE = "execute"; //$NON-NLS-1$
@@ -76,16 +74,33 @@ final class HydPyServerProcess implements IHydPyServerProcess
           "GET_update_conditionitemvalues," + //
           "GET_update_getitemvalues";
 
-  private static final String METHODS_GET_ITEMVALUES__OPENDA = //
+  private static final String METHODS_GET_INITIALISATIONTIMEGRID_OPENDA = //
+      "GET_query_initialisationtimegrid"; //
+
+  private static final String METHODS_SET_SIMULATIONDATES_OPENDA = //
+      "POST_register_simulationdates"; //
+
+  private static final String METHODS_GET_ITEMVALUES_OPENDA = //
       "GET_query_conditionitemvalues," + //
           "GET_query_getitemvalues," + //
           "GET_query_parameteritemvalues," + //
           "GET_query_simulationdates"; //
 
+  private static final String METHODS_GET_FIXED_ITEMVALUES_OPENDA = //
+      "GET_query_conditionitemvalues," + //
+          "GET_query_getitemvalues," + //
+          "GET_query_parameteritemvalues"; //
+
   private static final String METHODS_POST_ITEMVALUES__OPENDA = //
       "POST_register_simulationdates," + //
           "POST_register_parameteritemvalues," + //
           "POST_register_conditionitemvalues";
+
+  private static final String ITEM_ID_FIRST_DATE_INIT = "firstdate_init"; //$NON-NLS-1$
+
+  private static final String ITEM_ID_LAST_DATE_INIT = "lastdate_init"; //$NON-NLS-1$
+
+  private static final String ITEM_ID_STEP_SIZE = "stepsize"; //$NON-NLS-1$
 
   private final URI m_address;
 
@@ -93,22 +108,54 @@ final class HydPyServerProcess implements IHydPyServerProcess
 
   private final int m_timeoutMillis = 60000;
 
-  private List<AbstractServerItem> m_items = null;
+  private List<IServerItem> m_items = null;
 
   private Map<String, AbstractServerItem> m_itemIndex = null;
 
-  private Map<String, Object> m_fixedItems;
+  private final Map<String, Object> m_fixedItems;
 
   private final Collection<String> m_fixedParameters;
 
   private final String m_name;
 
-  public HydPyServerProcess( final String name, final URI address, final Process process, final Collection<String> fixedParameters )
+  private final long m_stepSeconds;
+
+  private final String m_firstDateValue;
+
+  private final String m_lastDateValue;
+
+  public HydPyServerProcess( final String name, final URI address, final Process process, final Collection<String> fixedParameters ) throws HydPyServerException
   {
     m_name = name;
     m_address = address;
     m_process = process;
     m_fixedParameters = fixedParameters;
+
+    final List<IServerItem> items = requestItems();
+    m_items = Collections.unmodifiableList( items );
+
+    m_itemIndex = new HashMap<>( items.size() );
+    for( final IServerItem item : items )
+      m_itemIndex.put( item.getId(), (AbstractServerItem)item );
+
+    m_fixedItems = requestFixedItems();
+
+    /* retreive init-dates and stepsize */
+    final URI endpointRetreiveInitDates = buildEndpoint( PATH_EXECUTE, null, METHODS_GET_INITIALISATIONTIMEGRID_OPENDA );
+    final Properties props = callGetAndParse( endpointRetreiveInitDates, m_timeoutMillis );
+
+    m_firstDateValue = props.getProperty( ITEM_ID_FIRST_DATE_INIT );
+    m_lastDateValue = props.getProperty( ITEM_ID_LAST_DATE_INIT );
+
+    /* detemrine step seconds */
+    final String stepValue = props.getProperty( ITEM_ID_STEP_SIZE );
+    final AbstractServerItem stepServerItem = getItem( ITEM_ID_STEP_SIZE );
+    final Object stepParsedValue = stepServerItem.parseValue( stepValue );
+    final IPrevExchangeItem stepItem = stepServerItem.toExchangeItem( null, null, 0, stepParsedValue );
+    m_stepSeconds = (long)((DoubleExchangeItem)stepItem).getValue();
+
+    // REMARK: set 'stepSeconds' as fixed item, as these are not return from HydPy from any state
+    m_fixedItems.put( ITEM_ID_STEP_SIZE, m_stepSeconds );
   }
 
   @Override
@@ -141,18 +188,6 @@ final class HydPyServerProcess implements IHydPyServerProcess
     {
       // Process is still living, return normally
       return;
-    }
-  }
-
-  void killServer( )
-  {
-    try
-    {
-      m_process.destroy();
-    }
-    catch( final Exception e )
-    {
-      e.printStackTrace();
     }
   }
 
@@ -256,10 +291,8 @@ final class HydPyServerProcess implements IHydPyServerProcess
     }
   }
 
-  private AbstractServerItem getItem( final String id ) throws HydPyServerException
+  private AbstractServerItem getItem( final String id )
   {
-    getItems();
-
     if( m_itemIndex == null )
       throw new IllegalStateException();
 
@@ -272,30 +305,18 @@ final class HydPyServerProcess implements IHydPyServerProcess
   }
 
   @Override
-  public synchronized List<IServerItem> getItems( ) throws HydPyServerException
+  public List<IServerItem> getItems( )
   {
-    if( m_items == null )
-    {
-      m_items = requestItems();
-      m_itemIndex = new HashMap<>( m_items.size() );
-
-      for( final AbstractServerItem item : m_items )
-        m_itemIndex.put( item.getId(), item );
-
-      m_fixedItems = requestFixedItems();
-    }
-
-    final List< ? extends IServerItem> items = m_items;
-    return Collections.unmodifiableList( items );
+    return m_items;
   }
 
-  private List<AbstractServerItem> requestItems( ) throws HydPyServerException
+  private List<IServerItem> requestItems( ) throws HydPyServerException
   {
     final URI endpoint = buildEndpoint( PATH_EXECUTE, null, METHODS_GET_ITEMTYPES__OPENDA );
 
     final Properties props = callGetAndParse( endpoint, m_timeoutMillis );
 
-    final List<AbstractServerItem> items = new ArrayList<>( props.size() );
+    final List<IServerItem> items = new ArrayList<>( props.size() );
 
     for( final String property : props.stringPropertyNames() )
     {
@@ -314,15 +335,18 @@ final class HydPyServerProcess implements IHydPyServerProcess
 
   private Map<String, Object> requestFixedItems( ) throws HydPyServerException
   {
-//    if( m_fixedParameters.isEmpty() )
-//      return Collections.emptyMap();
+    if( m_fixedParameters.isEmpty() )
+    {
+      // REMARK: must be modifiable
+      return new HashMap<>();
+    }
 
-    // REMARK: we need to initialize the 'fixedItems' in order to retrieve their state later.
-    initializeItems( INSTANCE_ID_FIXED_ITEMS );
+    // REMARK: we need to initialize the 'fixedItems' in order to retrieve their state ni the next step.
+    initializeState( HydPyServerManager.ANY_INSTANCE );
 
     // REMARK: HydPy always need instanceId; we give fake one here
-    final URI endpoint = buildEndpoint( PATH_EXECUTE, INSTANCE_ID_FIXED_ITEMS, METHODS_GET_ITEMVALUES__OPENDA ); // $NON-NLS-1$
-
+    // REMARK: we do not request simulation-dates, as they will not be fixed in this sense.
+    final URI endpoint = buildEndpoint( PATH_EXECUTE, HydPyServerManager.ANY_INSTANCE, METHODS_GET_FIXED_ITEMVALUES_OPENDA );
     final Properties props = callGetAndParse( endpoint, m_timeoutMillis );
 
     /* pre-parse items */
@@ -335,13 +359,31 @@ final class HydPyServerProcess implements IHydPyServerProcess
   }
 
   @Override
-  public void initializeItems( final String instanceId ) throws HydPyServerException
+  public void initializeInstance( final String instanceId ) throws HydPyServerException
+  {
+    initializeState( instanceId );
+
+    // REMARK: special handling for the simulation-timegrid: we set the whole (aka init) timegrid as starting state for the simulation-timegrid
+    // OpenDa will soon request all items and especially the start/stop time and expect the complete, yet unchanged, simulation-time
+
+    /* build post-body for setting simulation dates */
+    final StringBuffer body = new StringBuffer();
+    body.append( IHydPyServer.ITEM_ID_FIRST_DATE ).append( '=' ).append( m_firstDateValue ).append( '\r' ).append( '\n' );
+    body.append( IHydPyServer.ITEM_ID_LAST_DATE ).append( '=' ).append( m_lastDateValue ).append( '\r' ).append( '\n' );
+
+    /* set simulation-dates */
+    final URI endpointSetSimulationDates = buildEndpoint( PATH_EXECUTE, instanceId, METHODS_SET_SIMULATIONDATES_OPENDA );
+
+    callPost( endpointSetSimulationDates, m_timeoutMillis, body.toString() );
+  }
+
+  private void initializeState( final String instanceId ) throws HydPyServerException
   {
     log( "initializing state for instanceId = '%s'", instanceId );
 
-    final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, METHODS_INITIALIZE_ITEMTYPES__OPENDA );
-
-    callGet( endpoint, m_timeoutMillis );
+    /* tell hyd py to write default values into state-register */
+    final URI endpointInitItemType = buildEndpoint( PATH_EXECUTE, instanceId, METHODS_INITIALIZE_ITEMTYPES__OPENDA );
+    callGet( endpointInitItemType, m_timeoutMillis );
   }
 
   @Override
@@ -349,7 +391,7 @@ final class HydPyServerProcess implements IHydPyServerProcess
   {
     log( "retrieving state for instanceId = '%s'", instanceId );
 
-    final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, METHODS_GET_ITEMVALUES__OPENDA );
+    final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, METHODS_GET_ITEMVALUES_OPENDA );
 
     final Properties props = callGetAndParse( endpoint, m_timeoutMillis );
 
@@ -360,7 +402,6 @@ final class HydPyServerProcess implements IHydPyServerProcess
     /* fetch fixed items value necessary to parse timeseries */
     final Instant startTime = (Instant)preValues.get( IHydPyServer.ITEM_ID_FIRST_DATE );
     final Instant endTime = (Instant)preValues.get( IHydPyServer.ITEM_ID_LAST_DATE );
-    final long stepSeconds = (Long)preValues.get( IHydPyServer.ITEM_ID_STEP_SIZE );
 
     /* parse item values */
     final List<IPrevExchangeItem> values = new ArrayList<>( preValues.size() );
@@ -373,10 +414,10 @@ final class HydPyServerProcess implements IHydPyServerProcess
 
       final Object preValue = entry.getValue();
 
-      final IPrevExchangeItem value = item.toExchangeItem( startTime, endTime, stepSeconds, preValue );
+      final IPrevExchangeItem value = item.toExchangeItem( startTime, endTime, m_stepSeconds, preValue );
       values.add( value );
 
-      final String valueText = item.printValue( value, stepSeconds );
+      final String valueText = item.printValue( value, m_stepSeconds );
       log( "%s=%s", id, valueText );
     }
 
@@ -405,15 +446,13 @@ final class HydPyServerProcess implements IHydPyServerProcess
   {
     log( "setting state for instanceId = '%s'", instanceId );
 
-    final long stepSeconds = findStepSeconds( values );
-
     final StringBuffer body = new StringBuffer();
     for( final IPrevExchangeItem exItem : values )
     {
       final String id = exItem.getId();
 
       final AbstractServerItem item = getItem( id );
-      final String valueText = item.printValue( exItem, stepSeconds );
+      final String valueText = item.printValue( exItem, m_stepSeconds );
 
       body.append( id );
       body.append( '=' );
@@ -426,20 +465,6 @@ final class HydPyServerProcess implements IHydPyServerProcess
 
     final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, METHODS_POST_ITEMVALUES__OPENDA );
     callPost( endpoint, m_timeoutMillis, body.toString() );
-  }
-
-  private long findStepSeconds( final Collection<IPrevExchangeItem> values )
-  {
-    for( final IPrevExchangeItem item : values )
-    {
-      if( IHydPyServer.ITEM_ID_STEP_SIZE.equals( item.getId() ) )
-      {
-        final double value = ((DoubleExchangeItem)item).getValue();
-        return (long)value;
-      }
-    }
-
-    throw new IllegalStateException( "Failed to find stepsize exchange item" );
   }
 
   boolean checkStatus( final int timeout ) throws HydPyServerException, HydPyServerProcessException

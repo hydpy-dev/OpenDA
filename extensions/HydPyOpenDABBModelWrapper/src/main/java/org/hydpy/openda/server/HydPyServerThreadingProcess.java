@@ -73,17 +73,17 @@ class HydPyServerThreadingProcess implements IHydPyServerProcess
   }
 
   @Override
-  public List<IServerItem> getItems( ) throws HydPyServerException
+  public List<IServerItem> getItems( )
   {
     /* not threaded, this is called only once during initialization */
     return getDelegate().getItems();
   }
 
   @Override
-  public void initializeItems( final String instanceId ) throws HydPyServerException
+  public void initializeInstance( final String instanceId ) throws HydPyServerException
   {
     /* not threaded, this is called only once during initialization */
-    getDelegate().initializeItems( instanceId );
+    getDelegate().initializeInstance( instanceId );
   }
 
   @Override

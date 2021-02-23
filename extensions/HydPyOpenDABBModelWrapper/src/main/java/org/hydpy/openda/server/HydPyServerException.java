@@ -21,6 +21,11 @@ public final class HydPyServerException extends Exception
     super( message );
   }
 
+  public HydPyServerException( final Throwable cause )
+  {
+    super( cause );
+  }
+
   public HydPyServerException( final String message, final Throwable cause )
   {
     super( message, cause );

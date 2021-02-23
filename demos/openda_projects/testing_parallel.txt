@@ -1,0 +1,3 @@
+t1 h1: 16min
+
+diff zeilen ca 1542 - 2279

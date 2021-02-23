@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<threadConfig xmlns="http://www.openda.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/threadConfig.xsd">
+  <maxThreads>100</maxThreads>
+  <!-- REMARK: numThreadsGroups is not used in the implementation -->
+  <numThreadsGroups>1</numThreadsGroups>
+  <!--
+  REMARK: not in schema but used in code: 
+   sleepTime (milliseconds): sleepTime between thread checks
+   cashState (boolean): flag whether want to cash the state
+   nonBlockingAxpy (boolean): not documented, TODO
+  <sleepTime>10</sleepTime>
+   -->
+   <cashState>true</cashState>
+   <nonBlockingAxpy>true</nonBlockingAxpy>
+   
+  <stochModelFactory className="org.hydpy.openda.HydPyStochModelFactory">
+    <workingDirectory></workingDirectory>
+    <configFile>model.xml</configFile>
+  </stochModelFactory>
+</threadConfig>
+

@@ -14,16 +14,16 @@ package org.hydpy.openda;
 import java.io.File;
 import java.util.List;
 
-import org.hydpy.openda.server.HydPyServer;
 import org.hydpy.openda.server.HydPyServerException;
 import org.hydpy.openda.server.HydPyServerManager;
+import org.hydpy.openda.server.IHydPyServer;
 import org.openda.blackbox.interfaces.IoObjectInterface;
 import org.openda.interfaces.IPrevExchangeItem;
 
 /**
  * @author Gernot Belger
  */
-public class HyPyIoObject implements IoObjectInterface
+public final class HyPyIoObject implements IoObjectInterface
 {
   private List<IPrevExchangeItem> m_exchangeItems = null;
 
@@ -39,7 +39,7 @@ public class HyPyIoObject implements IoObjectInterface
 
       m_instanceId = arguments[0];
 
-      final HydPyServer server = HydPyServerManager.instance().getOrCreateServer();
+      final IHydPyServer server = HydPyServerManager.instance().getOrCreateServer( m_instanceId );
 
       m_exchangeItems = server.getItemValues( m_instanceId );
     }
@@ -62,7 +62,7 @@ public class HyPyIoObject implements IoObjectInterface
   {
     try
     {
-      final HydPyServer server = HydPyServerManager.instance().getOrCreateServer();
+      final IHydPyServer server = HydPyServerManager.instance().getOrCreateServer( m_instanceId );
 
       server.setItemValues( m_instanceId, m_exchangeItems );
     }

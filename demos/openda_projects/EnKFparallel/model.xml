@@ -8,7 +8,7 @@
     <arg>projectPath:../../hydpy_projects</arg>
     <arg>projectName:LahnH</arg>
     <arg>configFile:hydpy.xml</arg>
-    <arg>logDirectory:results</arg>
+    <arg>logDirectory:results</arg>    
   </modelFactory>
 
   <vectorSpecification>
@@ -26,6 +26,5 @@
       <vector id="lahn_1_nodes_sim_series" />
     </predictor>
   </vectorSpecification>
-
 
 </blackBoxStochModel>

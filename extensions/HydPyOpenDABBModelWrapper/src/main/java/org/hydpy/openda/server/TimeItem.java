@@ -42,7 +42,7 @@ final class TimeItem extends AbstractServerItem
   {
     Instant date = (Instant)value;
 
-    if( HydPyServer.ITEM_ID_FIRST_DATE.equals( getId() ) && HydPyServer.ITEM_ID_LAST_DATE.equals( getId() ) )
+    if( IHydPyServer.ITEM_ID_FIRST_DATE.equals( getId() ) && IHydPyServer.ITEM_ID_LAST_DATE.equals( getId() ) )
     {
       // REMARK: HydPy thinks in time-interval, hence we have one timestep less --> start with startTime + stepSeconds
       date = date.plus( stepSeconds * 1000 );
@@ -60,7 +60,7 @@ final class TimeItem extends AbstractServerItem
     final double value = dblItem.getValue();
     Instant date = HydPyUtils.mjdToDate( value );
 
-    if( HydPyServer.ITEM_ID_FIRST_DATE.equals( getId() ) && HydPyServer.ITEM_ID_LAST_DATE.equals( getId() ) )
+    if( IHydPyServer.ITEM_ID_FIRST_DATE.equals( getId() ) && IHydPyServer.ITEM_ID_LAST_DATE.equals( getId() ) )
     {
       // REMARK: HydPy thinks in time-intervals, hence we have one timestep less --> start with startTime + stepSeconds
       date = date.minus( stepSeconds * 1000 );

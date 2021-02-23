@@ -79,20 +79,24 @@ Example:
 ```xml
 	<modelFactory className="org.hydpy.openda.HydPyModelFactory" workingDirectory=".">
 		<arg>serverPort:8080</arg>
+		<arg>serverInstances:5</arg>
 		<arg>initializeWaitSeconds:5</arg>
 		<arg>projectPath:../../hydpy_projects</arg>
 		<arg>projectName:LahnH</arg>
 		<arg>configFile:hydpy.xml</arg>
+		<arg>logDirectory:results/logs</arg>
 	</modelFactory>
 ```
 
 The model factory requires the following arguments
 
 * serverPort: The web port on which to start the HydPy server. Use any free port on your machine. 
+* serverInstances (optional): The number of HydPy server processes that will be started (maximal). Defaults to 1. If greater 1 and the chosen algorithm allows multiple instances, _HydPyOpenDABBModelWrapper_ will automatically start several server instances and run simulations in parallel. Server instances will run on web ports starting with _serverPort_ up-to _serverPort+serverInstances-1_.      
 * initializeWaitSeconds: The maximum time in seconds the wrapper implementation should wait for the HydPy server to start up. This time may depend on the actual HydPy project.
 * projectPath: The path to the HydPy project directory.
 * projectName: The name of the HydPy project within the project directory.
 * configFile: The name of the [HydPy servertools](https://hydpy-dev.github.io/hydpy/servertools.html) configuration file.
+* logDirectory (optional): The path to the directory where the output of the HydPy server processes will be written. If specified, for each server instance, two log files (one for the standard output and one for the error output) will be written. If omitted, all server outputs will be written to the console output streams of the java process.
 * templateDir (optional): The template directory for model instances.  
 * instanceDir (optional): The instance directory for model instances. The actual directories are post-fixed with the instance number. 
 

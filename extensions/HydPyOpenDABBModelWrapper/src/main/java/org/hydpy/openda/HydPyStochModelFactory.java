@@ -42,6 +42,7 @@ public class HydPyStochModelFactory extends BBStochModelFactory
     final BBStochModelConfig stochModelConfig = stochModelConfigReader.getBBStochModelConfig();
 
     /* find out which exchange-items should be 'fixed' and which not */
+    // TODO: rename to fixedItems
     final Collection<String> fixedParameters = extractFixedParameters( stochModelConfig );
     HydPyServerManager.initFixedParameters( fixedParameters );
 
@@ -92,5 +93,13 @@ public class HydPyStochModelFactory extends BBStochModelFactory
     }
 
     return fixedParameters;
+  }
+
+  @Override
+  public void finish( )
+  {
+    HydPyServerManager.instance().finish();
+
+    super.finish();
   }
 }

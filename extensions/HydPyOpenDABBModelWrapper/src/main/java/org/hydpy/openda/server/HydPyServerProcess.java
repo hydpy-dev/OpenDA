@@ -42,8 +42,10 @@ import org.openda.interfaces.IPrevExchangeItem;
  *
  * @author Gernot Belger
  */
-public final class HydPyServer
+final class HydPyServerProcess implements IHydPyServerProcess
 {
+  private static final String INSTANCE_ID_FIXED_ITEMS = "fixedItems"; //$NON-NLS-1$
+
   private static final String PATH_STATUS = "status"; //$NON-NLS-1$
 
   private static final String PATH_EXECUTE = "execute"; //$NON-NLS-1$
@@ -54,40 +56,36 @@ public final class HydPyServer
 
   private static final String PARAMETER_METHODS = "methods"; //$NON-NLS-1$
 
-  public static final String ITEM_ID_FIRST_DATE = "firstdate"; //$NON-NLS-1$
-
-  public static final String ITEM_ID_LAST_DATE = "lastdate"; //$NON-NLS-1$
-
-  public static final String ITEM_ID_STEP_SIZE = "stepsize"; //$NON-NLS-1$
-
   // REMARK: The life-cycle of the OpenDA model-instances enforce a very specific way, on
   // how the model must be called and specifically on how the internal model state must be
   // preserved and restored.
 
   private static final String METHODS_GET_ITEMTYPES__OPENDA = //
-      "GET_parameteritemtypes," + //
-          "GET_conditionitemtypes," + //
-          "GET_getitemtypes";
+      "GET_query_itemtypes"; //
+
+  private static final String METHODS_INITIALIZE_ITEMTYPES__OPENDA = //
+      "GET_register_initialitemvalues"; // writes the initial state into the instance-registry
 
   private static final String METHODS_GET_SIMULATE__OPENDA = //
-      "GET_simulate," + //
-          "GET_save_timegrid," + //
-          "GET_save_parameteritemvalues," + //
-          "GET_save_conditionvalues," + //
-          "GET_save_modifiedconditionitemvalues," + //
-          "GET_save_getitemvalues"; //
+      "GET_activate_simulationdates," + //
+          "GET_activate_parameteritemvalues," + //
+          "GET_load_internalconditions," + //
+          "GET_activate_conditionitemvalues," + //
+          "GET_simulate," + //
+          "GET_save_internalconditions," + //
+          "GET_update_conditionitemvalues," + //
+          "GET_update_getitemvalues";
 
   private static final String METHODS_GET_ITEMVALUES__OPENDA = //
-      "GET_savedtimegrid," + //
-          "GET_savedparameteritemvalues," + //
-          "GET_savedmodifiedconditionitemvalues," + //
-          "GET_savedgetitemvalues";
+      "GET_query_conditionitemvalues," + //
+          "GET_query_getitemvalues," + //
+          "GET_query_parameteritemvalues," + //
+          "GET_query_simulationdates"; //
 
   private static final String METHODS_POST_ITEMVALUES__OPENDA = //
-      "POST_timegrid," + //
-          "POST_parameteritemvalues," + //
-          "GET_load_conditionvalues," + //
-          "POST_conditionitemvalues";
+      "POST_register_simulationdates," + //
+          "POST_register_parameteritemvalues," + //
+          "POST_register_conditionitemvalues";
 
   private final URI m_address;
 
@@ -103,11 +101,33 @@ public final class HydPyServer
 
   private final Collection<String> m_fixedParameters;
 
-  public HydPyServer( final URI address, final Process process, final Collection<String> fixedParameters )
+  private final String m_name;
+
+  public HydPyServerProcess( final String name, final URI address, final Process process, final Collection<String> fixedParameters )
   {
+    m_name = name;
     m_address = address;
     m_process = process;
     m_fixedParameters = fixedParameters;
+  }
+
+  @Override
+  public String getName( )
+  {
+    return m_name;
+  }
+
+  /**
+   * For debug purposes only
+   */
+  private void log( final String message, final Object... arguments )
+  {
+    final String msg = String.format( message, arguments );
+
+    // TODO: use logging framework or something
+    System.out.print( m_name );
+    System.out.print( ": " ); //$NON-NLS-1$
+    System.out.println( msg );
   }
 
   private void checkProcess( ) throws HydPyServerProcessException
@@ -226,6 +246,10 @@ public final class HydPyServer
 
       return response.getEntity();
     }
+    catch( final HydPyServerException e )
+    {
+      throw e;
+    }
     catch( final Exception e )
     {
       throw new HydPyServerException( "Failed to connect to HydPy-Server", e );
@@ -247,6 +271,7 @@ public final class HydPyServer
     return item;
   }
 
+  @Override
   public synchronized List<IServerItem> getItems( ) throws HydPyServerException
   {
     if( m_items == null )
@@ -266,7 +291,7 @@ public final class HydPyServer
 
   private List<AbstractServerItem> requestItems( ) throws HydPyServerException
   {
-    final URI endpoint = buildEndpoint( PATH_EXECUTE, "initializing", METHODS_GET_ITEMTYPES__OPENDA );
+    final URI endpoint = buildEndpoint( PATH_EXECUTE, null, METHODS_GET_ITEMTYPES__OPENDA );
 
     final Properties props = callGetAndParse( endpoint, m_timeoutMillis );
 
@@ -280,17 +305,23 @@ public final class HydPyServer
       items.add( item );
     }
 
-    items.add( AbstractServerItem.newTimeItem( ITEM_ID_FIRST_DATE ) );
-    items.add( AbstractServerItem.newTimeItem( ITEM_ID_LAST_DATE ) );
-    items.add( AbstractServerItem.newDurationItem( ITEM_ID_STEP_SIZE ) );
+    items.add( AbstractServerItem.newTimeItem( IHydPyServer.ITEM_ID_FIRST_DATE ) );
+    items.add( AbstractServerItem.newTimeItem( IHydPyServer.ITEM_ID_LAST_DATE ) );
+    items.add( AbstractServerItem.newDurationItem( IHydPyServer.ITEM_ID_STEP_SIZE ) );
 
     return items;
   }
 
   private Map<String, Object> requestFixedItems( ) throws HydPyServerException
   {
+//    if( m_fixedParameters.isEmpty() )
+//      return Collections.emptyMap();
+
+    // REMARK: we need to initialize the 'fixedItems' in order to retrieve their state later.
+    initializeItems( INSTANCE_ID_FIXED_ITEMS );
+
     // REMARK: HydPy always need instanceId; we give fake one here
-    final URI endpoint = buildEndpoint( PATH_EXECUTE, "initializing", METHODS_GET_ITEMVALUES__OPENDA ); //$NON-NLS-1$
+    final URI endpoint = buildEndpoint( PATH_EXECUTE, INSTANCE_ID_FIXED_ITEMS, METHODS_GET_ITEMVALUES__OPENDA ); // $NON-NLS-1$
 
     final Properties props = callGetAndParse( endpoint, m_timeoutMillis );
 
@@ -303,9 +334,20 @@ public final class HydPyServer
     return values;
   }
 
+  @Override
+  public void initializeItems( final String instanceId ) throws HydPyServerException
+  {
+    log( "initializing state for instanceId = '%s'", instanceId );
+
+    final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, METHODS_INITIALIZE_ITEMTYPES__OPENDA );
+
+    callGet( endpoint, m_timeoutMillis );
+  }
+
+  @Override
   public List<IPrevExchangeItem> getItemValues( final String instanceId ) throws HydPyServerException
   {
-    // System.out.println( String.format( "Retrieving HydPy-Model State - InstanceId = '%s'", instanceId ) );
+    log( "retrieving state for instanceId = '%s'", instanceId );
 
     final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, METHODS_GET_ITEMVALUES__OPENDA );
 
@@ -316,9 +358,9 @@ public final class HydPyServer
     preValues.putAll( m_fixedItems );
 
     /* fetch fixed items value necessary to parse timeseries */
-    final Instant startTime = (Instant)preValues.get( ITEM_ID_FIRST_DATE );
-    final Instant endTime = (Instant)preValues.get( ITEM_ID_LAST_DATE );
-    final long stepSeconds = (Long)preValues.get( ITEM_ID_STEP_SIZE );
+    final Instant startTime = (Instant)preValues.get( IHydPyServer.ITEM_ID_FIRST_DATE );
+    final Instant endTime = (Instant)preValues.get( IHydPyServer.ITEM_ID_LAST_DATE );
+    final long stepSeconds = (Long)preValues.get( IHydPyServer.ITEM_ID_STEP_SIZE );
 
     /* parse item values */
     final List<IPrevExchangeItem> values = new ArrayList<>( preValues.size() );
@@ -334,8 +376,8 @@ public final class HydPyServer
       final IPrevExchangeItem value = item.toExchangeItem( startTime, endTime, stepSeconds, preValue );
       values.add( value );
 
-      // final String valueText = item.printValue( value, stepSeconds );
-      // System.out.format( "%s = %s%n", value.getId(), valueText );
+      final String valueText = item.printValue( value, stepSeconds );
+      log( "%s=%s", id, valueText );
     }
 
     return values;
@@ -358,9 +400,10 @@ public final class HydPyServer
     return preValues;
   }
 
+  @Override
   public void setItemValues( final String instanceId, final Collection<IPrevExchangeItem> values ) throws HydPyServerException
   {
-    // System.out.println( String.format( "Setting HydPy-Model State - InstanceId = '%s'", instanceId ) );
+    log( "setting state for instanceId = '%s'", instanceId );
 
     final long stepSeconds = findStepSeconds( values );
 
@@ -372,13 +415,13 @@ public final class HydPyServer
       final AbstractServerItem item = getItem( id );
       final String valueText = item.printValue( exItem, stepSeconds );
 
-      // System.out.format( "%s = %s%n", item.getId(), valueText );
-
       body.append( id );
       body.append( '=' );
       body.append( valueText );
       body.append( '\r' );
       body.append( '\n' );
+
+      log( "%s=%s", id, valueText );
     }
 
     final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, METHODS_POST_ITEMVALUES__OPENDA );
@@ -389,7 +432,7 @@ public final class HydPyServer
   {
     for( final IPrevExchangeItem item : values )
     {
-      if( ITEM_ID_STEP_SIZE.equals( item.getId() ) )
+      if( IHydPyServer.ITEM_ID_STEP_SIZE.equals( item.getId() ) )
       {
         final double value = ((DoubleExchangeItem)item).getValue();
         return (long)value;
@@ -419,15 +462,49 @@ public final class HydPyServer
     }
   }
 
+  @Override
   public void simulate( final String instanceId ) throws HydPyServerException
   {
+    log( "running simulation for current state for instanceId = '%s'", instanceId );
+
     final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, METHODS_GET_SIMULATE__OPENDA );
     callGet( endpoint, m_timeoutMillis );
   }
 
-  void shutdown( ) throws HydPyServerException
+  @Override
+  public void shutdown( )
   {
-    final URI endpoint = buildEndpoint( PATH_CLOSE_SERVER, null, null );
-    callGet( endpoint, m_timeoutMillis );
+    try
+    {
+      log( "%s: shutting down...%n", getName() );
+
+      final URI endpoint = buildEndpoint( PATH_CLOSE_SERVER, null, null );
+      callGet( endpoint, m_timeoutMillis );
+
+      // TODO: check if process was correctly terminated
+
+      log( "%s: shut down done%n", getName() );
+    }
+    catch( final HydPyServerException e )
+    {
+      e.printStackTrace();
+    }
+  }
+
+  @Override
+  public void kill( )
+  {
+    try
+    {
+      m_process.exitValue();
+
+      /* process has already correctly terminated, nothing else to do */
+    }
+    catch( final IllegalThreadStateException e )
+    {
+      /* process was not correctly terminated, kill */
+      log( "%s: killing service%n", getName() );
+      m_process.destroy();
+    }
   }
 }

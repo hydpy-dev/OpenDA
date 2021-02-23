@@ -82,6 +82,10 @@ public class HydPyModelFactory implements IModelFactory
     return properties;
   }
 
+  /**
+   * Create factory on demand and not in {@link #initialize(File, String[])}, in order to avoid throwing exception in initialize.
+   * This makes sure finish will more likely to be called in case of error, and so HydPy server instances will be shut down instead of beeing killed.
+   */
   private synchronized BBModelFactory getFactory( )
   {
     if( m_bbFactory == null )

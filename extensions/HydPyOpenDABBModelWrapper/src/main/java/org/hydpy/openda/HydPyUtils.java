@@ -36,15 +36,6 @@ public final class HydPyUtils
     throw new UnsupportedOperationException();
   }
 
-  public static String getRequiredSystemProperty( final String key )
-  {
-    final String value = System.getenv( key );
-    if( StringUtils.isBlank( value ) )
-      throw new RuntimeException( String.format( "Missing environment variable: %s", key ) );
-
-    return value;
-  }
-
   public static String getOptionalSystemProperty( final String key, final String defaultValue )
   {
     final String value = System.getenv( key );
@@ -66,7 +57,20 @@ public final class HydPyUtils
   public static int getRequiredPropertyAsInt( final Properties properties, final String key )
   {
     final String value = getRequiredProperty( properties, key );
+    return parseInt( key, value );
+  }
 
+  public static int getOptionalPropertyAsInt( final Properties properties, final String key, final int defaultValue )
+  {
+    final String value = properties.getProperty( key );
+    if( StringUtils.isBlank( value ) )
+      return defaultValue;
+
+    return parseInt( key, value );
+  }
+
+  private static int parseInt( final String key, final String value )
+  {
     try
     {
       return Integer.parseInt( value );

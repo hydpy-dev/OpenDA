@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.http.client.utils.URIBuilder;
@@ -25,41 +24,16 @@ import org.apache.http.client.utils.URIBuilder;
  */
 final class HydPyServerBuilder
 {
-  private final String m_host;
+  private final HydPyServerConfiguration m_config;
 
-  private final int m_startPort;
-
-  private final String m_serverExe;
-
-  private final String m_hydPyScript;
-
-  private final Path m_workingDir;
-
-  private final String m_projectName;
-
-  private final Path m_configFile;
-
-  private final Path m_logDirectory;
-
-  private final int m_initRetrySeconds;
-
-  public HydPyServerBuilder( final int startPort, final String serverExe, final String hydPyScript, final Path projectDir, final String projectName, final Path logDirectory, final Path configFile, final int initRetrySeconds )
+  public HydPyServerBuilder( final HydPyServerConfiguration config )
   {
-    // REAMRK: we open a local process, so this is always localhost (for now)
-    m_host = "localhost";
-    m_startPort = startPort;
-    m_serverExe = serverExe;
-    m_hydPyScript = hydPyScript;
-    m_workingDir = projectDir;
-    m_projectName = projectName;
-    m_logDirectory = logDirectory;
-    m_configFile = configFile;
-    m_initRetrySeconds = initRetrySeconds;
+    m_config = config;
   }
 
   public HydPyServerProcess start( final int processId ) throws HydPyServerException
   {
-    final int port = m_startPort + processId;
+    final int port = m_config.startPort + processId;
 
     final URI address = createAddress( port );
 
@@ -90,7 +64,7 @@ final class HydPyServerBuilder
     {
       return new URIBuilder() //
           .setScheme( "http" ) //
-          .setHost( m_host ) //
+          .setHost( m_config.host ) //
           .setPort( port ) //
           .build();
     }
@@ -105,20 +79,20 @@ final class HydPyServerBuilder
   {
     try
     {
-      final String command = m_serverExe;
+      final String command = m_config.serverExe;
       final String operation = "start_server";
       final String portArgument = Integer.toString( port );
-      final String configFile = m_configFile.toString();
+      final String configFile = m_config.configFile.toString();
 
-      final ProcessBuilder builder = new ProcessBuilder( command, m_hydPyScript, operation, portArgument, m_projectName, configFile ) //
-          .directory( m_workingDir.toFile() );
+      final ProcessBuilder builder = new ProcessBuilder( command, m_config.hydPyScript, operation, portArgument, m_config.modelName, configFile ) //
+          .directory( m_config.modelDir.toFile() );
 
-      if( m_logDirectory == null )
+      if( m_config.logDirectory == null )
         builder.inheritIO();
       else
       {
-        final File logFile = new File( m_logDirectory.toFile(), String.format( "HydPy_Server_%d.log", processId ) );
-        final File errFile = new File( m_logDirectory.toFile(), String.format( "HydPy_Server_%d.err", processId ) );
+        final File logFile = new File( m_config.logDirectory.toFile(), String.format( "HydPy_Server_%d.log", processId ) );
+        final File errFile = new File( m_config.logDirectory.toFile(), String.format( "HydPy_Server_%d.err", processId ) );
         builder.redirectError( errFile );
         builder.redirectOutput( logFile );
       }
@@ -126,7 +100,7 @@ final class HydPyServerBuilder
       System.out.format( "Starting HydPy-Server %d...%n", processId );
       final List<String> commandLine = builder.command();
       System.out.println( "Working-Directory:" );
-      System.out.println( m_workingDir );
+      System.out.println( m_config.workingDir );
       System.out.println( "Command-Line:" );
       for( final String commmandPart : commandLine )
       {
@@ -145,7 +119,7 @@ final class HydPyServerBuilder
 
   private void tryCallServer( final HydPyServerProcess server ) throws HydPyServerException
   {
-    final int retries = m_initRetrySeconds * 4;
+    final int retries = m_config.initRetrySeconds * 4;
     final int timeoutMillis = 250;
 
     for( int i = 0; i < retries; i++ )
@@ -169,7 +143,7 @@ final class HydPyServerBuilder
       }
     }
 
-    final String message = String.format( "Timeout waiting for HydPy-Server after %d seconds", m_initRetrySeconds );
+    final String message = String.format( "Timeout waiting for HydPy-Server after %d seconds", m_config.initRetrySeconds );
     throw new HydPyServerException( message );
   }
 }

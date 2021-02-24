@@ -11,14 +11,9 @@
  */
 package org.hydpy.openda.server;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
-
-import org.hydpy.openda.HydPyUtils;
 
 /**
  * Manages the life-cycle of the {@link HydPyServer}, allowing possibly several server processes at once.
@@ -28,28 +23,6 @@ import org.hydpy.openda.HydPyUtils;
  */
 public final class HydPyServerManager
 {
-  private static final String ENVIRONMENT_HYD_PY_PYTHON_EXE = "HYD_PY_PYTHON_EXE"; //$NON-NLS-1$
-
-  private static final String ENVIRONMENT_HYD_PY_SCRIPT_PATH = "HYD_PY_SCRIPT_PATH"; //$NON-NLS-1$
-
-  private static final String PROPERTY_SERVER_PORT = "serverPort"; //$NON-NLS-1$
-
-  private static final String PROPERTY_SERVER_MAX_PROCESSES = "serverInstances"; //$NON-NLS-1$
-
-  private static final String PROPERTY_INITIALIZE_SECONDS = "initializeWaitSeconds"; //$NON-NLS-1$
-
-  private static final String PROPERTY_PROJECT_PATH = "projectPath"; //$NON-NLS-1$
-
-  private static final String PROPERTY_PROJECT_NAME = "projectName"; //$NON-NLS-1$
-
-  private static final String PROPERTY_CONFIG_FILE = "configFile"; //$NON-NLS-1$
-
-  private static final String PROPERTY_LOG_DIRECTORY = "logDirectory"; //$NON-NLS-1$
-
-  private static final String HYD_PY_PYTHON_EXE_DEFAULT = "python.exe"; //$NON-NLS-1$
-
-  private static final String HYD_PY_SCRIPT_PATH_DEFAULT = "hy.py"; //$NON-NLS-1$
-
   /**
    * Constant for any server instance.
    *
@@ -66,7 +39,7 @@ public final class HydPyServerManager
     FIXED_ITEMS = fixedItems;
   }
 
-  public static synchronized void create( final Path baseDir, final Properties args )
+  public static synchronized void create( final HydPyServerConfiguration hydPyConfig )
   {
     if( FIXED_ITEMS == null )
       throw new IllegalStateException( "initFixedParameters was never called" );
@@ -74,40 +47,9 @@ public final class HydPyServerManager
     if( INSTANCE != null )
       throw new IllegalStateException( "create wa called more than once" );
 
-    /* absolute paths from system environment */
-    final String serverExe = HydPyUtils.getOptionalSystemProperty( ENVIRONMENT_HYD_PY_PYTHON_EXE, HYD_PY_PYTHON_EXE_DEFAULT );
-    final String hydPyScript = HydPyUtils.getOptionalSystemProperty( ENVIRONMENT_HYD_PY_SCRIPT_PATH, HYD_PY_SCRIPT_PATH_DEFAULT );
+    final HydPyServerBuilder serverBuilder = new HydPyServerBuilder( hydPyConfig );
 
-    /* Everything else from model.xml arguments */
-    final int startPort = HydPyUtils.getRequiredPropertyAsInt( args, PROPERTY_SERVER_PORT );
-
-    final int maxProcesses = HydPyUtils.getOptionalPropertyAsInt( args, PROPERTY_SERVER_MAX_PROCESSES, 1 );
-    if( maxProcesses < 1 )
-      throw new RuntimeException( String.format( "Argument '%s': must be positive", PROPERTY_SERVER_MAX_PROCESSES ) );
-
-    if( startPort + maxProcesses - 1 > 0xFFFF )
-      throw new RuntimeException( String.format( "Arguments '%s'+'%s': exceeds maximal possible port 0xFFFF", PROPERTY_SERVER_PORT, PROPERTY_SERVER_MAX_PROCESSES ) );
-
-    final int initRetrySeconds = HydPyUtils.getRequiredPropertyAsInt( args, PROPERTY_INITIALIZE_SECONDS );
-
-    final String projectDirArgument = HydPyUtils.getRequiredProperty( args, PROPERTY_PROJECT_PATH );
-    final Path projectDir = baseDir.resolve( projectDirArgument ).normalize();
-    if( !Files.isDirectory( projectDir ) )
-      throw new RuntimeException( String.format( "Argument '%s': Directory does not exist: %s", PROPERTY_PROJECT_PATH, projectDir ) );
-
-    final String projectName = HydPyUtils.getRequiredProperty( args, PROPERTY_PROJECT_NAME );
-
-    final String configFileArgument = HydPyUtils.getRequiredProperty( args, PROPERTY_CONFIG_FILE );
-    final Path configFile = baseDir.resolve( configFileArgument ).normalize();
-    if( !Files.isRegularFile( configFile ) )
-      throw new RuntimeException( String.format( "Argument '%s': File does not exist: %s", PROPERTY_CONFIG_FILE, configFile ) );
-
-    final String logDirectoryArgument = args.getProperty( PROPERTY_LOG_DIRECTORY, null );
-    final Path logDirectory = logDirectoryArgument == null ? null : baseDir.resolve( logDirectoryArgument ).normalize();
-
-    final HydPyServerBuilder serverBuilder = new HydPyServerBuilder( startPort, serverExe, hydPyScript, projectDir, projectName, logDirectory, configFile, initRetrySeconds );
-
-    INSTANCE = new HydPyServerManager( serverBuilder, maxProcesses, FIXED_ITEMS );
+    INSTANCE = new HydPyServerManager( serverBuilder, hydPyConfig.maxProcesses, FIXED_ITEMS );
   }
 
   public synchronized static HydPyServerManager instance( )

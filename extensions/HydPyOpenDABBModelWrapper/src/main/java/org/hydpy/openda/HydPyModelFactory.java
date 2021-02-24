@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hydpy.openda.server.HydPyServerConfiguration;
 import org.hydpy.openda.server.HydPyServerException;
 import org.hydpy.openda.server.HydPyServerManager;
 import org.hydpy.openda.server.IHydPyInstance;
@@ -104,7 +105,9 @@ public class HydPyModelFactory implements IModelFactory
       final String templateDirPath = m_args.getProperty( PROPERTY_TEMPLATE_DIR_PATH );
       final String instanceDirPath = m_args.getProperty( PROPERTY_INSTANCE_DIR_PATH );
 
-      HydPyServerManager.create( m_workingDir.toPath(), m_args );
+      final HydPyServerConfiguration hydPyConfig = new HydPyServerConfiguration( m_workingDir.toPath(), m_args );
+
+      HydPyServerManager.create( hydPyConfig );
 
       final BBWrapperConfig wrapperConfig = initializeWrapperConfig( m_workingDir, templateDirPath, instanceDirPath );
 

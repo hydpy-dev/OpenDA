@@ -1,10 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<noosObserver xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-
-	<timeSeries id="lahn_1_nodes_sim_series"
-                status="use"
-                standardDeviation="0.1">
-		data/lahn_1.discharge.noos
-	</timeSeries>
-
+<noosObserver xmlns="http://www.openda.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/observation/noosObservations.xsd">
+  <timeSeries id="lahn_1_nodes_sim_series" status="use" standardDeviation="0.1">data/lahn_1.discharge.noos</timeSeries>
 </noosObserver>

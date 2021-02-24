@@ -177,13 +177,17 @@ final class HydPyServerProcess
     }
   }
 
-  public Properties execute( final String instanceId, final String methods ) throws HydPyServerException
+  // REMARK: synchronized execute in order to block sequential calls to the same server.
+  // Normally this should already happen via the server-side (using non-threaded HttpServer),
+  // however we still get sometimes 'Connection Refused' errors if too many calls are made within a small timespan.
+  // Enlarging the socket-queue-size does not really help.
+  public synchronized Properties execute( final String instanceId, final String methods ) throws HydPyServerException
   {
     final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, methods );
     return callGetAndParse( endpoint, m_timeoutMillis );
   }
 
-  public void execute( final String instanceId, final String methods, final String postBody ) throws HydPyServerException
+  public synchronized void execute( final String instanceId, final String methods, final String postBody ) throws HydPyServerException
   {
     final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, methods );
     callPost( endpoint, m_timeoutMillis, postBody );

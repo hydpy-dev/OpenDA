@@ -57,10 +57,10 @@ class HydPyServerThreadingProcess implements IHydPyServerProcess
     return m_delegate;
   }
 
-  @Override
   public String getName( )
   {
-    return m_delegate.getName();
+    // FIXME
+    return toString();
   }
 
   private HydPyServerException toHydPyServerException( final Exception e )
@@ -80,10 +80,9 @@ class HydPyServerThreadingProcess implements IHydPyServerProcess
   }
 
   @Override
-  public void initializeInstance( final String instanceId ) throws HydPyServerException
+  public IHydPyInstance createInstance( final String instanceId ) throws HydPyServerException
   {
-    /* not threaded, this is called only once during initialization */
-    getDelegate().initializeInstance( instanceId );
+    return getDelegate().createInstance( instanceId );
   }
 
   @Override

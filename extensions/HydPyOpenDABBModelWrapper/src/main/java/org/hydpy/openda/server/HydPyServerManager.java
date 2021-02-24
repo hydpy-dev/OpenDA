@@ -11,10 +11,6 @@
  */
 package org.hydpy.openda.server;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -22,7 +18,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.http.client.utils.URIBuilder;
 import org.hydpy.openda.HydPyUtils;
 
 /**
@@ -76,7 +71,43 @@ public final class HydPyServerManager
     if( FIXED_ITEMS == null )
       throw new IllegalStateException( "initFixedParameters was never called" );
 
-    INSTANCE = new HydPyServerManager( baseDir, args, FIXED_ITEMS );
+    if( INSTANCE != null )
+      throw new IllegalStateException( "create wa called more than once" );
+
+    /* absolute paths from system environment */
+    final String serverExe = HydPyUtils.getOptionalSystemProperty( ENVIRONMENT_HYD_PY_PYTHON_EXE, HYD_PY_PYTHON_EXE_DEFAULT );
+    final String hydPyScript = HydPyUtils.getOptionalSystemProperty( ENVIRONMENT_HYD_PY_SCRIPT_PATH, HYD_PY_SCRIPT_PATH_DEFAULT );
+
+    /* Everything else from model.xml arguments */
+    final int startPort = HydPyUtils.getRequiredPropertyAsInt( args, PROPERTY_SERVER_PORT );
+
+    final int maxProcesses = HydPyUtils.getOptionalPropertyAsInt( args, PROPERTY_SERVER_MAX_PROCESSES, 1 );
+    if( maxProcesses < 1 )
+      throw new RuntimeException( String.format( "Argument '%s': must be positive", PROPERTY_SERVER_MAX_PROCESSES ) );
+
+    if( startPort + maxProcesses - 1 > 0xFFFF )
+      throw new RuntimeException( String.format( "Arguments '%s'+'%s': exceeds maximal possible port 0xFFFF", PROPERTY_SERVER_PORT, PROPERTY_SERVER_MAX_PROCESSES ) );
+
+    final int initRetrySeconds = HydPyUtils.getRequiredPropertyAsInt( args, PROPERTY_INITIALIZE_SECONDS );
+
+    final String projectDirArgument = HydPyUtils.getRequiredProperty( args, PROPERTY_PROJECT_PATH );
+    final Path projectDir = baseDir.resolve( projectDirArgument ).normalize();
+    if( !Files.isDirectory( projectDir ) )
+      throw new RuntimeException( String.format( "Argument '%s': Directory does not exist: %s", PROPERTY_PROJECT_PATH, projectDir ) );
+
+    final String projectName = HydPyUtils.getRequiredProperty( args, PROPERTY_PROJECT_NAME );
+
+    final String configFileArgument = HydPyUtils.getRequiredProperty( args, PROPERTY_CONFIG_FILE );
+    final Path configFile = baseDir.resolve( configFileArgument ).normalize();
+    if( !Files.isRegularFile( configFile ) )
+      throw new RuntimeException( String.format( "Argument '%s': File does not exist: %s", PROPERTY_CONFIG_FILE, configFile ) );
+
+    final String logDirectoryArgument = args.getProperty( PROPERTY_LOG_DIRECTORY, null );
+    final Path logDirectory = logDirectoryArgument == null ? null : baseDir.resolve( logDirectoryArgument ).normalize();
+
+    final HydPyServerBuilder serverBuilder = new HydPyServerBuilder( startPort, serverExe, hydPyScript, projectDir, projectName, logDirectory, configFile, initRetrySeconds );
+
+    INSTANCE = new HydPyServerManager( serverBuilder, maxProcesses, FIXED_ITEMS );
   }
 
   public synchronized static HydPyServerManager instance( )
@@ -105,76 +136,26 @@ public final class HydPyServerManager
     }
   }
 
-  private final String m_host;
-
-  private final int m_startPort;
-
   private final int m_maxProcesses;
 
-  private final String m_serverExe;
-
-  private final int m_initRetrySeconds;
-
-  private final String m_hydPyScript;
-
-  private final String m_projectDir;
-
-  private final String m_projectName;
-
-  private final Map<String, IHydPyServer> m_instances = new HashMap<>();
+  private final Map<String, IHydPyInstance> m_instances = new HashMap<>();
 
   private final Map<Integer, IHydPyServerProcess> m_processes = new HashMap<>();
-
-  private final String m_configFile;
 
   private final Collection<String> m_fixedParameters;
 
   private int m_nextProcessId = 0;
 
-  private final Path m_logDirectory;
+  private final HydPyServerBuilder m_serverBuilder;
 
-  private HydPyServerManager( final Path baseDir, final Properties args, final Collection<String> fixedItemIds )
+  public HydPyServerManager( final HydPyServerBuilder serverBuilder, final int maxProcesses, final Collection<String> fixedItemIds )
   {
     m_fixedParameters = fixedItemIds;
+    m_maxProcesses = maxProcesses;
+    m_serverBuilder = serverBuilder;
 
     // REMARK: always try to shutdown the running HydPy servers.
     Runtime.getRuntime().addShutdownHook( new ShutdownThread( this ) );
-
-    // REAMRK: we open a local process, so this is always localhost (for now)
-    m_host = "localhost";
-
-    /* absolute paths from system environment */
-    m_serverExe = HydPyUtils.getOptionalSystemProperty( ENVIRONMENT_HYD_PY_PYTHON_EXE, HYD_PY_PYTHON_EXE_DEFAULT );
-    m_hydPyScript = HydPyUtils.getOptionalSystemProperty( ENVIRONMENT_HYD_PY_SCRIPT_PATH, HYD_PY_SCRIPT_PATH_DEFAULT );
-
-    /* Everything else from model.xml arguments */
-    m_startPort = HydPyUtils.getRequiredPropertyAsInt( args, PROPERTY_SERVER_PORT );
-
-    m_maxProcesses = HydPyUtils.getOptionalPropertyAsInt( args, PROPERTY_SERVER_MAX_PROCESSES, 1 );
-    if( m_maxProcesses < 1 )
-      throw new RuntimeException( String.format( "Argument '%s': must be positive", PROPERTY_SERVER_MAX_PROCESSES ) );
-
-    if( m_startPort + m_maxProcesses - 1 > 0xFFFF )
-      throw new RuntimeException( String.format( "Arguments '%s'+'%s': exceeds maximal possible port 0xFFFF", PROPERTY_SERVER_PORT, PROPERTY_SERVER_MAX_PROCESSES ) );
-
-    m_initRetrySeconds = HydPyUtils.getRequiredPropertyAsInt( args, PROPERTY_INITIALIZE_SECONDS );
-
-    final String projectDirArgument = HydPyUtils.getRequiredProperty( args, PROPERTY_PROJECT_PATH );
-    final Path projectDir = baseDir.resolve( projectDirArgument ).normalize();
-    if( !Files.isDirectory( projectDir ) )
-      throw new RuntimeException( String.format( "Argument '%s': Directory does not exist: %s", PROPERTY_PROJECT_PATH, projectDir ) );
-    m_projectDir = projectDir.toString();
-
-    m_projectName = HydPyUtils.getRequiredProperty( args, PROPERTY_PROJECT_NAME );
-
-    final String configFileArgument = HydPyUtils.getRequiredProperty( args, PROPERTY_CONFIG_FILE );
-    final Path configFile = baseDir.resolve( configFileArgument ).normalize();
-    if( !Files.isRegularFile( configFile ) )
-      throw new RuntimeException( String.format( "Argument '%s': File does not exist: %s", PROPERTY_CONFIG_FILE, configFile ) );
-    m_configFile = configFile.toString();
-
-    final String logDirectory = args.getProperty( PROPERTY_LOG_DIRECTORY, null );
-    m_logDirectory = logDirectory == null ? null : baseDir.resolve( logDirectory ).normalize();
   }
 
   /**
@@ -184,7 +165,7 @@ public final class HydPyServerManager
    *          Several calls with the same instanceId are guaranteed to return the same {@link IHydPyServer} process.<br/>
    *          Depending on the configuration of this manager, multiple instanceId's may be mapped to the same HydPy server process.
    */
-  public synchronized IHydPyServer getOrCreateServer( final String instanceId ) throws HydPyServerException
+  public synchronized IHydPyInstance getOrCreateInstance( final String instanceId ) throws HydPyServerException
   {
     if( !m_instances.containsKey( instanceId ) )
       m_instances.put( instanceId, createInstance( instanceId ) );
@@ -192,13 +173,13 @@ public final class HydPyServerManager
     return m_instances.get( instanceId );
   }
 
-  private IHydPyServer createInstance( final String instanceId ) throws HydPyServerException
+  private IHydPyInstance createInstance( final String instanceId ) throws HydPyServerException
   {
     final int processId = toServerId( instanceId );
 
     final IHydPyServerProcess server = getOrCreateServer( processId );
 
-    return HydPyServerInstance.create( instanceId, server );
+    return server.createInstance( instanceId );
   }
 
   private int toServerId( final String instanceId )
@@ -226,87 +207,19 @@ public final class HydPyServerManager
   {
     try
     {
-      final int port = m_startPort + processId;
-
-      final URI address = new URIBuilder() //
-          .setScheme( "http" ) //
-          .setHost( m_host ) //
-          .setPort( port ) //
-          .build();
-
-      final String name = String.format( "HydPyServer %d - %s", processId, port );
-
       /* start the real server */
-      final Process process = startHydPyProcess( port, processId );
-
-      final HydPyServerProcess server = new HydPyServerProcess( name, address, process, m_fixedParameters );
-
-      tryCallServer( server );
+      final HydPyServerProcess server = m_serverBuilder.start( processId );
 
 //      return new HydPyServerThreadingProcess( server );
-      return server;
+
+      return new HydPyServerOpenDA( server, m_fixedParameters );
     }
-    catch( final URISyntaxException | IOException | HydPyServerException e )
+    catch( final HydPyServerException e )
     {
       e.printStackTrace();
 
       throw new RuntimeException( "Failed to start HydPy Server", e );
     }
-  }
-
-  private void tryCallServer( final HydPyServerProcess server ) throws HydPyServerException
-  {
-    final int retries = m_initRetrySeconds * 4;
-    final int timeoutMillis = 250;
-
-    for( int i = 0; i < retries; i++ )
-    {
-      try
-      {
-        if( server.checkStatus( timeoutMillis ) )
-          return;
-      }
-      catch( final HydPyServerException ignored )
-      {
-        // TODO: use logging framework?
-        System.out.println( "Waiting for HyPy-Server: " + i );
-        /* continue waiting */
-      }
-      catch( final HydPyServerProcessException e )
-      {
-        /* the process was terminated, we will never get an answer now */
-        e.printStackTrace();
-        throw new HydPyServerException( e.getMessage() );
-      }
-    }
-
-    final String message = String.format( "Timeout waiting for HydPy-Server after %d seconds", m_initRetrySeconds );
-    throw new HydPyServerException( message );
-  }
-
-  private Process startHydPyProcess( final int port, final int processId ) throws IOException
-  {
-    final File projectDir = new File( m_projectDir );
-    final File workingDir = projectDir;
-
-    final String command = m_serverExe;
-    final String operation = "start_server";
-    final String portArgument = Integer.toString( port );
-
-    final ProcessBuilder builder = new ProcessBuilder( command, m_hydPyScript, operation, portArgument, m_projectName, m_configFile ) //
-        .directory( workingDir );
-
-    if( m_logDirectory == null )
-      builder.inheritIO();
-    else
-    {
-      final File logFile = new File( m_logDirectory.toFile(), String.format( "HydPy_Server_%d.log", processId ) );
-      final File errFile = new File( m_logDirectory.toFile(), String.format( "HydPy_Server_%d.err", processId ) );
-      builder.redirectError( errFile );
-      builder.redirectOutput( logFile );
-    }
-
-    return builder.start();
   }
 
   public void killAllServers( )

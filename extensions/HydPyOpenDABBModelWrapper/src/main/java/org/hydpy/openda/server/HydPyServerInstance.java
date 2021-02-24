@@ -17,25 +17,17 @@ import java.util.List;
 import org.openda.interfaces.IPrevExchangeItem;
 
 /**
- * Wraps a 'real' HydPyServer together with an sinatcneId.
+ * Wraps a 'real' HydPyServer together with an instanceId.
  *
  * @author Gernot Belger
  */
-class HydPyServerInstance implements IHydPyServer
+class HydPyServerInstance implements IHydPyInstance
 {
   private final String m_instanceId;
 
   private final IHydPyServerProcess m_server;
 
-  public static IHydPyServer create( final String instanceId, final IHydPyServerProcess server ) throws HydPyServerException
-  {
-    // needs to be called once per instanceId.
-    server.initializeInstance( instanceId );
-
-    return new HydPyServerInstance( instanceId, server );
-  }
-
-  private HydPyServerInstance( final String instanceId, final IHydPyServerProcess server )
+  HydPyServerInstance( final String instanceId, final IHydPyServerProcess server )
   {
     m_instanceId = instanceId;
     m_server = server;

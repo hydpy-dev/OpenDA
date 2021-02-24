@@ -22,7 +22,7 @@ import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
 import org.hydpy.openda.server.HydPyServerException;
 import org.hydpy.openda.server.HydPyServerManager;
-import org.hydpy.openda.server.IHydPyServer;
+import org.hydpy.openda.server.IHydPyInstance;
 import org.hydpy.openda.server.IServerItem;
 import org.openda.blackbox.config.AliasDefinitions;
 import org.openda.blackbox.config.BBAction;
@@ -108,7 +108,7 @@ public class HydPyModelFactory implements IModelFactory
 
       final BBWrapperConfig wrapperConfig = initializeWrapperConfig( m_workingDir, templateDirPath, instanceDirPath );
 
-      final IHydPyServer server = HydPyServerManager.instance().getOrCreateServer( HydPyServerManager.ANY_INSTANCE );
+      final IHydPyInstance server = HydPyServerManager.instance().getOrCreateInstance( HydPyServerManager.ANY_INSTANCE );
       final List<IServerItem> items = server.getItems();
       final BBModelConfig bbModelConfig = initializeModelConfig( m_workingDir, wrapperConfig, items );
 
@@ -217,9 +217,9 @@ public class HydPyModelFactory implements IModelFactory
     final double timeStepMJD = Double.NaN;
 
     // REMARK: we always use these fixed exchange items to initially retrieve the simulation time span from the model.
-    final String[] startTimeExchangeItemIds = new String[] { IHydPyServer.ITEM_ID_FIRST_DATE };
-    final String[] endTimeExchangeItemIds = new String[] { IHydPyServer.ITEM_ID_LAST_DATE };
-    final String[] timeStepExchangeItemIds = new String[] { IHydPyServer.ITEM_ID_STEP_SIZE };
+    final String[] startTimeExchangeItemIds = new String[] { IHydPyInstance.ITEM_ID_FIRST_DATE };
+    final String[] endTimeExchangeItemIds = new String[] { IHydPyInstance.ITEM_ID_LAST_DATE };
+    final String[] timeStepExchangeItemIds = new String[] { IHydPyInstance.ITEM_ID_STEP_SIZE };
 
     final Collection<BBModelVectorConfig> vectorConfigs = initializeVectorConfigs( wrapperConfig, items );
 

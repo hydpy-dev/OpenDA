@@ -19,7 +19,7 @@ import org.openda.interfaces.IPrevExchangeItem;
 /**
  * @author Gernot Belger
  */
-public interface IHydPyServer
+public interface IHydPyInstance
 {
   String ITEM_ID_FIRST_DATE = "firstdate_sim"; //$NON-NLS-1$
 

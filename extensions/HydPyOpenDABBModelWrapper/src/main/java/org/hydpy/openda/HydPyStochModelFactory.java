@@ -49,6 +49,7 @@ public class HydPyStochModelFactory extends BBStochModelFactory
     super.initialize( configRootDir, arguments );
   }
 
+  // FIXME: comment, why do we need this?
   private Collection<String> extractFixedParameters( final BBStochModelConfig stochModelConfig )
   {
     final Set<String> fixedParameters = new HashSet<>();

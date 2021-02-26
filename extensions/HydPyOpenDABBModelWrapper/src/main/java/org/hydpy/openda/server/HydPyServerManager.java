@@ -11,9 +11,11 @@
  */
 package org.hydpy.openda.server;
 
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Manages the life-cycle of the {@link HydPyServer}, allowing possibly several server processes at once.
@@ -39,7 +41,7 @@ public final class HydPyServerManager
     FIXED_ITEMS = fixedItems;
   }
 
-  public static synchronized void create( final HydPyServerConfiguration hydPyConfig )
+  public static void create( final Path workingDir, final Properties args )
   {
     if( FIXED_ITEMS == null )
       throw new IllegalStateException( "initFixedParameters was never called" );
@@ -47,7 +49,9 @@ public final class HydPyServerManager
     if( INSTANCE != null )
       throw new IllegalStateException( "create wa called more than once" );
 
-    INSTANCE = new HydPyServerManager( hydPyConfig, hydPyConfig.maxProcesses, FIXED_ITEMS );
+    final HydPyServerConfiguration hydPyConfig = new HydPyServerConfiguration( workingDir, args );
+
+    INSTANCE = new HydPyServerManager( hydPyConfig, FIXED_ITEMS );
   }
 
   public synchronized static HydPyServerManager instance( )
@@ -78,35 +82,27 @@ public final class HydPyServerManager
 
   private final Map<Integer, HydPyServerStarter> m_starters = new HashMap<>();
 
-  private final Map<String, IHydPyInstance> m_instances = new HashMap<>();
-
-  private final Map<Integer, IHydPyServerProcess> m_processes = new HashMap<>();
+  private final Map<String, HydPyModelInstance> m_instances = new HashMap<>();
 
   private final HydPyServerConfiguration m_config;
 
   private final Collection<String> m_fixedParameters;
 
-  private final int m_maxProcesses;
-
   private int m_nextProcessId = 0;
 
-  public HydPyServerManager( final HydPyServerConfiguration config, final int maxProcesses, final Collection<String> fixedItemIds )
+  public HydPyServerManager( final HydPyServerConfiguration config, final Collection<String> fixedItemIds )
   {
     m_config = config;
     m_fixedParameters = fixedItemIds;
-    m_maxProcesses = maxProcesses;
 
     // REMARK: always try to shutdown the running HydPy servers.
     Runtime.getRuntime().addShutdownHook( new ShutdownThread( this ) );
 
     if( config.parallelStartup )
-      startAllProcesses( m_maxProcesses );
-  }
-
-  private synchronized void startAllProcesses( final int numProcesses )
-  {
-    for( int i = 0; i < numProcesses; i++ )
-      getOrCreateStarter( i );
+    {
+      for( int i = 0; i < config.maxProcesses; i++ )
+        getOrCreateStarter( i );
+    }
   }
 
   private HydPyServerStarter getOrCreateStarter( final int processId )
@@ -124,7 +120,7 @@ public final class HydPyServerManager
    *          Several calls with the same instanceId are guaranteed to return the same {@link IHydPyServer} process.<br/>
    *          Depending on the configuration of this manager, multiple instanceId's may be mapped to the same HydPy server process.
    */
-  public synchronized IHydPyInstance getOrCreateInstance( final String instanceId ) throws HydPyServerException
+  public synchronized HydPyModelInstance getOrCreateInstance( final String instanceId )
   {
     if( !m_instances.containsKey( instanceId ) )
       m_instances.put( instanceId, createInstance( instanceId ) );
@@ -132,13 +128,13 @@ public final class HydPyServerManager
     return m_instances.get( instanceId );
   }
 
-  private IHydPyInstance createInstance( final String instanceId ) throws HydPyServerException
+  private HydPyModelInstance createInstance( final String instanceId )
   {
     final int processId = toServerId( instanceId );
 
-    final IHydPyServerProcess server = getOrCreateServer( processId );
+    final HydPyServerInstance server = getOrCreateServer( processId );
 
-    return new HydPyServerInstance( instanceId, server );
+    return new HydPyModelInstance( instanceId, server );
   }
 
   private int toServerId( final String instanceId )
@@ -149,24 +145,16 @@ public final class HydPyServerManager
     /* simply distributing the instances to consecutive processes, restarting with first process if we encounter maxProcesses */
     final int currentProcessId = m_nextProcessId;
 
-    m_nextProcessId = (m_nextProcessId + 1) % m_maxProcesses;
+    m_nextProcessId = (m_nextProcessId + 1) % m_config.maxProcesses;
 
     return currentProcessId;
   }
 
-  private IHydPyServerProcess getOrCreateServer( final int processId )
-  {
-    if( !m_processes.containsKey( processId ) )
-      m_processes.put( processId, createServer( processId ) );
-
-    return m_processes.get( processId );
-  }
-
-  private IHydPyServerProcess createServer( final int processId )
+  private HydPyServerInstance getOrCreateServer( final int processId )
   {
     try
     {
-      /* start the real server and wait for it */
+      /* start the real server (if that is not yet the case) and wait for it */
       final HydPyServerStarter starter = getOrCreateStarter( processId );
       return starter.getServer();
     }
@@ -178,7 +166,7 @@ public final class HydPyServerManager
     }
   }
 
-  public void killAllServers( )
+  public synchronized void killAllServers( )
   {
     for( final HydPyServerStarter starter : m_starters.values() )
       starter.kill();

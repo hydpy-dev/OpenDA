@@ -9,7 +9,7 @@
  * and comes with ABSOLUTELY NO WARRANTY! Check out the
  * documentation coming with HydPy for details.
  */
-package org.hydpy.openda;
+package org.hydpy.openda.server;
 
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -22,7 +22,7 @@ import org.joda.time.Instant;
  *
  * @author Gernot Belger
  */
-public final class HydPyUtils
+final class HydPyUtils
 {
   // REMARK: copied from Observer OpenDA, API, which is sadly not public
   private static final double millisToDays = 1.0 / (1000 * 60 * 60 * 24);

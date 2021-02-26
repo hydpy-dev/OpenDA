@@ -11,7 +11,6 @@
  */
 package org.hydpy.openda.server;
 
-import org.hydpy.openda.HydPyUtils;
 import org.joda.time.Instant;
 import org.openda.exchange.timeseries.TimeSeries;
 import org.openda.interfaces.IPrevExchangeItem;
@@ -52,13 +51,16 @@ final class Timeseries0DItem extends AbstractServerItem
       times[i] = HydPyUtils.dateToMjd( time );
     }
 
+    if( !time.equals( endTime ) )
+      throw new IllegalStateException();
+
     final TimeSeries timeSeries = new TimeSeries( times, values );
     timeSeries.setId( getId() );
     return timeSeries;
   }
 
   @Override
-  public String printValue( final IPrevExchangeItem exItem, final long stepSeconds )
+  public String printValue( final IPrevExchangeItem exItem )
   {
     final TimeSeries timeSeries = (TimeSeries)exItem;
 

@@ -41,9 +41,11 @@ final class HydPyServerStarter
 
   private final String m_name;
 
-  private final Future<IHydPyServerProcess> m_future;
+  private final Future<HydPyServerInstance> m_future;
 
   private final Collection<String> m_fixedParameters;
+
+  private Process m_process = null;
 
   public HydPyServerStarter( final HydPyServerConfiguration config, final Collection<String> fixedParameters, final int processId )
   {
@@ -57,10 +59,10 @@ final class HydPyServerStarter
     final ThreadFactory threadFactory = new HydPyThreadFactory( m_name );
     m_executor = Executors.newSingleThreadExecutor( threadFactory );
 
-    final Callable<IHydPyServerProcess> task = new Callable<IHydPyServerProcess>()
+    final Callable<HydPyServerInstance> task = new Callable<HydPyServerInstance>()
     {
       @Override
-      public IHydPyServerProcess call( ) throws Exception
+      public HydPyServerInstance call( ) throws Exception
       {
         return doStart();
       }
@@ -72,7 +74,7 @@ final class HydPyServerStarter
   /**
    * Get the startet server process instance. Blocks until it is really started.
    */
-  public IHydPyServerProcess getServer( ) throws HydPyServerException
+  public HydPyServerInstance getServer( ) throws HydPyServerException
   {
     try
     {
@@ -93,34 +95,34 @@ final class HydPyServerStarter
     return new HydPyServerException( cause );
   }
 
-  protected IHydPyServerProcess doStart( ) throws HydPyServerException
+  protected HydPyServerInstance doStart( ) throws HydPyServerException
   {
     final URI address = createAddress();
 
     final long start = System.currentTimeMillis();
 
-    final Process process = startProcess();
+    m_process = startProcess();
 
-    final HydPyServerProcess serverProcess = new HydPyServerProcess( m_name, address, process );
+    final HydPyServerClient client = new HydPyServerClient( address );
 
     try
     {
-      tryCallServer( serverProcess );
+      tryCallServer( client );
 
       final long end = System.currentTimeMillis();
       final double time = (end - start) / 1000.0;
-      System.out.format( "HydPy Server ready after %.2f seconds%n", time );
+      System.out.format( "%s: ready after %.2f seconds%n", m_name, time );
 
       /* wrap for OpenDA specific calling */
-      final HydPyServerOpenDA server = new HydPyServerOpenDA( serverProcess, m_fixedParameters );
+      final HydPyOpenDACaller openDaCaller = new HydPyOpenDACaller( m_name, client, m_fixedParameters );
 
       /* return the real implementation which is always threaded per process */
-      return new HydPyServerThreadingProcess( server, m_executor );
+      return new HydPyServerInstance( openDaCaller, m_executor );
     }
     catch( final HydPyServerException e )
     {
       /* if the test-call fails, we directly destroy the process, the manager can't do it */
-      process.destroy();
+      m_process.destroy();
 
       throw e;
     }
@@ -165,7 +167,7 @@ final class HydPyServerStarter
         builder.redirectOutput( logFile );
       }
 
-      System.out.format( "Starting HydPy-Server %d...%n", m_processId );
+      System.out.format( "%s: starting ...%n", m_name );
       final List<String> commandLine = builder.command();
       System.out.println( "Working-Directory:" );
       System.out.println( m_config.workingDir );
@@ -181,11 +183,11 @@ final class HydPyServerStarter
     }
     catch( final IOException e )
     {
-      throw new HydPyServerException( "Failed to start HydPy-Process", e );
+      throw new HydPyServerException( String.format( "%s: failed to start process", m_name ), e );
     }
   }
 
-  private void tryCallServer( final HydPyServerProcess server ) throws HydPyServerException
+  private void tryCallServer( final HydPyServerClient client ) throws HydPyServerException
   {
     final int retries = m_config.initRetrySeconds * 4;
     final int timeoutMillis = 250;
@@ -194,23 +196,26 @@ final class HydPyServerStarter
     {
       try
       {
-        if( server.checkStatus( timeoutMillis ) )
-          return;
+        m_process.exitValue();
+        throw new HydPyServerException( String.format( "%s: unexpectedly terminated", m_name ) );
       }
-      catch( final HydPyServerException ignored )
+      catch( final IllegalThreadStateException e )
       {
-        System.out.format( "Waiting for %s...%n", m_name );
-        /* continue waiting */
-      }
-      catch( final HydPyServerProcessException e )
-      {
-        /* the process was terminated, we will never get an answer now */
-        e.printStackTrace();
-        throw new HydPyServerException( e.getMessage() );
+        try
+        {
+          // Process is still living, continue
+          if( client.checkStatus( timeoutMillis ) )
+            return;
+        }
+        catch( final HydPyServerException ignored )
+        {
+          System.out.format( "%s: waiting for startup...%n", m_name );
+          /* continue waiting */
+        }
       }
     }
 
-    final String message = String.format( "Timeout waiting for %s after %d seconds", m_name, m_config.initRetrySeconds );
+    final String message = String.format( "%s: timeout after %d seconds", m_name, m_config.initRetrySeconds );
     throw new HydPyServerException( message );
   }
 
@@ -218,8 +223,8 @@ final class HydPyServerStarter
   {
     try
     {
-      final IHydPyServerProcess serverProcess = getServer();
-      serverProcess.shutdown();
+      final HydPyServerInstance server = getServer();
+      server.shutdown();
     }
     catch( final HydPyServerException e )
     {
@@ -243,12 +248,15 @@ final class HydPyServerStarter
   {
     try
     {
-      final IHydPyServerProcess serverProcess = getServer();
-      serverProcess.kill();
+      m_process.exitValue();
+
+      /* process has already correctly terminated, nothing else to do */
     }
-    catch( final HydPyServerException e )
+    catch( final IllegalThreadStateException e )
     {
-      e.printStackTrace();
+      /* process was not correctly terminated, kill */
+      System.err.format( "%s: killing service%n", m_name );
+      m_process.destroy();
     }
   }
 }

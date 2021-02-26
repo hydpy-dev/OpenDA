@@ -16,14 +16,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hydpy.openda.server.HydPyServerConfiguration;
-import org.hydpy.openda.server.HydPyServerException;
+import org.hydpy.openda.server.HydPyModelInstance;
 import org.hydpy.openda.server.HydPyServerManager;
-import org.hydpy.openda.server.IHydPyInstance;
 import org.hydpy.openda.server.IServerItem;
 import org.openda.blackbox.config.AliasDefinitions;
 import org.openda.blackbox.config.BBAction;
@@ -97,30 +94,21 @@ public class HydPyModelFactory implements IModelFactory
 
   private BBModelFactory createFactory( )
   {
-    try
-    {
-      if( m_args == null )
-        throw new IllegalStateException( "initialize was never called" );
+    if( m_args == null )
+      throw new IllegalStateException( "initialize was never called" );
 
-      final String templateDirPath = m_args.getProperty( PROPERTY_TEMPLATE_DIR_PATH );
-      final String instanceDirPath = m_args.getProperty( PROPERTY_INSTANCE_DIR_PATH );
+    final String templateDirPath = m_args.getProperty( PROPERTY_TEMPLATE_DIR_PATH );
+    final String instanceDirPath = m_args.getProperty( PROPERTY_INSTANCE_DIR_PATH );
 
-      final HydPyServerConfiguration hydPyConfig = new HydPyServerConfiguration( m_workingDir.toPath(), m_args );
+    HydPyServerManager.create( m_workingDir.toPath(), m_args );
 
-      HydPyServerManager.create( hydPyConfig );
+    final BBWrapperConfig wrapperConfig = initializeWrapperConfig( m_workingDir, templateDirPath, instanceDirPath );
 
-      final BBWrapperConfig wrapperConfig = initializeWrapperConfig( m_workingDir, templateDirPath, instanceDirPath );
+    final HydPyModelInstance server = HydPyServerManager.instance().getOrCreateInstance( HydPyServerManager.ANY_INSTANCE );
+    final Collection<IServerItem> items = server.getItems();
+    final BBModelConfig bbModelConfig = initializeModelConfig( m_workingDir, wrapperConfig, items );
 
-      final IHydPyInstance server = HydPyServerManager.instance().getOrCreateInstance( HydPyServerManager.ANY_INSTANCE );
-      final List<IServerItem> items = server.getItems();
-      final BBModelConfig bbModelConfig = initializeModelConfig( m_workingDir, wrapperConfig, items );
-
-      return new BBModelFactory( bbModelConfig );
-    }
-    catch( final HydPyServerException e )
-    {
-      throw new RuntimeException( e );
-    }
+    return new BBModelFactory( bbModelConfig );
   }
 
   private BBWrapperConfig initializeWrapperConfig( final File workingDir, final String templateDirPath, final String instanceDirPath )
@@ -210,7 +198,7 @@ public class HydPyModelFactory implements IModelFactory
     return ioObjects;
   }
 
-  private BBModelConfig initializeModelConfig( final File workingDir, final BBWrapperConfig wrapperConfig, final List<IServerItem> items )
+  private BBModelConfig initializeModelConfig( final File workingDir, final BBWrapperConfig wrapperConfig, final Collection<IServerItem> items )
   {
     final File configRootDir = workingDir;
     final String instanceNumberFormat = "0";
@@ -220,9 +208,9 @@ public class HydPyModelFactory implements IModelFactory
     final double timeStepMJD = Double.NaN;
 
     // REMARK: we always use these fixed exchange items to initially retrieve the simulation time span from the model.
-    final String[] startTimeExchangeItemIds = new String[] { IHydPyInstance.ITEM_ID_FIRST_DATE };
-    final String[] endTimeExchangeItemIds = new String[] { IHydPyInstance.ITEM_ID_LAST_DATE };
-    final String[] timeStepExchangeItemIds = new String[] { IHydPyInstance.ITEM_ID_STEP_SIZE };
+    final String[] startTimeExchangeItemIds = new String[] { HydPyModelInstance.ITEM_ID_FIRST_DATE };
+    final String[] endTimeExchangeItemIds = new String[] { HydPyModelInstance.ITEM_ID_LAST_DATE };
+    final String[] timeStepExchangeItemIds = new String[] { HydPyModelInstance.ITEM_ID_STEP_SIZE };
 
     final Collection<BBModelVectorConfig> vectorConfigs = initializeVectorConfigs( wrapperConfig, items );
 
@@ -235,7 +223,7 @@ public class HydPyModelFactory implements IModelFactory
     return new BBModelConfig( configRootDir, wrapperConfig, instanceNumberFormat, startTime, endTime, timeStepMJD, startTimeExchangeItemIds, endTimeExchangeItemIds, timeStepExchangeItemIds, vectorConfigs, skipModelActionsIfInstanceDirExists, doCleanUp, restartFileNames, savedStatesDirPrefix );
   }
 
-  private Collection<BBModelVectorConfig> initializeVectorConfigs( final BBWrapperConfig wrapperConfig, final List<IServerItem> items )
+  private Collection<BBModelVectorConfig> initializeVectorConfigs( final BBWrapperConfig wrapperConfig, final Collection<IServerItem> items )
   {
     final Collection<BBModelVectorConfig> vectorConfigs = new ArrayList<>();
 

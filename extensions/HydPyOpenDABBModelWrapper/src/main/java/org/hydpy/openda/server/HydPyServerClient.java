@@ -27,11 +27,11 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.util.EntityUtils;
 
 /**
- * Represents a HydPyServer on the client side and handles the basic htttp calls.
+ * Represents a client calling a HydPy server process which handles the basic http calls.
  *
  * @author Gernot Belger
  */
-final class HydPyServerProcess
+final class HydPyServerClient
 {
   private static final String PATH_STATUS = "status"; //$NON-NLS-1$
 
@@ -45,53 +45,17 @@ final class HydPyServerProcess
 
   private final URI m_address;
 
-  private final Process m_process;
-
   private final int m_timeoutMillis = 60000;
 
-  private final String m_name;
-
-  public HydPyServerProcess( final String name, final URI address, final Process process )
+  public HydPyServerClient( final URI address )
   {
-    m_name = name;
     m_address = address;
-    m_process = process;
-  }
-
-  public String getName( )
-  {
-    return m_name;
-  }
-
-  private void checkProcess( ) throws HydPyServerProcessException
-  {
-    try
-    {
-      m_process.exitValue();
-      throw new HydPyServerProcessException( "HydPy Server unexpectedly terminated" );
-    }
-    catch( final IllegalThreadStateException e )
-    {
-      // Process is still living, return normally
-      return;
-    }
   }
 
   private HttpEntity callGet( final URI endpoint, final int timeout ) throws HydPyServerException
   {
-    try
-    {
-      checkProcess();
-
-      final Request request = Request.Get( endpoint );
-
-      return callServer( request, timeout );
-    }
-    catch( final HydPyServerProcessException e )
-    {
-      e.printStackTrace();
-      throw new HydPyServerException( "HydPy-Server not running", e );
-    }
+    final Request request = Request.Get( endpoint );
+    return callServer( request, timeout );
   }
 
   private Properties callGetAndParse( final URI endpoint, final int timeoutMillis ) throws HydPyServerException
@@ -146,21 +110,11 @@ final class HydPyServerProcess
 
   private HttpEntity callPost( final URI endpoint, final int timeout, final String body ) throws HydPyServerException
   {
-    try
-    {
-      checkProcess();
+    final ContentType contentType = ContentType.TEXT_PLAIN.withCharset( StandardCharsets.UTF_8 );
 
-      final ContentType contentType = ContentType.TEXT_PLAIN.withCharset( StandardCharsets.UTF_8 );
+    final Request request = Request.Post( endpoint ).bodyString( body, contentType );
 
-      final Request request = Request.Post( endpoint ).bodyString( body, contentType );
-
-      return callServer( request, timeout );
-    }
-    catch( final HydPyServerProcessException e )
-    {
-      e.printStackTrace();
-      throw new HydPyServerException( "HydPy-Server not running", e );
-    }
+    return callServer( request, timeout );
   }
 
   private HttpEntity callServer( final Request request, final int timeout ) throws HydPyServerException
@@ -204,11 +158,8 @@ final class HydPyServerProcess
     return callPostAndParse( endpoint, m_timeoutMillis, postBody );
   }
 
-  public boolean checkStatus( final int timeout ) throws HydPyServerException, HydPyServerProcessException
+  public boolean checkStatus( final int timeout ) throws HydPyServerException
   {
-    // REMARK: extra check process so we get the special exception
-    checkProcess();
-
     final URI endpoint = buildEndpoint( PATH_STATUS, null, null );
     final HttpEntity entity = callGet( endpoint, timeout );
 
@@ -230,27 +181,11 @@ final class HydPyServerProcess
     {
       final URI endpoint = buildEndpoint( PATH_CLOSE_SERVER, null, null );
       callGet( endpoint, m_timeoutMillis );
-      // TODO: check if process was correctly terminated
+      // TODO: check if process was correctly terminated, needs bigger java version
     }
     catch( final HydPyServerException e )
     {
       e.printStackTrace();
-    }
-  }
-
-  public void kill( )
-  {
-    try
-    {
-      m_process.exitValue();
-
-      /* process has already correctly terminated, nothing else to do */
-    }
-    catch( final IllegalThreadStateException e )
-    {
-      /* process was not correctly terminated, kill */
-      System.err.format( "%s: killing service%n", getName() );
-      m_process.destroy();
     }
   }
 }

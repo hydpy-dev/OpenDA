@@ -15,12 +15,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
-import org.hydpy.openda.HydPyUtils;
-
 /**
  * @author Gernot Belger
  */
-public final class HydPyServerConfiguration
+final class HydPyServerConfiguration
 {
   private static final String ENVIRONMENT_HYD_PY_PYTHON_EXE = "HYD_PY_PYTHON_EXE"; //$NON-NLS-1$
 

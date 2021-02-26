@@ -10,6 +10,13 @@ def javaVersion = JavaVersion.VERSION_1_7;
 sourceCompatibility = javaVersion;
 targetCompatibility = javaVersion; // defaults to sourceCompatibility
 
+eclipse {
+    classpath {
+        downloadJavadoc = false
+        downloadSources = true
+    }
+}
+
 repositories {
     jcenter()
     

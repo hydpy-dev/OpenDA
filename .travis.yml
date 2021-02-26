@@ -22,7 +22,7 @@ cache:
 
 script:
   - cd extensions/HydPyOpenDABBModelWrapper
-  - ./gradlew build
+  - ./gradlew wrapper build
   - export BUILD_VERSION=$(./gradlew -q printVersionName)
 #  - cd ../..
 #  - python run_doctests.py

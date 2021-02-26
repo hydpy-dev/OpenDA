@@ -117,7 +117,7 @@ final class HydPyServerOpenDA
 
     /* Retrieve initial state and also init-dates and stepsize */
     // REMARK: HydPy always need instanceId; we give fake one here
-    log( "requesting fixed item states and iniital time-grid" );
+    log( "requesting fixed item states and initial time-grid" );
     final Properties props = m_server.execute( HydPyServerManager.ANY_INSTANCE, METHODS_REQUEST_INITIAL_STATE );
 
     m_firstDateValue = props.getProperty( ITEM_ID_FIRST_DATE_INIT );
@@ -310,11 +310,11 @@ final class HydPyServerOpenDA
 
   public void shutdown( )
   {
-    log( "%s: shutting down...%n", getName() );
+    log( "shutting down..." );
 
     m_server.shutdown();
 
-    log( "%s: shut down done%n", getName() );
+    log( "shut down done" );
   }
 
   public void kill( )

@@ -99,7 +99,8 @@ public final class HydPyServerManager
     // REMARK: always try to shutdown the running HydPy servers.
     Runtime.getRuntime().addShutdownHook( new ShutdownThread( this ) );
 
-    startAllProcesses( m_maxProcesses );
+    if( config.parallelStartup )
+      startAllProcesses( m_maxProcesses );
   }
 
   private synchronized void startAllProcesses( final int numProcesses )

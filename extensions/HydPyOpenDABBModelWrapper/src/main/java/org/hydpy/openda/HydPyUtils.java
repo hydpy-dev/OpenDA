@@ -69,6 +69,15 @@ public final class HydPyUtils
     return parseInt( key, value );
   }
 
+  public static boolean getOptionalPropertyAsBoolean( final Properties properties, final String key, final boolean defaultValue )
+  {
+    final String value = properties.getProperty( key );
+    if( StringUtils.isBlank( value ) )
+      return defaultValue;
+
+    return Boolean.parseBoolean( value );
+  }
+
   private static int parseInt( final String key, final String value )
   {
     try

@@ -30,49 +30,56 @@ import org.openda.interfaces.IPrevExchangeItem;
  *
  * @author Gernot Belger
  */
-final class HydPyServerOpenDA implements IHydPyServerProcess
+final class HydPyServerOpenDA
 {
   // REMARK: The life-cycle of the OpenDA model-instances enforce a very specific way, on
   // how the model must be called and specifically on how the internal model state must be
   // preserved and restored.
 
-  private static final String METHODS_GET_ITEMTYPES__OPENDA = //
+  private static final String METHODS_REQUEST_ITEMTYPES = //
       "GET_query_itemtypes"; //
 
-  private static final String METHODS_INITIALIZE_ITEMTYPES__OPENDA = //
-      "GET_register_initialitemvalues"; // writes the initial state into the instance-registry
+  private static final String METHODS_REQUEST_INITIAL_STATE = //
+      /* tell hyd py to write default values into state-register */
+      "GET_register_initialitemvalues," + //
+      /* and query them */
+          "GET_query_conditionitemvalues," + //
+          "GET_query_getitemvalues," + //
+          "GET_query_parameteritemvalues," + //
+          "GET_query_initialisationtimegrid"; //
 
-  private static final String METHODS_GET_SIMULATE__OPENDA = //
-      "GET_activate_simulationdates," + //
-          "GET_activate_parameteritemvalues," + //
-          "GET_load_internalconditions," + //
-          "GET_activate_conditionitemvalues," + //
-          "GET_simulate," + //
-          "GET_save_internalconditions," + //
-          "GET_update_conditionitemvalues," + //
-          "GET_update_getitemvalues";
-
-  private static final String METHODS_GET_INITIALISATIONTIMEGRID_OPENDA = //
-      "GET_query_initialisationtimegrid"; //
-
-  private static final String METHODS_SET_SIMULATIONDATES_OPENDA = //
-      "POST_register_simulationdates"; //
-
-  private static final String METHODS_GET_ITEMVALUES_OPENDA = //
-      "GET_query_conditionitemvalues," + //
+  private static final String METHODS_INITIALIZE_INSTANCE = //
+      /* register default values into instance-state */
+      "GET_register_initialitemvalues," + //
+          "POST_register_simulationdates," + //
+          /* and fetch them */
+          "GET_query_conditionitemvalues," + //
           "GET_query_getitemvalues," + //
           "GET_query_parameteritemvalues," + //
           "GET_query_simulationdates"; //
 
-  private static final String METHODS_GET_FIXED_ITEMVALUES_OPENDA = //
-      "GET_query_conditionitemvalues," + //
-          "GET_query_getitemvalues," + //
-          "GET_query_parameteritemvalues"; //
-
-  private static final String METHODS_POST_ITEMVALUES__OPENDA = //
+  private static final String METHODS_REGISTER_ITEMVALUES = //
       "POST_register_simulationdates," + //
           "POST_register_parameteritemvalues," + //
           "POST_register_conditionitemvalues";
+
+  private static final String METHODS_SIMULATE_AND_QUERY_ITEMVALUES = //
+      /* activate current instance-state */
+      "GET_activate_simulationdates," + //
+          "GET_activate_parameteritemvalues," + //
+          "GET_load_internalconditions," + //
+          "GET_activate_conditionitemvalues," + //
+          /* run simulation */
+          "GET_simulate," + //
+          /* apply hydpy state to instance-state */
+          "GET_save_internalconditions," + //
+          "GET_update_conditionitemvalues," + //
+          "GET_update_getitemvalues," + //
+          /* and retrieve them directly */
+          "GET_query_conditionitemvalues," + //
+          "GET_query_getitemvalues," + //
+          "GET_query_parameteritemvalues," + //
+          "GET_query_simulationdates"; //
 
   private static final String ITEM_ID_FIRST_DATE_INIT = "firstdate_init"; //$NON-NLS-1$
 
@@ -108,16 +115,22 @@ final class HydPyServerOpenDA implements IHydPyServerProcess
     for( final IServerItem item : items )
       m_itemIndex.put( item.getId(), (AbstractServerItem)item );
 
-    m_fixedItems = requestFixedItems();
-
-    /* retreive init-dates and stepsize */
-    final Properties props = m_server.execute( null, METHODS_GET_INITIALISATIONTIMEGRID_OPENDA );
+    /* Retrieve initial state and also init-dates and stepsize */
+    // REMARK: HydPy always need instanceId; we give fake one here
+    log( "requesting fixed item states and iniital time-grid" );
+    final Properties props = m_server.execute( HydPyServerManager.ANY_INSTANCE, METHODS_REQUEST_INITIAL_STATE );
 
     m_firstDateValue = props.getProperty( ITEM_ID_FIRST_DATE_INIT );
     m_lastDateValue = props.getProperty( ITEM_ID_LAST_DATE_INIT );
+    final String stepValue = props.getProperty( ITEM_ID_STEP_SIZE );
+
+    /* remove time grid related, as they do not represent items */
+    props.remove( ITEM_ID_FIRST_DATE_INIT );
+    props.remove( ITEM_ID_LAST_DATE_INIT );
+    props.remove( ITEM_ID_STEP_SIZE );
+    m_fixedItems = getFixedItemValues( props );
 
     /* detemrine step seconds */
-    final String stepValue = props.getProperty( ITEM_ID_STEP_SIZE );
     final AbstractServerItem stepServerItem = getItem( ITEM_ID_STEP_SIZE );
     final Object stepParsedValue = stepServerItem.parseValue( stepValue );
     final IPrevExchangeItem stepItem = stepServerItem.toExchangeItem( null, null, 0, stepParsedValue );
@@ -125,6 +138,11 @@ final class HydPyServerOpenDA implements IHydPyServerProcess
 
     // REMARK: set 'stepSeconds' as fixed item, as these are not return from HydPy from any state
     m_fixedItems.put( ITEM_ID_STEP_SIZE, m_stepSeconds );
+  }
+
+  public String getName( )
+  {
+    return m_server.getName();
   }
 
   /**
@@ -135,7 +153,7 @@ final class HydPyServerOpenDA implements IHydPyServerProcess
     final String msg = String.format( message, arguments );
 
     // TODO: use logging framework or something
-    System.out.print( m_server.getName() );
+    System.out.print( getName() );
     System.out.print( ": " ); //$NON-NLS-1$
     System.out.println( msg );
   }
@@ -153,7 +171,6 @@ final class HydPyServerOpenDA implements IHydPyServerProcess
     return item;
   }
 
-  @Override
   public List<IServerItem> getItems( )
   {
     return m_items;
@@ -161,7 +178,7 @@ final class HydPyServerOpenDA implements IHydPyServerProcess
 
   private List<IServerItem> requestItems( ) throws HydPyServerException
   {
-    final Properties props = m_server.execute( null, METHODS_GET_ITEMTYPES__OPENDA );
+    final Properties props = m_server.execute( null, METHODS_REQUEST_ITEMTYPES );
 
     final List<IServerItem> items = new ArrayList<>( props.size() );
 
@@ -180,21 +197,8 @@ final class HydPyServerOpenDA implements IHydPyServerProcess
     return items;
   }
 
-  private Map<String, Object> requestFixedItems( ) throws HydPyServerException
+  private Map<String, Object> getFixedItemValues( final Properties props ) throws HydPyServerException
   {
-    if( m_fixedParameters.isEmpty() )
-    {
-      // REMARK: must be modifiable
-      return new HashMap<>();
-    }
-
-    // REMARK: we need to initialize the 'fixedItems' in order to retrieve their state ni the next step.
-    initializeState( HydPyServerManager.ANY_INSTANCE );
-
-    // REMARK: HydPy always need instanceId; we give fake one here
-    // REMARK: we do not request simulation-dates, as they will not be fixed in this sense.
-    final Properties props = m_server.execute( HydPyServerManager.ANY_INSTANCE, METHODS_GET_FIXED_ITEMVALUES_OPENDA );
-
     /* pre-parse items */
     final Map<String, Object> values = preParseValues( props );
 
@@ -204,21 +208,12 @@ final class HydPyServerOpenDA implements IHydPyServerProcess
     return values;
   }
 
-  @Override
-  public IHydPyInstance createInstance( final String instanceId ) throws HydPyServerException
-  {
-    // needs to be called once per instanceId.
-    initializeInstance( instanceId );
-
-    return new HydPyServerInstance( instanceId, this );
-  }
-
   /**
    * Tells HydPy to initialize the state for instanceId with the defined start values. Should be called exactly once per unique instanceId.
    */
-  private void initializeInstance( final String instanceId ) throws HydPyServerException
+  public List<IPrevExchangeItem> initializeInstance( final String instanceId ) throws HydPyServerException
   {
-    initializeState( instanceId );
+    log( "initializing state for instanceId = '%s'", instanceId );
 
     // REMARK: special handling for the simulation-timegrid: we set the whole (aka init) timegrid as starting state for the simulation-timegrid
     // OpenDa will soon request all items and especially the start/stop time and expect the complete, yet unchanged, simulation-time
@@ -229,24 +224,12 @@ final class HydPyServerOpenDA implements IHydPyServerProcess
     body.append( IHydPyInstance.ITEM_ID_LAST_DATE ).append( '=' ).append( m_lastDateValue ).append( '\r' ).append( '\n' );
 
     /* set simulation-dates */
-    m_server.execute( instanceId, METHODS_SET_SIMULATIONDATES_OPENDA, body.toString() );
+    final Properties props = m_server.execute( instanceId, METHODS_INITIALIZE_INSTANCE, body.toString() );
+    return parseItemValues( props );
   }
 
-  private void initializeState( final String instanceId ) throws HydPyServerException
+  private List<IPrevExchangeItem> parseItemValues( final Properties props ) throws HydPyServerException
   {
-    log( "initializing state for instanceId = '%s'", instanceId );
-
-    /* tell hyd py to write default values into state-register */
-    m_server.execute( instanceId, METHODS_INITIALIZE_ITEMTYPES__OPENDA );
-  }
-
-  @Override
-  public List<IPrevExchangeItem> getItemValues( final String instanceId ) throws HydPyServerException
-  {
-    log( "retrieving state for instanceId = '%s'", instanceId );
-
-    final Properties props = m_server.execute( instanceId, METHODS_GET_ITEMVALUES_OPENDA );
-
     /* pre-parse items */
     final Map<String, Object> preValues = preParseValues( props );
     preValues.putAll( m_fixedItems );
@@ -293,7 +276,6 @@ final class HydPyServerOpenDA implements IHydPyServerProcess
     return preValues;
   }
 
-  @Override
   public void setItemValues( final String instanceId, final Collection<IPrevExchangeItem> values ) throws HydPyServerException
   {
     log( "setting state for instanceId = '%s'", instanceId );
@@ -315,28 +297,26 @@ final class HydPyServerOpenDA implements IHydPyServerProcess
       log( "%s=%s", id, valueText );
     }
 
-    m_server.execute( instanceId, METHODS_POST_ITEMVALUES__OPENDA, body.toString() );
+    m_server.execute( instanceId, METHODS_REGISTER_ITEMVALUES, body.toString() );
   }
 
-  @Override
-  public void simulate( final String instanceId ) throws HydPyServerException
+  public List<IPrevExchangeItem> simulate( final String instanceId ) throws HydPyServerException
   {
     log( "running simulation for current state for instanceId = '%s'", instanceId );
 
-    m_server.execute( instanceId, METHODS_GET_SIMULATE__OPENDA );
+    final Properties props = m_server.execute( instanceId, METHODS_SIMULATE_AND_QUERY_ITEMVALUES );
+    return parseItemValues( props );
   }
 
-  @Override
   public void shutdown( )
   {
-    log( "%s: shutting down...%n", m_server.getName() );
+    log( "%s: shutting down...%n", getName() );
 
     m_server.shutdown();
 
-    log( "%s: shut down done%n", m_server.getName() );
+    log( "%s: shut down done%n", getName() );
   }
 
-  @Override
   public void kill( )
   {
     m_server.kill();

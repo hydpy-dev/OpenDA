@@ -21,12 +21,14 @@ import org.openda.interfaces.IPrevExchangeItem;
  */
 interface IHydPyServerProcess
 {
+  String getName( );
+
   /**
    * Request all known exchange items from the server.
    */
   List<IServerItem> getItems( );
 
-  IHydPyInstance createInstance( String instanceId ) throws HydPyServerException;
+  void initializeInstance( String instanceId ) throws HydPyServerException;
 
   List<IPrevExchangeItem> getItemValues( String instanceId ) throws HydPyServerException;
 

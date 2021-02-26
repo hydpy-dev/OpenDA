@@ -27,10 +27,12 @@ class HydPyServerInstance implements IHydPyInstance
 
   private final IHydPyServerProcess m_server;
 
-  HydPyServerInstance( final String instanceId, final IHydPyServerProcess server )
+  HydPyServerInstance( final String instanceId, final IHydPyServerProcess server ) throws HydPyServerException
   {
     m_instanceId = instanceId;
     m_server = server;
+
+    m_server.initializeInstance( instanceId );
   }
 
   @Override

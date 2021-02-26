@@ -98,6 +98,11 @@ final class HydPyServerProcess
   {
     final HttpEntity entity = callGet( endpoint, timeoutMillis );
 
+    return parseAsProperties( entity );
+  }
+
+  private Properties parseAsProperties( final HttpEntity entity ) throws HydPyServerException
+  {
     try
     {
       final Properties props = new Properties();
@@ -131,6 +136,12 @@ final class HydPyServerProcess
     {
       throw new HydPyServerException( "Invalid uri", e );
     }
+  }
+
+  private Properties callPostAndParse( final URI endpoint, final int timeout, final String body ) throws HydPyServerException
+  {
+    final HttpEntity response = callPost( endpoint, timeout, body );
+    return parseAsProperties( response );
   }
 
   private HttpEntity callPost( final URI endpoint, final int timeout, final String body ) throws HydPyServerException
@@ -187,10 +198,10 @@ final class HydPyServerProcess
     return callGetAndParse( endpoint, m_timeoutMillis );
   }
 
-  public synchronized void execute( final String instanceId, final String methods, final String postBody ) throws HydPyServerException
+  public synchronized Properties execute( final String instanceId, final String methods, final String postBody ) throws HydPyServerException
   {
     final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, methods );
-    callPost( endpoint, m_timeoutMillis, postBody );
+    return callPostAndParse( endpoint, m_timeoutMillis, postBody );
   }
 
   public boolean checkStatus( final int timeout ) throws HydPyServerException, HydPyServerProcessException

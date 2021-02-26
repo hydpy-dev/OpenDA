@@ -121,7 +121,7 @@ public final class HydPyServerManager
 
     final IHydPyServerProcess server = getOrCreateServer( processId );
 
-    return server.createInstance( instanceId );
+    return new HydPyServerInstance( instanceId, server );
   }
 
   private int toServerId( final String instanceId )
@@ -150,11 +150,13 @@ public final class HydPyServerManager
     try
     {
       /* start the real server */
-      final HydPyServerProcess server = m_serverBuilder.start( processId );
+      final HydPyServerProcess process = m_serverBuilder.start( processId );
 
-//      return new HydPyServerThreadingProcess( server );
+      /* wrap for OpenDA specific calling */
+      final HydPyServerOpenDA server = new HydPyServerOpenDA( process, m_fixedParameters );
 
-      return new HydPyServerOpenDA( server, m_fixedParameters );
+      /* return the real implementation which is always threaded per process */
+      return new HydPyServerThreadingProcess( server );
     }
     catch( final HydPyServerException e )
     {

@@ -12,7 +12,9 @@
 package org.hydpy.openda.server;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -28,13 +30,15 @@ import org.openda.interfaces.IPrevExchangeItem;
  */
 class HydPyServerThreadingProcess implements IHydPyServerProcess
 {
-  private final IHydPyServerProcess m_delegate;
+  private final HydPyServerOpenDA m_server;
 
   private final ExecutorService m_executor;
 
-  public HydPyServerThreadingProcess( final IHydPyServerProcess delegate )
+  private final Map<String, Future<List<IPrevExchangeItem>>> m_currentSimulations = new HashMap<>();
+
+  public HydPyServerThreadingProcess( final HydPyServerOpenDA server )
   {
-    m_delegate = delegate;
+    m_server = server;
 
     final ThreadFactory threadFactory = new ThreadFactory()
     {
@@ -43,8 +47,7 @@ class HydPyServerThreadingProcess implements IHydPyServerProcess
       {
         final ThreadGroup group = Thread.currentThread().getThreadGroup();
         final Thread thread = new Thread( group, r, getName() );
-        // FIXME
-        thread.setDaemon( true );
+        thread.setDaemon( false );
         thread.setPriority( Thread.NORM_PRIORITY );
         return thread;
       }
@@ -52,15 +55,15 @@ class HydPyServerThreadingProcess implements IHydPyServerProcess
     m_executor = Executors.newSingleThreadExecutor( threadFactory );
   }
 
-  protected final IHydPyServerProcess getDelegate( )
+  protected final HydPyServerOpenDA getServer( )
   {
-    return m_delegate;
+    return m_server;
   }
 
+  @Override
   public String getName( )
   {
-    // FIXME
-    return toString();
+    return getServer().getName();
   }
 
   private HydPyServerException toHydPyServerException( final Exception e )
@@ -73,39 +76,47 @@ class HydPyServerThreadingProcess implements IHydPyServerProcess
   }
 
   @Override
-  public List<IServerItem> getItems( )
-  {
-    /* not threaded, this is called only once during initialization */
-    return getDelegate().getItems();
-  }
-
-  @Override
-  public IHydPyInstance createInstance( final String instanceId ) throws HydPyServerException
-  {
-    return getDelegate().createInstance( instanceId );
-  }
-
-  @Override
-  public List<IPrevExchangeItem> getItemValues( final String instanceId ) throws HydPyServerException
+  public synchronized void initializeInstance( final String instanceId )
   {
     final Callable<List<IPrevExchangeItem>> task = new Callable<List<IPrevExchangeItem>>()
     {
       @Override
       public List<IPrevExchangeItem> call( ) throws HydPyServerException
       {
-        return getDelegate().getItemValues( instanceId );
+        return getServer().initializeInstance( instanceId );
       }
     };
-    final Future<List<IPrevExchangeItem>> future = m_executor.submit( task );
 
-    try
+    m_currentSimulations.put( instanceId, m_executor.submit( task ) );
+  }
+
+  @Override
+  public List<IServerItem> getItems( )
+  {
+    /* not threaded, the items are always available after initialization */
+    return getServer().getItems();
+  }
+
+  @Override
+  public List<IPrevExchangeItem> getItemValues( final String instanceId ) throws HydPyServerException
+  {
+    final Future<List<IPrevExchangeItem>> currentSimulation = m_currentSimulations.get( instanceId );
+    if( currentSimulation != null )
     {
-      return future.get();
+      try
+      {
+        final List<IPrevExchangeItem> itemValues = currentSimulation.get();
+        // we keep the last simulation forever in case of consecutive 'getItemsValues'
+        // m_currentSimulation = null;
+        return itemValues;
+      }
+      catch( final InterruptedException | ExecutionException e )
+      {
+        throw toHydPyServerException( e );
+      }
     }
-    catch( final InterruptedException | ExecutionException e )
-    {
-      throw toHydPyServerException( e );
-    }
+
+    throw new HydPyServerException( "Get item values before simulation/initialization" );
   }
 
   @Override
@@ -116,7 +127,7 @@ class HydPyServerThreadingProcess implements IHydPyServerProcess
       @Override
       public Void call( ) throws HydPyServerException
       {
-        getDelegate().setItemValues( instanceId, values );
+        getServer().setItemValues( instanceId, values );
         return null;
       }
     };
@@ -125,19 +136,19 @@ class HydPyServerThreadingProcess implements IHydPyServerProcess
   }
 
   @Override
-  public void simulate( final String instanceId )
+  public synchronized void simulate( final String instanceId )
   {
-    final Callable<Void> task = new Callable<Void>()
+    final Callable<List<IPrevExchangeItem>> task = new Callable<List<IPrevExchangeItem>>()
     {
       @Override
-      public Void call( ) throws HydPyServerException
+      public List<IPrevExchangeItem> call( ) throws HydPyServerException
       {
-        getDelegate().simulate( instanceId );
-        return null;
+        // TODO comment
+        return getServer().simulate( instanceId );
       }
     };
 
-    m_executor.submit( task );
+    m_currentSimulations.put( instanceId, m_executor.submit( task ) );
   }
 
   @Override
@@ -148,7 +159,7 @@ class HydPyServerThreadingProcess implements IHydPyServerProcess
       @Override
       public Void call( )
       {
-        getDelegate().shutdown();
+        getServer().shutdown();
         return null;
       }
     };
@@ -171,6 +182,6 @@ class HydPyServerThreadingProcess implements IHydPyServerProcess
   public void kill( )
   {
     /* not threaded, especially executor was already shut down */
-    getDelegate().kill();
+    getServer().kill();
   }
 }

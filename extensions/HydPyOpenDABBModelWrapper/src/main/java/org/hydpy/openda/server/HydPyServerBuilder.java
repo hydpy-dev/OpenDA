@@ -45,7 +45,13 @@ final class HydPyServerBuilder
 
     try
     {
+      final long start = System.currentTimeMillis();
+
       tryCallServer( server );
+
+      final long end = System.currentTimeMillis();
+      final double time = (end - start) / 1000.0;
+      System.out.format( "StartTime: %.2f%n", time );
 
       return server;
     }

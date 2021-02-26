@@ -47,9 +47,7 @@ public final class HydPyServerManager
     if( INSTANCE != null )
       throw new IllegalStateException( "create wa called more than once" );
 
-    final HydPyServerBuilder serverBuilder = new HydPyServerBuilder( hydPyConfig );
-
-    INSTANCE = new HydPyServerManager( serverBuilder, hydPyConfig.maxProcesses, FIXED_ITEMS );
+    INSTANCE = new HydPyServerManager( hydPyConfig, hydPyConfig.maxProcesses, FIXED_ITEMS );
   }
 
   public synchronized static HydPyServerManager instance( )
@@ -78,26 +76,44 @@ public final class HydPyServerManager
     }
   }
 
-  private final int m_maxProcesses;
+  private final Map<Integer, HydPyServerStarter> m_starters = new HashMap<>();
 
   private final Map<String, IHydPyInstance> m_instances = new HashMap<>();
 
   private final Map<Integer, IHydPyServerProcess> m_processes = new HashMap<>();
 
+  private final HydPyServerConfiguration m_config;
+
   private final Collection<String> m_fixedParameters;
+
+  private final int m_maxProcesses;
 
   private int m_nextProcessId = 0;
 
-  private final HydPyServerBuilder m_serverBuilder;
-
-  public HydPyServerManager( final HydPyServerBuilder serverBuilder, final int maxProcesses, final Collection<String> fixedItemIds )
+  public HydPyServerManager( final HydPyServerConfiguration config, final int maxProcesses, final Collection<String> fixedItemIds )
   {
+    m_config = config;
     m_fixedParameters = fixedItemIds;
     m_maxProcesses = maxProcesses;
-    m_serverBuilder = serverBuilder;
 
     // REMARK: always try to shutdown the running HydPy servers.
     Runtime.getRuntime().addShutdownHook( new ShutdownThread( this ) );
+
+    startAllProcesses( m_maxProcesses );
+  }
+
+  private synchronized void startAllProcesses( final int numProcesses )
+  {
+    for( int i = 0; i < numProcesses; i++ )
+      getOrCreateStarter( i );
+  }
+
+  private HydPyServerStarter getOrCreateStarter( final int processId )
+  {
+    if( !m_starters.containsKey( processId ) )
+      m_starters.put( processId, new HydPyServerStarter( m_config, m_fixedParameters, processId ) );
+
+    return m_starters.get( processId );
   }
 
   /**
@@ -149,14 +165,9 @@ public final class HydPyServerManager
   {
     try
     {
-      /* start the real server */
-      final HydPyServerProcess process = m_serverBuilder.start( processId );
-
-      /* wrap for OpenDA specific calling */
-      final HydPyServerOpenDA server = new HydPyServerOpenDA( process, m_fixedParameters );
-
-      /* return the real implementation which is always threaded per process */
-      return new HydPyServerThreadingProcess( server );
+      /* start the real server and wait for it */
+      final HydPyServerStarter starter = getOrCreateStarter( processId );
+      return starter.getServer();
     }
     catch( final HydPyServerException e )
     {
@@ -168,13 +179,13 @@ public final class HydPyServerManager
 
   public void killAllServers( )
   {
-    for( final IHydPyServerProcess process : m_processes.values() )
-      process.kill();
+    for( final HydPyServerStarter starter : m_starters.values() )
+      starter.kill();
   }
 
-  public void finish( )
+  public synchronized void finish( )
   {
-    for( final IHydPyServerProcess process : m_processes.values() )
-      process.shutdown();
+    for( final HydPyServerStarter starter : m_starters.values() )
+      starter.shutdown();
   }
 }

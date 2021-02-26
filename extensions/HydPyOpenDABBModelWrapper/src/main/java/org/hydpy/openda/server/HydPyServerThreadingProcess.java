@@ -18,10 +18,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 
 import org.openda.interfaces.IPrevExchangeItem;
 
@@ -36,23 +33,10 @@ class HydPyServerThreadingProcess implements IHydPyServerProcess
 
   private final Map<String, Future<List<IPrevExchangeItem>>> m_currentSimulations = new HashMap<>();
 
-  public HydPyServerThreadingProcess( final HydPyServerOpenDA server )
+  public HydPyServerThreadingProcess( final HydPyServerOpenDA server, final ExecutorService executor )
   {
     m_server = server;
-
-    final ThreadFactory threadFactory = new ThreadFactory()
-    {
-      @Override
-      public Thread newThread( final Runnable r )
-      {
-        final ThreadGroup group = Thread.currentThread().getThreadGroup();
-        final Thread thread = new Thread( group, r, getName() );
-        thread.setDaemon( false );
-        thread.setPriority( Thread.NORM_PRIORITY );
-        return thread;
-      }
-    };
-    m_executor = Executors.newSingleThreadExecutor( threadFactory );
+    m_executor = executor;
   }
 
   protected final HydPyServerOpenDA getServer( )
@@ -164,18 +148,7 @@ class HydPyServerThreadingProcess implements IHydPyServerProcess
       }
     };
 
-    try
-    {
-      m_executor.submit( task );
-
-      m_executor.shutdown();
-      m_executor.awaitTermination( 5, TimeUnit.SECONDS );
-      System.out.format( "%s: shut down terminated", getName() );
-    }
-    catch( final InterruptedException e )
-    {
-      e.printStackTrace();
-    }
+    m_executor.submit( task );
   }
 
   @Override

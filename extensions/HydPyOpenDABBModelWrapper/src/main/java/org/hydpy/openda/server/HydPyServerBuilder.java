@@ -39,19 +39,19 @@ final class HydPyServerBuilder
 
     final String name = String.format( "HydPyServer %d - %s", processId, port );
 
+    final long start = System.currentTimeMillis();
+
     final Process process = startProcess( port, processId );
 
     final HydPyServerProcess server = new HydPyServerProcess( name, address, process );
 
     try
     {
-      final long start = System.currentTimeMillis();
-
       tryCallServer( server );
 
       final long end = System.currentTimeMillis();
       final double time = (end - start) / 1000.0;
-      System.out.format( "StartTime: %.2f%n", time );
+      System.out.format( "HydPy Server ready after %.2f seconds%n", time );
 
       return server;
     }
@@ -137,8 +137,7 @@ final class HydPyServerBuilder
       }
       catch( final HydPyServerException ignored )
       {
-        // TODO: use logging framework?
-        System.out.println( "Waiting for HyPy-Server: " + i );
+        System.out.println( "Waiting for HyPy-Server..." );
         /* continue waiting */
       }
       catch( final HydPyServerProcessException e )

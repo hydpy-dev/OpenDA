@@ -22,6 +22,7 @@ cache:
 
 script:
   - cd extensions/HydPyOpenDABBModelWrapper
+  - gradle wrapper
   - ./gradlew build
   - export BUILD_VERSION=$(./gradlew -q printVersionName)
 #  - cd ../..

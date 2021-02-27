@@ -3,6 +3,8 @@
 Allows running a [HydPy](https://github.com/hydpy-dev/hydpy) model as a 
 BlackBoxModel in [OpenDA](http://openda.org/).
 
+This version of HydPyOpenDABBModelWrapper is currently compatible with OpenDA Version 2.4.5. 
+
 ## Compilation
 
 Building the sources is done via [Gradle](https://gradle.org/). Usually,

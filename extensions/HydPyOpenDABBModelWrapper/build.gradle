@@ -3,7 +3,7 @@ plugins {
     id 'eclipse'
 }
 
-project.version = '0.8.0'
+project.version = '0.9.0'
 project.description = 'The HydPy BlackBoxModel wrapper for OpenDA'
 
 // OpenDA is currrently distributed with Java 1.7
@@ -26,18 +26,32 @@ repositories {
     }
 }
 
+configurations {
+    openDaLibs {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+    
+    compileOnly.extendsFrom openDaLibs
+    testImplementation.extendsFrom openDaLibs
+}
+
 dependencies {
     implementation group: 'org.apache.httpcomponents', name: 'fluent-hc', version: '4.5.6'
 
     // Those libs are part of OpenDA and will be automatically in the classpath when we run OpenDA with this extension.
     // They will be not included in our distribution. 
-    compileOnly name: 'joda-time-2.9.6'
-    compileOnly name: 'commons-lang3-3.4'
-    compileOnly name: 'openda_core'
-
-    // Use JUnit test framework
-    // testImplementation 'junit:junit:4.12'
+    openDaLibs group: 'joda-time', name: 'joda-time', version: '2.9.6'
+    openDaLibs group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+    openDaLibs name: 'openda_core'
 }
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
 jar {
 	// name the main jar file according to OpenDA convention
@@ -47,9 +61,16 @@ jar {
         attributes(
             'Build-Timestamp': new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
             'Build-Version'  : "${project.version}",
-            'Created-By'     : "Gradle ${gradle.gradleVersion}",
             'Build-Jdk'      : "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
-            'Build-OS'       : "${System.properties['os.name']} ${System.properties['os.arch']} ${System.properties['os.version']}"
+            'Build-OS'       : "${System.properties['os.name']} ${System.properties['os.arch']} ${System.properties['os.version']}",
+
+            'Created-By'     : "Gradle ${gradle.gradleVersion}",
+
+            'Bundle-Name'    : "${project.name}",
+			'Bundle-License' : "LICENSE.txt",
+			'Bundle-SymbolicName' : "org.hydpy.openda",
+			'Bundle-Vendor': "https://github.com/hydpy-dev",
+			'Bundle-Version': "${project.version}"
         )
     }
 }

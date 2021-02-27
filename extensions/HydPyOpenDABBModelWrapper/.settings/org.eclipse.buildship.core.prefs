@@ -1,4 +1,4 @@
-arguments=-POpenDADir\=G\:/Workspaces/OpenDA/openda_2.4 --warning-mode all
+arguments=--warning-mode all
 auto.sync=true
 build.scans.enabled=false
 connection.gradle.distribution=GRADLE_DISTRIBUTION(WRAPPER)

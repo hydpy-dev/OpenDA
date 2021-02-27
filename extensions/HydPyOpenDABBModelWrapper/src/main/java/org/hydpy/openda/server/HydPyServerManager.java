@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * Manages the life-cycle of the {@link HydPyServer}, allowing possibly several server processes at once.
+ * Manages the life-cycle of the {@link HydPyServerInstance}s, allowing possibly several server processes at once.
  * Model runs will the same instanceId are guaranteed to always get the same server process.
  *
  * @author Gernot Belger
@@ -28,7 +28,7 @@ public final class HydPyServerManager
   /**
    * Constant for any server instance.
    *
-   * @see #getOrCreateServer(String)
+   * @see #getOrCreateInstance(String)
    */
   public static final String ANY_INSTANCE = "ANY_INSTANCE"; //$NON-NLS-1$
 
@@ -117,7 +117,7 @@ public final class HydPyServerManager
    * @param instanceId
    *          Used to fetch a server instance for the given simulation instance id. <br/>
    *          If {@link #ANY_INSTANCE} is given, any available instance is returned (useful for initialization).<br/>
-   *          Several calls with the same instanceId are guaranteed to return the same {@link IHydPyServer} process.<br/>
+   *          Several calls with the same instanceId are guaranteed to return the same {@link HydPyModelInstance} process.<br/>
    *          Depending on the configuration of this manager, multiple instanceId's may be mapped to the same HydPy server process.
    */
   public synchronized HydPyModelInstance getOrCreateInstance( final String instanceId )

@@ -26,7 +26,6 @@ script:
   - export BUILD_VERSION=$(./gradlew -q printVersionName)
   - cd ../..
   - zip -r "HydPyOpenDABBModelWrapper-$BUILD_VERSION-Examples.zip" demos/*
-  - ls
 #  - cd ../..
 #  - python run_doctests.py
 

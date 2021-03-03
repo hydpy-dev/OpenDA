@@ -24,7 +24,6 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
-import org.apache.http.util.EntityUtils;
 
 /**
  * Represents a client calling a HydPy server process which handles the basic http calls.
@@ -33,7 +32,9 @@ import org.apache.http.util.EntityUtils;
  */
 final class HydPyServerClient
 {
-  private static final String PATH_STATUS = "status"; //$NON-NLS-1$
+  private static final String PATH_STATUS = "get_status"; //$NON-NLS-1$
+
+  private static final String PATH_VERSION = "get_version"; //$NON-NLS-1$
 
   private static final String PATH_EXECUTE = "execute"; //$NON-NLS-1$
 
@@ -161,18 +162,17 @@ final class HydPyServerClient
   public boolean checkStatus( final int timeout ) throws HydPyServerException
   {
     final URI endpoint = buildEndpoint( PATH_STATUS, null, null );
-    final HttpEntity entity = callGet( endpoint, timeout );
+    final Properties response = callGetAndParse( endpoint, timeout );
 
-    try
-    {
-      final String responseContent = EntityUtils.toString( entity );
+    final String status = response.getProperty( "status" );
+    return "ready".equalsIgnoreCase( status );
+  }
 
-      return "status = ready".equalsIgnoreCase( responseContent );
-    }
-    catch( final Exception e )
-    {
-      throw new HydPyServerException( "Failed to read HydPy-Server response", e );
-    }
+  public HydPyVersion getVersion( final int timeout ) throws HydPyServerException
+  {
+    final URI endpoint = buildEndpoint( PATH_VERSION, null, null );
+    final Properties response = callGetAndParse( endpoint, timeout );
+    return HydPyVersion.parse( response.getProperty( "version" ) );
   }
 
   public void shutdown( )

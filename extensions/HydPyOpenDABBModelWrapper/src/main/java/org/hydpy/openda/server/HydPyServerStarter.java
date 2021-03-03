@@ -31,6 +31,8 @@ import org.apache.http.client.utils.URIBuilder;
  */
 final class HydPyServerStarter
 {
+  private final static HydPyVersion VERSION_SUPPORTED = new HydPyVersion( 4, 1, 0, true );
+
   private final ExecutorService m_executor;
 
   private final HydPyServerConfiguration m_config;
@@ -170,7 +172,7 @@ final class HydPyServerStarter
       System.out.format( "%s: starting ...%n", m_name );
       final List<String> commandLine = builder.command();
       System.out.println( "Working-Directory:" );
-      System.out.println( m_config.workingDir );
+      System.out.println( m_config.modelDir );
       System.out.println( "Command-Line:" );
       for( final String commmandPart : commandLine )
       {
@@ -204,12 +206,22 @@ final class HydPyServerStarter
         try
         {
           // Process is still living, continue
-          if( client.checkStatus( timeoutMillis ) )
-            return;
+          final HydPyVersion version = client.getVersion( timeoutMillis );
+
+          if( version.compareTo( VERSION_SUPPORTED ) < 0 )
+            System.err.format( "WARNING: HydPy Version of Server (%s) is LESS than the supported vrsion (%s) of this wrapper, do expect compatibility problems.%n", version, VERSION_SUPPORTED );
+          else if( version.compareTo( VERSION_SUPPORTED ) > 0 )
+            System.out.format( "INFO: HydPy Version of Server (%s) is GREATER than the supported vrsion (%s) of this wrapper%n", version, VERSION_SUPPORTED );
+          return;
         }
-        catch( final HydPyServerException ignored )
+        catch( final HydPyServerException ex )
         {
           System.out.format( "%s: waiting for startup...%n", m_name );
+          System.out.format( "%s: %s%n", m_name, ex.getLocalizedMessage() );
+
+          if( i == retries - 1 )
+            ex.printStackTrace();
+
           /* continue waiting */
         }
       }

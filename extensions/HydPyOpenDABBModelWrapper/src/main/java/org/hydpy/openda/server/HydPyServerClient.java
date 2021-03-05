@@ -32,9 +32,9 @@ import org.apache.http.entity.ContentType;
  */
 final class HydPyServerClient
 {
-  private static final String PATH_STATUS = "get_status"; //$NON-NLS-1$
+  private static final String PATH_STATUS = "status"; //$NON-NLS-1$
 
-  private static final String PATH_VERSION = "get_version"; //$NON-NLS-1$
+  private static final String PATH_VERSION = "version"; //$NON-NLS-1$
 
   private static final String PATH_EXECUTE = "execute"; //$NON-NLS-1$
 

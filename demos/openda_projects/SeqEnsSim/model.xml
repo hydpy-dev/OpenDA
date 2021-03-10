@@ -9,7 +9,7 @@
     <arg>logDirectory:results</arg>
     <!-- Only activate those if you want the armaNoiseModell-log.txt -->
     <arg>templateDir:results/template</arg>
-    <arg>instanceDir:results/member_</arg>
+    <arg>instanceDir:results/instance</arg>
   </modelFactory>
   <vectorSpecification>
     <state>

@@ -13,9 +13,6 @@ os:
 #  - pip install --upgrade pip
 #  - pip install hydpy==3.2a4
 
-# jdk:
- #  - oraclejdk7
-
 cache:
    directories:
      - $TRAVIS_BUILD_DIR/extensions/HydPyOpenDABBModelWrapper/.gradle

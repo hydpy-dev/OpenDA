@@ -29,7 +29,7 @@ first, before being able to calculate the results on our own:
 >>> from hydpy import HydPy, pub, print_values, run_subprocess
 >>> pub.options.printprogress = False
 >>> pub.options.reprdigits = 6
->>> run_subprocess('oda_run_batch main.oda', verbose=False)
+>>> _ = run_subprocess('oda_run_batch main.oda', verbose=False)
 
 We now load the three simulation results into dictionary `ext_sim` and
 show the first five values of each series:
@@ -41,9 +41,9 @@ show the first five values of each series:
 ...     ext_sims[idx] = results[f'pred_f_{idx-1}'][:, 0]
 ...     print(f'sim {idx}:', end=' ')
 ...     print_values(ext_sims[idx][:5])
-sim 1: 23.292242, 9.149346, 7.174979, 6.886055, 6.600641
-sim 2: 11.465863, 8.503955, 7.652735, 7.274943, 7.106856
-sim 3: 16.146278, 9.464293, 7.620645, 7.123824, 6.854726
+sim 1: 23.439226, 9.14789, 7.169866, 6.880254, 6.595081
+sim 2: 11.5159, 8.517174, 7.656261, 7.272902, 7.105482
+sim 3: 16.249522, 9.481361, 7.621557, 7.118519, 6.849954
 
 To reproduce these results, we need to know the `Alpha`_ values of the
 different ensemble members at the different simulation time steps.
@@ -96,9 +96,9 @@ value between subsequent timesteps):
 ...     int_sims[idx] = hp.nodes.lahn_1.sequences.sim.series.copy()
 ...     print(f'sim {idx}:', end=' ')
 ...     print_values(int_sims[idx][:5])
-sim 1: 23.292242, 9.149346, 7.174979, 6.886055, 6.600641
-sim 2: 11.465863, 8.503955, 7.652735, 7.274943, 7.106856
-sim 3: 16.146278, 9.464293, 7.620645, 7.123824, 6.854726
+sim 1: 23.439226, 9.14789, 7.169866, 6.880254, 6.595081
+sim 2: 11.5159, 8.517174, 7.656261, 7.272902, 7.105482
+sim 3: 16.249522, 9.481361, 7.621557, 7.118519, 6.849954
 
 Both simulation results of the `OpenDA` based and the "pure Python"
 approach are identical not only the first five days but for the

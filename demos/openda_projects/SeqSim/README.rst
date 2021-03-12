@@ -51,7 +51,7 @@ We save the complete simulated discharge series for later comparisons:
 
 >>> sim_internal = hp.nodes.lahn_1.sequences.sim.series
 >>> print_values(sim_internal[:5])
-17.342381, 9.544265, 7.548786, 7.096891, 6.805922
+17.456475, 9.559102, 7.548185, 7.091031, 6.800865
 >>> os.chdir('../openda_projects/SeqSim')
 
 The `OpenDA`_ configuration of this example is very much similar to the
@@ -60,7 +60,7 @@ one of the `calibration example`_.  One notable difference is that the
 of `DUD`_.  The command to execute `OpenDA`_ and the way to load the
 results into Python are also identical:
 
->>> run_subprocess('oda_run_batch main.oda', verbose=False)
+>>> _ = run_subprocess('oda_run_batch main.oda', verbose=False)
 >>> import runpy
 >>> results = runpy.run_path('results/final.py')
 >>> sim_external = results['pred_a_central'][:, 0]
@@ -71,7 +71,7 @@ five values but also the complete discharge series of one year within a
 precision of six decimal places:
 
 >>> print_values(sim_external[:5])
-17.342381, 9.544265, 7.548786, 7.096891, 6.805922
+17.456475, 9.559102, 7.548185, 7.091031, 6.800865
 >>> import numpy
 >>> numpy.all(numpy.round(sim_internal, 6) == numpy.round(sim_external, 6))
 True

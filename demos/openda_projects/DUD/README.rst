@@ -81,7 +81,7 @@ values simulated for the outlet of the Dill catchment, serving as the
 >>> hp.simulate()
 >>> true_discharge = hp.nodes.dill.sequences.sim.series
 >>> print_values(true_discharge[:5])
-11.658511, 8.842278, 7.103614, 6.00763, 5.313751
+11.78038, 8.901179, 7.131072, 6.017787, 5.313211
 
 Fifth, we write the "true" discharge into `observation file`_
 *dill.discharge.noos*:
@@ -114,7 +114,7 @@ line tool:
 
 From within a Python process, one can use function `run_subprocess`_ instead:
 
->>> run_subprocess(command, verbose=False)
+>>> _ = run_subprocess(command, verbose=False)
 
 `oda_run_batch` is a batch script available in your `OpenDA`_ installation.
 Its path must either be added to the environment variable *PATH* or prefixed
@@ -160,18 +160,18 @@ the correct value of 1.0 with a precision of six decimal places within
 six simulation runs:
 
 >>> print_values(2.0+results['evaluatedParameters'][:,0])
-2.0, 3.0, 1.012238, 1.001496, 1.000002, 1.0
+2.0, 3.0, 1.002549, 1.000307, 1.0
 
 The following commands print the "artificial observations", the simulation
 results of the first evaluation (*alpha*=2.0), and the simulation results
 of the last evaluation (*alpha*=1.0), respectively:
 
 >>> print_values(results['observed'][-1, :5])
-11.658511, 8.842278, 7.103614, 6.00763, 5.313751
+11.78038, 8.901179, 7.131072, 6.017787, 5.313211
 >>> print_values(results['predicted'][0, :5])
-35.250827, 7.774062, 5.035808, 4.513706, 4.251594
+35.537828, 7.741064, 5.018981, 4.501784, 4.238874
 >>> print_values(results['predicted'][-1, :5])
-11.658511, 8.842278, 7.103614, 6.00763, 5.313751
+11.780381, 8.901179, 7.131072, 6.017787, 5.313211
 
 At least for this minimal example, `DUD`_ works well for calibrating
 `HydPy`_ models.

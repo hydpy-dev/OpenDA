@@ -66,8 +66,8 @@ Before continuing the simulation, we add 4 mm to the base flow storage `LZ`_:
 The modified series of `LZ`_ looks as follows:
 
 >>> print_values(element.model.sequences.states.lz.series[:10])
-8.276894, 8.361623, 8.441877, 8.517635, 8.589283, 12.113043,
-11.612774, 11.187676, 10.725625, 10.282656
+8.274782, 8.357493, 8.435817, 8.50973, 8.579616, 12.110951, 11.610768,
+11.185753, 10.723781, 10.280889
 
 When inspecting the discharge simulated at the catchment outlet, which
 we take as the "true" discharge in the following, one sees
@@ -75,8 +75,8 @@ an abrupt increase due to the sudden increase of groundwater:
 
 >>> sim_true = node.sequences.sim.series.copy()
 >>> print_values(sim_true[:10])
-9.621296, 8.503069, 7.774927, 7.34503, 7.15879, 10.026952, 9.612801,
-9.260914, 8.878438, 8.511759
+9.647824, 8.517795, 7.781311, 7.344944, 7.153142, 10.025244, 9.611141,
+9.259323, 8.876913, 8.510296
 
 We now reset the previously saved model states (with the unmodified
 value of `LZ`_) and recalculate the discharge series, taken as the
@@ -86,8 +86,8 @@ value of `LZ`_) and recalculate the discharge series, taken as the
 >>> hp.simulate()
 >>> sim_uncorrected = node.sequences.sim.series.copy()
 >>> print_values(sim_uncorrected[:10])
-9.621296, 8.503069, 7.774927, 7.34503, 7.15879, 6.852588, 6.569539,
-6.343338, 6.081358, 5.830198
+9.647824, 8.517795, 7.781311, 7.344944, 7.153142, 6.85088, 6.567878,
+6.341747, 6.079833, 5.828735
 
 The Ensemble Kalman Filter needs to know (an estimate of) the "true"
 discharge to improve the model states.  As in the `calibration example`_,
@@ -115,7 +115,7 @@ an exchange item for changing the value of state `LZ`_ instead of parameter
 the stochastic perturbations, the Ensemble Kalman Filter returns the
 following corrected discharge series:
 
->>> run_subprocess('oda_run_batch main.oda', verbose=False)
+>>> _ = run_subprocess('oda_run_batch main.oda', verbose=False)
 >>> import runpy
 >>> results = runpy.run_path('results/final.py')
 >>> sim_corrected = results['pred_f'][:, 0]
@@ -125,11 +125,11 @@ by the Ensemble Kalman Filter approximates the "true" discharge more
 closely than the uncorrected discharge:
 
 >>> print_values(sim_uncorrected[-7:])
-2.118697, 2.031194, 1.947306, 1.866882, 1.78978, 1.715862, 1.644997
+2.118165, 2.030685, 1.946818, 1.866414, 1.789331, 1.715432, 1.644584
 >>> print_values(sim_corrected[-7:])
-2.859875, 2.838286, 2.662556, 2.574135, 2.529551, 2.462996, 2.477771
+2.859344, 2.837776, 2.662068, 2.573667, 2.529102, 2.462565, 2.477358
 >>> print_values(sim_true[-7:])
-3.093177, 2.965429, 2.842957, 2.725542, 2.612978, 2.505062, 2.401603
+3.092645, 2.964919, 2.842468, 2.725074, 2.612528, 2.504631, 2.40119
 
 Inspecting the complete simulation period, one realises that there is
 a short subperiod where the "corrected" results are actually worse than

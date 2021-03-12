@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -45,14 +44,11 @@ final class HydPyServerStarter
 
   private final Future<HydPyServerInstance> m_future;
 
-  private final Collection<String> m_fixedParameters;
-
   private Process m_process = null;
 
-  public HydPyServerStarter( final HydPyServerConfiguration config, final Collection<String> fixedParameters, final int processId )
+  public HydPyServerStarter( final HydPyServerConfiguration config, final int processId )
   {
     m_config = config;
-    m_fixedParameters = fixedParameters;
     m_processId = processId;
 
     m_port = config.startPort + processId;
@@ -116,7 +112,7 @@ final class HydPyServerStarter
       System.out.format( "%s: ready after %.2f seconds%n", m_name, time );
 
       /* wrap for OpenDA specific calling */
-      final HydPyOpenDACaller openDaCaller = new HydPyOpenDACaller( m_name, client, m_fixedParameters );
+      final HydPyOpenDACaller openDaCaller = new HydPyOpenDACaller( m_name, client );
 
       /* return the real implementation which is always threaded per process */
       return new HydPyServerInstance( openDaCaller, m_executor );

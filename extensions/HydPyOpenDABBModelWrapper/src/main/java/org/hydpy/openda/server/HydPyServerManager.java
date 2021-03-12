@@ -12,7 +12,6 @@
 package org.hydpy.openda.server;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -34,24 +33,14 @@ public final class HydPyServerManager
 
   private static HydPyServerManager INSTANCE = null;
 
-  private static Collection<String> FIXED_ITEMS = null;
-
-  public static void initFixedItems( final Collection<String> fixedItems )
-  {
-    FIXED_ITEMS = fixedItems;
-  }
-
   public static void create( final Path workingDir, final Properties args )
   {
-    if( FIXED_ITEMS == null )
-      throw new IllegalStateException( "initFixedParameters was never called" );
-
     if( INSTANCE != null )
       throw new IllegalStateException( "create wa called more than once" );
 
     final HydPyServerConfiguration hydPyConfig = new HydPyServerConfiguration( workingDir, args );
 
-    INSTANCE = new HydPyServerManager( hydPyConfig, FIXED_ITEMS );
+    INSTANCE = new HydPyServerManager( hydPyConfig );
   }
 
   public synchronized static HydPyServerManager instance( )
@@ -86,14 +75,11 @@ public final class HydPyServerManager
 
   private final HydPyServerConfiguration m_config;
 
-  private final Collection<String> m_fixedParameters;
-
   private int m_nextProcessId = 0;
 
-  public HydPyServerManager( final HydPyServerConfiguration config, final Collection<String> fixedItemIds )
+  public HydPyServerManager( final HydPyServerConfiguration config )
   {
     m_config = config;
-    m_fixedParameters = fixedItemIds;
 
     // REMARK: always try to shutdown the running HydPy servers.
     Runtime.getRuntime().addShutdownHook( new ShutdownThread( this ) );
@@ -108,7 +94,7 @@ public final class HydPyServerManager
   private HydPyServerStarter getOrCreateStarter( final int processId )
   {
     if( !m_starters.containsKey( processId ) )
-      m_starters.put( processId, new HydPyServerStarter( m_config, m_fixedParameters, processId ) );
+      m_starters.put( processId, new HydPyServerStarter( m_config, processId ) );
 
     return m_starters.get( processId );
   }

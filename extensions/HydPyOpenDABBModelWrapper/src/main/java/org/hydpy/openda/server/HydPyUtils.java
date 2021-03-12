@@ -27,7 +27,11 @@ final class HydPyUtils
   // REMARK: copied from Observer OpenDA, API, which is sadly not public
   private static final double millisToDays = 1.0 / (1000 * 60 * 60 * 24);
 
+  private static final double secondsToDays = 1.0 / (60 * 60 * 24);
+
   private static final double daysToMillis = (1000 * 60 * 60 * 24);
+
+  private static final double daysToSeconds = (60 * 60 * 24);
 
   private static final double mjdAtJanFirst1970 = 40587.0;
 
@@ -141,5 +145,16 @@ final class HydPyUtils
   {
     final long timeInMillis = Math.round( (mjd - mjdAtJanFirst1970) * daysToMillis );
     return new Instant( timeInMillis );
+  }
+
+  public static double durationToMjd( final long seconds )
+  {
+    return seconds * secondsToDays; // convert from millis to days and add offset for mjd
+  }
+
+  public static long mjdToDuration( final double mjd )
+  {
+    final long timeInSeconds = Math.round( mjd * daysToSeconds );
+    return timeInSeconds;
   }
 }

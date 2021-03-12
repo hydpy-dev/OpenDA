@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.joda.time.Instant;
-import org.openda.exchange.DoubleExchangeItem;
 import org.openda.interfaces.IPrevExchangeItem;
 
 /**
@@ -125,9 +124,7 @@ final class HydPyOpenDACaller
 
     /* detemrine step seconds */
     final AbstractServerItem stepServerItem = getItem( ITEM_ID_STEP_SIZE );
-    final Object stepParsedValue = stepServerItem.parseValue( stepValue );
-    final IPrevExchangeItem stepItem = stepServerItem.toExchangeItem( null, null, 0, stepParsedValue );
-    m_stepSeconds = (long)((DoubleExchangeItem)stepItem).getValue();
+    m_stepSeconds = (long)stepServerItem.parseValue( stepValue );
   }
 
   public String getName( )

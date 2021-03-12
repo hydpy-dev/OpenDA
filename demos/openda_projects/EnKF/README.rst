@@ -21,13 +21,12 @@ Adjust model states with the Ensemble Kalman Filter
 
 This example extends the `multiple sequential runs` example.  Now `OpenDA`_
 does not only perturb some model properties randomly but does so to improve
-simulations.  There is also a similarity to the
-`calibration example`_, in so far that both are artificial data experiments.
-In the `calibration example`_, we checked the `DUD`_ algorithm being able
-to find the `Alpha`_ value we knew to be the "true" one.  In this example,
-we instead distort the model state `LZ`_ during a simulation run and check
-the Ensemble Kalman Filter to be able to adjust another simulation run
-to this distortion.
+simulations.  There is also a similarity to the `calibration example`_, in so
+far that both are artificial data experiments. In the `calibration example`_,
+we checked the `DUD`_ algorithm being able to find the `Alpha`_ value we knew
+to be the "true" one.  In this example, we instead distort the model state
+`LZ`_ during a simulation run and check the Ensemble Kalman Filter to adjust
+another simulation run to this distortion.
 
 Prepare the artificial data
 ...........................
@@ -107,13 +106,13 @@ Adjust state LZ
 
 The `OpenDA`_ configuration resembles the configuration of the
 `multiple sequential runs`_ example.  Notable differences are that file
-`main.oda`_ selects the Ensemble Kalman Filter algorithm, file
-`algorithm.xml`_ enables not only `stochInit` but also `stochForcing` for
-stepwise state perturbations, and files `model.xml`_ and `hydpy.xml`_ define
-an exchange item for changing the value of state `LZ`_ instead of parameter
-`Alpha`_.  Using 20 ensemble members and the AR(1) model for generating
-the stochastic perturbations, the Ensemble Kalman Filter returns the
-following corrected discharge series:
+`main.oda`_ selects the Ensemble Kalman Filter algorithm, file `algorithm.xml`_
+enables not only `stochInit` but also `stochForcing` for stepwise state
+perturbations, and files `model.xml`_ and `hydpy.xml`_ define an exchange item
+for changing the value of state `LZ`_ instead of parameter `Alpha`_.  Using 20
+ensemble members and the `MapsNoiseModel` for generating the stochastic
+perturbations, the Ensemble Kalman Filter returns the following corrected
+discharge series:
 
 >>> _ = run_subprocess('oda_run_batch main.oda', verbose=False)
 >>> import runpy
@@ -127,19 +126,20 @@ closely than the uncorrected discharge:
 >>> print_values(sim_uncorrected[-7:])
 2.118165, 2.030685, 1.946818, 1.866414, 1.789331, 1.715432, 1.644584
 >>> print_values(sim_corrected[-7:])
-2.859344, 2.837776, 2.662068, 2.573667, 2.529102, 2.462565, 2.477358
+3.163455, 3.059748, 2.919574, 2.782616, 2.674682, 2.560758, 2.446207
 >>> print_values(sim_true[-7:])
 3.092645, 2.964919, 2.842468, 2.725074, 2.612528, 2.504631, 2.40119
 
-Inspecting the complete simulation period, one realises that there is
-a short subperiod where the "corrected" results are actually worse than
-the uncorrected ones and that the "corrected" discharge is generally
-too noisy, which is at least partly be due to the chosen ensemble size:
+The following figure shows the results for the entire simulation period
+and includes uncertainty bounds for the estimated value of `LZ`_:
 
+>>> sim_uncertainty = results['pred_f_std'][:, 0]
 >>> from matplotlib import pyplot
 >>> _ = pyplot.plot(sim_true, 'red', label='true')
 >>> _ = pyplot.plot(sim_uncorrected, 'green', label='uncorrected')
 >>> _ = pyplot.plot(sim_corrected, 'black', label='corrected')
+>>> _ = pyplot.plot(sim_corrected + 1.96 * sim_uncertainty, 'grey', label='uncertainty')
+>>> _ = pyplot.plot(sim_corrected - 1.96 * sim_uncertainty, 'grey')
 >>> _ = pyplot.ylabel('Q [m3/s]')
 >>> _ = pyplot.xlabel('day')
 >>> _ = pyplot.legend()

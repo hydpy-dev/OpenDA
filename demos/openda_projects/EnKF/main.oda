@@ -18,6 +18,7 @@
       <configFile>final.py</configFile>
       <selection>
         <resultItem id="pred_f" outputLevel="All" maxSize="100000" />
+        <resultItem id="pred_f_std" outputLevel="All" maxSize="100000" />
       </selection>
     </resultWriter>
   </resultWriters>

@@ -131,17 +131,10 @@ class MapsNoiseModelConfiguration
       throw new RuntimeException( "MapsNoiseModelInstance: missing id for item: " + itemConfig.toString() );
     System.out.println( "Id=" + id );
 
-    // create empty item
-//    final ArrayExchangeItem tempItem = new ArrayExchangeItem( id, Role.Output );
-
     // quantity
     final String quantityValue = itemConfig.getAsString( "@quantity", "unknown_quantity" ).trim();
-    // unit
     final String unitValue = itemConfig.getAsString( "@unit", "unknown_unit" ).trim();
-
     final QuantityInfo quantityInfo = new QuantityInfo( quantityValue, unitValue );
-
-//    tempItem.setQuantityInfo( tempQ );
 
     /*
      * spatial grid

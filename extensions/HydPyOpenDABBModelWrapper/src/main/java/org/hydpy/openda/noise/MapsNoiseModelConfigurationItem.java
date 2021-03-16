@@ -26,7 +26,7 @@ final class MapsNoiseModelConfigurationItem
 
   private final QuantityInfo m_quantityInfo;
 
-  private final CoordinatesType m_coordsType;
+  private final ArrayGeometryInfo m_geometryInfo;
 
   private final boolean m_separable;
 
@@ -37,6 +37,8 @@ final class MapsNoiseModelConfigurationItem
   private final double m_timeCorrelationScale;
 
   private final double m_horizontalCorrelationScale;
+
+  private final CoordinatesType m_coordsType;
 
   private final double[] m_x;
 
@@ -49,8 +51,6 @@ final class MapsNoiseModelConfigurationItem
   private SpatialCorrelationCovariance m_sharedCorrelationCovarianceY = null;
 
   private final double m_incrementTime;
-
-  private final ArrayGeometryInfo m_geometryInfo;
 
   public MapsNoiseModelConfigurationItem( final String id, final double incrementTime, final QuantityInfo quantityInfo, final CoordinatesType coordsType, final ArrayGeometryInfo geometryInfo, final boolean separable, final double initialValue, final double stdDeviation, final double timeCorrelationScale, final double horizontalCorrelationScale, final double[] x, final double[] y )
   {

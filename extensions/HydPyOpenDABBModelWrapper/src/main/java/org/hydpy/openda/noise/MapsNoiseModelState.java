@@ -22,6 +22,11 @@ import org.openda.interfaces.IVector;
 import org.openda.utils.Results;
 import org.openda.utils.Vector;
 
+/**
+ * 'State' of the {@link MapsNoiseModelInstance} used for saving/restoring its state from a file.
+ *
+ * @author Gernot Belger
+ */
 final class MapsNoiseModelState implements IModelState
 {
   private static final String PROPERTY_STATE = "state"; //$NON-NLS-1$

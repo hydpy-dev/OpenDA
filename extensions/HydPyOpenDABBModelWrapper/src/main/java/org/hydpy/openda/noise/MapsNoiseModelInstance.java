@@ -317,6 +317,7 @@ public class MapsNoiseModelInstance extends Instance implements IStochModelInsta
   @Override
   public void releaseInternalState( final IModelState savedInternalState )
   {
+    /* nothing to do, let the garbace collector do its work */
   }
 
   @Override
@@ -373,7 +374,6 @@ public class MapsNoiseModelInstance extends Instance implements IStochModelInsta
   public void setParameters( final IVector parameters )
   {
     /* we do not have any special parameters */
-    System.out.println();
   }
 
   @Override

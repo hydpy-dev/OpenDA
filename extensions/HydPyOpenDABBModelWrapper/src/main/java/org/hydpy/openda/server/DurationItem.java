@@ -36,7 +36,9 @@ final class DurationItem extends AbstractServerItem
   @Override
   public IPrevExchangeItem toExchangeItem( final Instant startTime, final Instant endTime, final long stepSeconds, final Object value )
   {
-    return new DoubleExchangeItem( getId(), getRole(), (Long)value );
+    final double mjd = HydPyUtils.durationToMjd( (long)value );
+
+    return new DoubleExchangeItem( getId(), getRole(), mjd );
   }
 
   @Override
@@ -44,7 +46,10 @@ final class DurationItem extends AbstractServerItem
   {
     final DoubleExchangeItem dblItem = (DoubleExchangeItem)exItem;
     final double value = dblItem.getValue();
-    return printDuration( value );
+
+    final long seconds = HydPyUtils.mjdToDuration( value );
+
+    return printDuration( seconds );
   }
 
   private long parseDuration( final String valueText ) throws HydPyServerException

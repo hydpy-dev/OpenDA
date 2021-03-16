@@ -20,9 +20,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.joda.time.Instant;
-import org.openda.exchange.DoubleExchangeItem;
 import org.openda.interfaces.IPrevExchangeItem;
 
 /**
@@ -42,10 +42,7 @@ final class HydPyOpenDACaller
   private static final String METHODS_REQUEST_INITIAL_STATE = //
       /* tell hyd py to write default values into state-register */
       "GET_register_initialitemvalues," + //
-      /* and query them */
-          "GET_query_conditionitemvalues," + //
-          "GET_query_getitemvalues," + //
-          "GET_query_parameteritemvalues," + //
+      /* and also query the initialization time grid (i.e. time span and step with which the HydPy is configured */
           "GET_query_initialisationtimegrid"; //
 
   private static final String METHODS_INITIALIZE_INSTANCE = //
@@ -93,15 +90,13 @@ final class HydPyOpenDACaller
 
   private final Map<String, AbstractServerItem> m_itemIndex;
 
-  private final Map<String, Object> m_fixedItemValues;
-
   private final long m_stepSeconds;
 
   private final String m_firstDateValue;
 
   private final String m_lastDateValue;
 
-  public HydPyOpenDACaller( final String name, final HydPyServerClient client, final Collection<String> fixedItemIds ) throws HydPyServerException
+  public HydPyOpenDACaller( final String name, final HydPyServerClient client ) throws HydPyServerException
   {
     m_name = name;
     m_client = client;
@@ -126,16 +121,10 @@ final class HydPyOpenDACaller
     props.remove( ITEM_ID_FIRST_DATE_INIT );
     props.remove( ITEM_ID_LAST_DATE_INIT );
     props.remove( ITEM_ID_STEP_SIZE );
-    m_fixedItemValues = getFixedItemValues( props, fixedItemIds );
 
     /* detemrine step seconds */
     final AbstractServerItem stepServerItem = getItem( ITEM_ID_STEP_SIZE );
-    final Object stepParsedValue = stepServerItem.parseValue( stepValue );
-    final IPrevExchangeItem stepItem = stepServerItem.toExchangeItem( null, null, 0, stepParsedValue );
-    m_stepSeconds = (long)((DoubleExchangeItem)stepItem).getValue();
-
-    // REMARK: set 'stepSeconds' as fixed item, as these are not return from HydPy from any state
-    m_fixedItemValues.put( ITEM_ID_STEP_SIZE, m_stepSeconds );
+    m_stepSeconds = (long)stepServerItem.parseValue( stepValue );
   }
 
   public String getName( )
@@ -188,17 +177,6 @@ final class HydPyOpenDACaller
     return items;
   }
 
-  private Map<String, Object> getFixedItemValues( final Properties props, final Collection<String> fixedItemIds ) throws HydPyServerException
-  {
-    /* pre-parse items */
-    final Map<String, Object> values = preParseValues( props );
-
-    /* only use those as 'fixed' that are really declared as those */
-    values.keySet().retainAll( fixedItemIds );
-
-    return values;
-  }
-
   public Collection< ? extends IServerItem> getItems( )
   {
     return m_itemIndex.values();
@@ -231,7 +209,8 @@ final class HydPyOpenDACaller
   {
     /* pre-parse items */
     final Map<String, Object> preValues = preParseValues( props );
-    preValues.putAll( m_fixedItemValues );
+    // REMARK: set 'stepSeconds' as fixed item, as these are not returned from HydPy from any state
+    preValues.put( ITEM_ID_STEP_SIZE, m_stepSeconds );
 
     /* fetch fixed items value necessary to parse timeseries */
     final Instant startTime = (Instant)preValues.get( HydPyModelInstance.ITEM_ID_FIRST_DATE );
@@ -260,7 +239,7 @@ final class HydPyOpenDACaller
 
   private Map<String, Object> preParseValues( final Properties props ) throws HydPyServerException
   {
-    final Map<String, Object> preValues = new HashMap<>( props.size() );
+    final Map<String, Object> preValues = new TreeMap<>();
 
     for( final String property : props.stringPropertyNames() )
     {
@@ -279,8 +258,12 @@ final class HydPyOpenDACaller
   {
     log( "setting state for instanceId = '%s'", instanceId );
 
+    final Map<String, IPrevExchangeItem> sortedItems = new TreeMap<>();
+    for( final IPrevExchangeItem item : values )
+      sortedItems.put( item.getId(), item );
+
     final StringBuffer body = new StringBuffer();
-    for( final IPrevExchangeItem exItem : values )
+    for( final IPrevExchangeItem exItem : sortedItems.values() )
     {
       final String id = exItem.getId();
 

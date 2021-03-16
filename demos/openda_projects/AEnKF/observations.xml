@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<noosObserver
+        xmlns="http://www.openda.org"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/observation/noosObservations.xsd">
+  <timeSeries
+          id="dill_nodes_sim_series"
+          status="use"
+          standardDeviation="0.1">data/dill_discharge.noos
+  </timeSeries>
+  <timeSeries
+          id="lahn_1_nodes_sim_series"
+          status="use"
+          standardDeviation="0.1">data/lahn_1_discharge.noos
+  </timeSeries>
+  <timeSeries
+          id="lahn_2_nodes_sim_series"
+          status="use"
+          standardDeviation="0.1">data/lahn_2_discharge.noos
+  </timeSeries>
+  <timeSeries
+          id="lahn_3_nodes_sim_series"
+          status="use"
+          standardDeviation="0.1">data/lahn_3_discharge.noos
+  </timeSeries>
+</noosObserver>

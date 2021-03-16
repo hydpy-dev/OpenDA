@@ -136,6 +136,8 @@ final class HydPyUtils
     return buffer.toString();
   }
 
+  // FIXME: check if w can reuse the Time utility class of openDA
+
   public static double dateToMjd( final Instant date )
   {
     return date.getMillis() * millisToDays + mjdAtJanFirst1970; // convert from millis to days and add offset for mjd

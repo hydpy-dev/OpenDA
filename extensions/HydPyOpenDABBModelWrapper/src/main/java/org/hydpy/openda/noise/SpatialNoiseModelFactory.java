@@ -31,12 +31,12 @@ import org.openda.interfaces.ITime;
  * @author verlaanm
  * @author belger
  */
-public class MapsNoiseModelFactory implements IStochModelFactory, ITimeHorizonConsumer
+public final class SpatialNoiseModelFactory implements IStochModelFactory, ITimeHorizonConsumer
 {
   // Counter for keeping track of instances
   private static int NEXT_INSTANCE_NUMBER = 1;
 
-  private static MapsNoiseModelConfiguration m_configuration;
+  private static SpatialNoiseModelConfiguration m_configuration;
 
   private File m_workingDir = null;
 
@@ -60,13 +60,13 @@ public class MapsNoiseModelFactory implements IStochModelFactory, ITimeHorizonCo
   @Override
   public IStochModelInstance getInstance( final OutputLevel outputLevel )
   {
-    final MapsNoiseModelConfiguration configuration = readConfiguration();
+    final SpatialNoiseModelConfiguration configuration = readConfiguration();
 
     // Instance counter
     final int instanceNumber = NEXT_INSTANCE_NUMBER;
     NEXT_INSTANCE_NUMBER++;
 
-    return new MapsNoiseModelInstance( instanceNumber, outputLevel, configuration );
+    return new SpatialNoiseModelInstance( instanceNumber, outputLevel, configuration );
   }
 
   /**
@@ -74,10 +74,10 @@ public class MapsNoiseModelFactory implements IStochModelFactory, ITimeHorizonCo
    * a) performance
    * b) the configuration items reuse the correlation covariance for all model instances.
    */
-  private synchronized MapsNoiseModelConfiguration readConfiguration( )
+  private synchronized SpatialNoiseModelConfiguration readConfiguration( )
   {
     if( m_configuration == null )
-      m_configuration = MapsNoiseModelConfiguration.read( m_workingDir, m_arguments, m_timeHorizon );
+      m_configuration = SpatialNoiseModelConfiguration.read( m_workingDir, m_arguments, m_timeHorizon );
 
     return m_configuration;
   }

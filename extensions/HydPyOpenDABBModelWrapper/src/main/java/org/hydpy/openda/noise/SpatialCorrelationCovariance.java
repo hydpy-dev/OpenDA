@@ -24,7 +24,7 @@ import org.openda.utils.Matrix;
 /**
  * Created by pelgrim on 08-May-17.
  */
-public class SpatialCorrelationCovariance
+public final class SpatialCorrelationCovariance
 {
   private final Matrix m_sqrtCovariance;
 

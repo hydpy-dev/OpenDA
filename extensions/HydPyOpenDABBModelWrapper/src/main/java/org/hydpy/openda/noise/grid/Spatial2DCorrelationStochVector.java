@@ -17,8 +17,10 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with OpenDA.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.hydpy.openda.noise;
+package org.hydpy.openda.noise.grid;
 
+import org.hydpy.openda.noise.SpatialCorrelationCovariance;
+import org.hydpy.openda.noise.SpatialCorrelationStochVector;
 import org.openda.interfaces.IMatrix;
 import org.openda.interfaces.ISqrtCovariance;
 import org.openda.interfaces.IStochVector;
@@ -29,11 +31,11 @@ import org.openda.utils.Vector;
 
 /**
  * This StochVector is a faster implementation for the SpatialCorrelationStochVector for regular 2D-grids.
- * It uses separabilily of the directions to speed up the computations.
+ * It uses separability of the directions to speed up the computations.
  *
  * @author verlaanm
  */
-public class Spatial2DCorrelationStochVector implements IStochVector
+final class Spatial2DCorrelationStochVector implements IStochVector
 {
   private final int m_xn;
 

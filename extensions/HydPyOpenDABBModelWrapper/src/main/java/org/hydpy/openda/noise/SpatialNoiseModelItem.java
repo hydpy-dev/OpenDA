@@ -16,18 +16,18 @@ import org.openda.exchange.ArrayExchangeItem;
 /**
  * @author Gernot Belger
  */
-final class MapsNoiseModelItem
+final class SpatialNoiseModelItem
 {
   private final String m_id;
 
   private final ArrayExchangeItem m_outputSeries;
 
-  private final MapsNoiseModelConfigurationItem m_configItem;
+  private final int[] m_stateDimensions;
 
-  public MapsNoiseModelItem( final String id, final MapsNoiseModelConfigurationItem configItem, final ArrayExchangeItem outputSeries )
+  public SpatialNoiseModelItem( final String id, final int[] stateDimensions, final ArrayExchangeItem outputSeries )
   {
     m_id = id;
-    m_configItem = configItem;
+    m_stateDimensions = stateDimensions;
     m_outputSeries = outputSeries;
   }
 
@@ -41,13 +41,8 @@ final class MapsNoiseModelItem
     return m_outputSeries;
   }
 
-  public int getSizeX( )
+  public int[] getStateDimensions( )
   {
-    return m_configItem.getSizeX();
-  }
-
-  public int getSizeY( )
-  {
-    return m_configItem.getSizeY();
+    return m_stateDimensions;
   }
 }

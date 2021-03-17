@@ -27,15 +27,8 @@ import org.openda.utils.SqrtCovariance;
 import org.openda.utils.StochVector;
 import org.openda.utils.Vector;
 
-public class SpatialCorrelationStochVector implements IStochVector
+public final class SpatialCorrelationStochVector implements IStochVector
 {
-  // distances are different on a globe
-  public enum CoordinatesType
-  {
-    WGS84,
-    XY
-  }
-
   private final double m_standardDeviation;
 
   private final Matrix m_sqrtCovariance;

@@ -27,7 +27,7 @@ import org.openda.utils.Vector;
  *
  * @author Gernot Belger
  */
-final class MapsNoiseModelState implements IModelState
+final class SpatialNoiseModelState implements IModelState
 {
   private static final String PROPERTY_STATE = "state"; //$NON-NLS-1$
 
@@ -45,7 +45,7 @@ final class MapsNoiseModelState implements IModelState
 
   private final IVector m_state;
 
-  public MapsNoiseModelState( final boolean coldStart, final double time, final int timestep, final IVector state )
+  public SpatialNoiseModelState( final boolean coldStart, final double time, final int timestep, final IVector state )
   {
     m_coldStart = coldStart;
     m_time = time;
@@ -119,6 +119,6 @@ final class MapsNoiseModelState implements IModelState
     final double t = Double.parseDouble( properties.getProperty( PROPERTY_TIME ) );
     final int timestep = Integer.parseInt( properties.getProperty( PROPERTY_TIMESTEP ) );
 
-    return new MapsNoiseModelState( coldStart, t, timestep, x );
+    return new SpatialNoiseModelState( coldStart, t, timestep, x );
   }
 }

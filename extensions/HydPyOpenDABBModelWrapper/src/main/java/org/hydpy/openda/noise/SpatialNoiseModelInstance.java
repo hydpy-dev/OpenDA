@@ -24,8 +24,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.openda.exchange.ArrayExchangeItem;
 import org.openda.exchange.TimeInfo;
+import org.openda.interfaces.IDimensionIndex;
 import org.openda.interfaces.IExchangeItem;
 import org.openda.interfaces.IInstance;
 import org.openda.interfaces.IModelState;
@@ -40,6 +42,7 @@ import org.openda.interfaces.ITime;
 import org.openda.interfaces.ITreeVector;
 import org.openda.interfaces.IVector;
 import org.openda.utils.Array;
+import org.openda.utils.DimensionIndex;
 import org.openda.utils.Instance;
 import org.openda.utils.Results;
 import org.openda.utils.StochTreeVector;
@@ -72,9 +75,9 @@ import org.openda.utils.Vector;
  *
  * @author verlaanm
  */
-public class MapsNoiseModelInstance extends Instance implements IStochModelInstance
+final class SpatialNoiseModelInstance extends Instance implements IStochModelInstance
 {
-  private final Map<String, MapsNoiseModelItem> m_items = new HashMap<>();
+  private final Map<String, SpatialNoiseModelItem> m_items = new HashMap<>();
 
   private final int m_instanceNumber;
 
@@ -96,7 +99,7 @@ public class MapsNoiseModelInstance extends Instance implements IStochModelInsta
 
   private int m_timeStep; // integer value is used for testing equality and counting
 
-  public MapsNoiseModelInstance( final int instanceNumber, final OutputLevel outputLevel, final MapsNoiseModelConfiguration configuration )
+  public SpatialNoiseModelInstance( final int instanceNumber, final OutputLevel outputLevel, final SpatialNoiseModelConfiguration configuration )
   {
     m_instanceNumber = instanceNumber;
     m_outputLevel = outputLevel;
@@ -112,49 +115,42 @@ public class MapsNoiseModelInstance extends Instance implements IStochModelInsta
     m_timeCorrelationPerTimeStep = new TreeVector( "timeCorrelationPerTimeStep" );
     m_sysNoiseIntensity = new StochTreeVector( "systemNoise" );
 
-    final Collection<MapsNoiseModelConfigurationItem> items = configuration.getItems();
-    for( final MapsNoiseModelConfigurationItem item : items )
+    final Collection<SpatialNoiseModelConfigurationItem> items = configuration.getItems();
+    for( final SpatialNoiseModelConfigurationItem item : items )
     {
       final String id = item.getId();
 
-      final ArrayExchangeItem outputItem = new ArrayExchangeItem( id, Role.Output );
-      outputItem.setQuantityInfo( item.getQuantityInfo() );
-      outputItem.setGeometryInfo( item.getGeometryInfo() );
+      final ArrayExchangeItem outputItem = item.createStateExchangeItem();
 
-      // initialValue
-      final int xLength = item.getSizeX();
-      final int yLength = item.getSizeY();
+      final int[] stateDimensions = item.getStateDimensions();
+
+      final int rank = stateDimensions.length;
+      final IDimensionIndex[] dimIndex = new IDimensionIndex[rank];
+      int numberOfValues = 1;
+      for( int i = 0; i < rank; i++ )
+      {
+        numberOfValues *= stateDimensions[i];
+        dimIndex[i] = new DimensionIndex( stateDimensions[i] );
+      }
+      ArrayUtils.reverse( dimIndex );
+
+      final ITreeVector statePart = new TreeVector( id, new Vector( numberOfValues ), dimIndex );
+
       final double initialValue = item.getInitialValue();
-      final TreeVector statePart = new TreeVector( id, new Vector( xLength * yLength ), yLength, xLength );
       statePart.setConstant( initialValue );
       m_state.addChild( statePart );
 
-      final TreeVector alphaPart = statePart.clone();
+      final ITreeVector alphaPart = statePart.clone();
       alphaPart.setConstant( item.getAlpha() );
       m_timeCorrelationPerTimeStep.addChild( alphaPart );
 
       // stochVector for generation of white noise
-      final IStochVector systemNoiseChild = createSystemNoiseChild( item );
+      final IStochVector systemNoiseChild = item.createSystemNoise();
       m_sysNoiseIntensity.addChild( systemNoiseChild );
 
-      final MapsNoiseModelItem modelItem = new MapsNoiseModelItem( id, item, outputItem );
+      final SpatialNoiseModelItem modelItem = new SpatialNoiseModelItem( id, stateDimensions, outputItem );
       m_items.put( id, modelItem );
     }
-  }
-
-  private IStochVector createSystemNoiseChild( final MapsNoiseModelConfigurationItem item )
-  {
-    final double stdWhiteNoise = item.getStandardWhiteNoise();
-    if( item.isSeparable() )
-    {
-      final SpatialCorrelationCovariance xCovarianceMatrix = item.getSpatialCorrelationCovarianceX();
-      final SpatialCorrelationCovariance yCovarianceMatrix = item.getSpatialCorrelationCovarianceY();
-
-      return new Spatial2DCorrelationStochVector( stdWhiteNoise, xCovarianceMatrix, yCovarianceMatrix );
-    }
-
-    final SpatialCorrelationCovariance covarianceMatrix = item.getSpatialCorrelationCovariance();
-    return new SpatialCorrelationStochVector( stdWhiteNoise, covarianceMatrix );
   }
 
   @Override
@@ -204,13 +200,17 @@ public class MapsNoiseModelInstance extends Instance implements IStochModelInsta
 
     final Map<String, Array> allValues = new HashMap<>();
 
-    for( final MapsNoiseModelItem item : m_items.values() )
+    for( final SpatialNoiseModelItem item : m_items.values() )
     {
       final String id = item.getId();
-      final int xn = item.getSizeX();
-      final int yn = item.getSizeY();
 
-      final Array state = new Array( new int[] { nsteps + 1, yn, xn } );
+      final int[] dimensions = item.getStateDimensions();
+
+      final int[] stateDimensions = new int[dimensions.length + 1];
+      stateDimensions[0] = nsteps + 1;
+      System.arraycopy( dimensions, 0, stateDimensions, 1, dimensions.length );
+
+      final Array state = new Array( stateDimensions );
 
       // save state for output
       final ITreeVector statePart = m_state.getSubTreeVector( id );
@@ -248,7 +248,7 @@ public class MapsNoiseModelInstance extends Instance implements IStochModelInsta
       }
 
       // save state for output
-      for( final MapsNoiseModelItem item : m_items.values() )
+      for( final SpatialNoiseModelItem item : m_items.values() )
       {
         final String id = item.getId();
         final ITreeVector statePart = m_state.getSubTreeVector( id );
@@ -257,7 +257,7 @@ public class MapsNoiseModelInstance extends Instance implements IStochModelInsta
     }
 
     // output storage set times and values for this compute
-    for( final MapsNoiseModelItem item : m_items.values() )
+    for( final SpatialNoiseModelItem item : m_items.values() )
     {
       final ArrayExchangeItem exItem = item.getOutputSeries();
       exItem.setArray( allValues.get( item.getId() ) );
@@ -275,13 +275,13 @@ public class MapsNoiseModelInstance extends Instance implements IStochModelInsta
   public IModelState saveInternalState( )
   {
     final boolean coldStart = m_timeStep == -1;
-    return new MapsNoiseModelState( coldStart, m_curentTime, m_timeStep, m_state.clone() );
+    return new SpatialNoiseModelState( coldStart, m_curentTime, m_timeStep, m_state.clone() );
   }
 
   @Override
   public void restoreInternalState( final IModelState savedInternalState )
   {
-    final MapsNoiseModelState saveState = (MapsNoiseModelState)savedInternalState;
+    final SpatialNoiseModelState saveState = (SpatialNoiseModelState)savedInternalState;
 
     final IVector state = saveState.getState();
 
@@ -326,7 +326,7 @@ public class MapsNoiseModelInstance extends Instance implements IStochModelInsta
     if( !persistentStateFile.exists() )
       throw new RuntimeException( "Could not find file for saved state:" + persistentStateFile.toString() );
 
-    return MapsNoiseModelState.read( persistentStateFile );
+    return SpatialNoiseModelState.read( persistentStateFile );
   }
 
   @Override

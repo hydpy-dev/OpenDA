@@ -14,27 +14,27 @@ package org.hydpy.openda.noise;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.hydpy.openda.noise.SpatialCorrelationStochVector.CoordinatesType;
-import org.openda.exchange.ArrayGeometryInfo;
 import org.openda.exchange.QuantityInfo;
 import org.openda.exchange.timeseries.TimeUtils;
 import org.openda.interfaces.ITime;
-import org.openda.utils.Array;
 import org.openda.utils.ConfigTree;
+import org.openda.utils.ObjectSupport;
 import org.openda.utils.Results;
 import org.openda.utils.Time;
 
 /**
  * @author Gernot Belger
  */
-class MapsNoiseModelConfiguration
+final class SpatialNoiseModelConfiguration
 {
-  private final Collection<MapsNoiseModelConfigurationItem> m_items;
+  private final Collection<SpatialNoiseModelConfigurationItem> m_items;
 
   private final ITime m_timeHorizon;
 
-  public static MapsNoiseModelConfiguration read( final File workingDir, final String[] arguments, final ITime timeHorizon )
+  public static SpatialNoiseModelConfiguration read( final File workingDir, final String[] arguments, final ITime timeHorizon )
   {
     final String configString = arguments[0];
     Results.putMessage( "configstring = " + configString );
@@ -95,6 +95,9 @@ class MapsNoiseModelConfiguration
 
     final ITime adjustedTimeHorizon = new Time( startTime, endTime, incrementTime );
 
+    // read geometry definitions
+    final Map<String, ISpatialNoiseGeometry> geometries = readGeometries( conf );
+
     /*
      * Parse input per item
      * <noiseItem id="windU"
@@ -112,18 +115,47 @@ class MapsNoiseModelConfiguration
      */
     final ConfigTree itemTrees[] = conf.getSubTrees( "noiseItem" );
 
-    final Collection<MapsNoiseModelConfigurationItem> items = new ArrayList<>( itemTrees.length );
+    final Collection<SpatialNoiseModelConfigurationItem> items = new ArrayList<>( itemTrees.length );
 
     for( final ConfigTree itemTree : itemTrees )
     {
-      final MapsNoiseModelConfigurationItem item = readItem( itemTree, incrementTime );
+      final SpatialNoiseModelConfigurationItem item = readItem( itemTree, geometries, incrementTime );
       items.add( item );
     }
 
-    return new MapsNoiseModelConfiguration( adjustedTimeHorizon, items );
+    return new SpatialNoiseModelConfiguration( adjustedTimeHorizon, items );
   }
 
-  private static MapsNoiseModelConfigurationItem readItem( final ConfigTree itemConfig, final double incrementTime )
+  private static Map<String, ISpatialNoiseGeometry> readGeometries( final ConfigTree conf )
+  {
+    final ConfigTree configs[] = conf.getSubTrees( "geometry" );
+
+    final Map<String, ISpatialNoiseGeometry> geometries = new HashMap<>( configs.length );
+
+    for( final ConfigTree config : configs )
+    {
+      final String id = config.getAsString( "@id", null );
+      if( id == null )
+        throw new RuntimeException( "Missing 'id' in geometry definition." );
+
+      final ISpatialNoiseGeometry geometry = readGeometry( config );
+      geometries.put( id, geometry );
+    }
+
+    return geometries;
+  }
+
+  private static ISpatialNoiseGeometry readGeometry( final ConfigTree config )
+  {
+    final String implClass = config.getAsString( "@factory", null );
+    if( implClass == null )
+      throw new RuntimeException( "Missing 'factory' in geometry definition." );
+
+    final ISpatialNoiseGeometryFactory factory = (ISpatialNoiseGeometryFactory)ObjectSupport.createNewInstance( implClass, ISpatialNoiseGeometryFactory.class );
+    return factory.create( config );
+  }
+
+  private static SpatialNoiseModelConfigurationItem readItem( final ConfigTree itemConfig, final Map<String, ISpatialNoiseGeometry> geometries, final double incrementTime )
   {
     // id
     final String id = itemConfig.getAsString( "@id", "" ).trim();
@@ -135,40 +167,6 @@ class MapsNoiseModelConfiguration
     final String quantityValue = itemConfig.getAsString( "@quantity", "unknown_quantity" ).trim();
     final String unitValue = itemConfig.getAsString( "@unit", "unknown_unit" ).trim();
     final QuantityInfo quantityInfo = new QuantityInfo( quantityValue, unitValue );
-
-    /*
-     * spatial grid
-     * <grid type="cartesian" coordinates="wgs84" separable="true">
-     * <x>-5,0,...,5</x>
-     * <y>50,55,...,60</y>
-     * </grid>
-     */
-    final String gridValueTypeValue = itemConfig.getAsString( "grid@type", "cartesian" );
-    // FIXME: arg....!
-    if( !gridValueTypeValue.toLowerCase().startsWith( "cart" ) )
-      throw new RuntimeException( "MapsNoisModelInstance - grid@type : only type cartesian is supported, but found " + gridValueTypeValue );
-
-    final String coordsTypeValue = itemConfig.getAsString( "grid@coordinates", CoordinatesType.WGS84.name() ).toUpperCase();
-    final CoordinatesType coordsType = CoordinatesType.valueOf( coordsTypeValue );
-
-    final boolean separable = itemConfig.getAsBoolean( "grid@separable", true );
-
-    // grid values
-    final String xValuesString = itemConfig.getContentString( "grid/x" );
-    final String yValuesString = itemConfig.getContentString( "grid/y" );
-    final double[] x = parseGridOneDim( xValuesString, "x-grid" );
-    final double[] y = parseGridOneDim( yValuesString, "y-grid" );
-
-    System.out.println( "x=" + xValuesString );
-    System.out.println( "y=" + yValuesString );
-
-    final Array latitudeArray = new Array( y, new int[] { y.length }, true );
-    final Array longitudeArray = new Array( x, new int[] { x.length }, true );
-    final int latitudeValueIndices[] = new int[] { 1 }; // we use the order time, lat, lon according to CF
-    final int longitudeValueIndices[] = new int[] { 2 };
-    final QuantityInfo latitudeQuantityInfo = null; // TODO
-    final QuantityInfo longitudeQuantityInfo = null;
-    final ArrayGeometryInfo geometryInfo = new ArrayGeometryInfo( latitudeArray, latitudeValueIndices, latitudeQuantityInfo, longitudeArray, longitudeValueIndices, longitudeQuantityInfo, null, null, null );
 
     // initialValue
     final double initialValue = itemConfig.getAsDouble( "@initialValue", 0.0 );
@@ -182,29 +180,13 @@ class MapsNoiseModelConfiguration
     final double timeCorrelationScale = adjustTimeCorrectionScale( timeCorrelationScaleValue, timeCorrelationScaleUnit );
 
     // spatial correlation
-    final double horizontalCorrelationScaleValue = itemConfig.getAsDouble( "@horizontalCorrelationScale", 0.0 );
-    final String horizontalCorrelationScaleUnit = itemConfig.getAsString( "@horizontalCorrelationScaleUnit", "m" ).trim().toLowerCase();
-    final double horizontalCorrelationScale = adjustHorizontalCorrelationScale( horizontalCorrelationScaleValue, horizontalCorrelationScaleUnit );
+    final String geometryRef = itemConfig.getAsString( "@geometry", null );
 
-    return new MapsNoiseModelConfigurationItem( id, incrementTime, quantityInfo, coordsType, geometryInfo, separable, initialValue, stdDeviation, timeCorrelationScale, horizontalCorrelationScale, x, y );
-  }
+    final ISpatialNoiseGeometry correlation = geometries.get( geometryRef );
+    if( correlation == null )
+      throw new RuntimeException( String.format( "noiseItem '%s': no geometry found with id '%s'", id, geometryRef ) );
 
-  private static double adjustHorizontalCorrelationScale( final double horizontalCorrelationScale, final String horizontalCorrelationScaleUnit )
-  {
-    switch( horizontalCorrelationScaleUnit )
-    {
-      case "m":
-        return horizontalCorrelationScale * 1.0;
-
-      case "km":
-        return horizontalCorrelationScale * 1000.;
-
-      case "cm":
-        return horizontalCorrelationScale * 0.01;
-
-      default:
-        throw new RuntimeException( "unknown horizontalCorrelationScaleUnit." + " Expected (m,km,cm),but found " + horizontalCorrelationScaleUnit );
-    }
+    return new SpatialNoiseModelConfigurationItem( id, incrementTime, quantityInfo, initialValue, stdDeviation, timeCorrelationScale, correlation );
   }
 
   private static double adjustTimeCorrectionScale( final double timeCorrelationScaleValue, final String timeCorrelationScaleUnit )
@@ -228,58 +210,7 @@ class MapsNoiseModelConfiguration
     }
   }
 
-  /**
-   * Parse a string with a list of numbers eg 1.0,2.0,3.0
-   * or 1.0,2.0,...,10.0 for sequence with fixed steps
-   * into a double[] array
-   *
-   * @param valuesString
-   *          String containing the double values
-   * @return values as doubles
-   */
-  private static double[] parseGridOneDim( String valuesString, final String gridLabel )
-  {
-    if( valuesString.equals( "" ) )
-    { // TODO add 0,5,...20
-      throw new RuntimeException( String.format( "MapsNoisModelInstance: missing %s", gridLabel ) );
-    }
-
-    try
-    {
-      valuesString = valuesString.trim();
-      final String parts[] = valuesString.split( "," );
-      double[] result = null;
-      if( !valuesString.contains( "..." ) )
-      { // eg 1.0,2.0,3.0
-        final int n = parts.length;
-        result = new double[n];
-        for( int j = 0; j < n; j++ )
-        {
-          result[j] = Double.parseDouble( parts[j] );
-        }
-      }
-      else
-      {
-        final double start = Double.parseDouble( parts[0] );
-        final double step = Double.parseDouble( parts[1] ) - start;
-        final double stop = Double.parseDouble( parts[3] );
-        final int n = (int)Math.round( (stop - start) / step ) + 1;
-        result = new double[n];
-        for( int i = 0; i < n; i++ )
-        {
-          result[i] = start + i * step;
-        }
-      }
-
-      return result;
-    }
-    catch( final NumberFormatException e )
-    {
-      throw new RuntimeException( String.format( "Problems parsing %s", gridLabel ), e );
-    }
-  }
-
-  public MapsNoiseModelConfiguration( final ITime timeHorizon, final Collection<MapsNoiseModelConfigurationItem> items )
+  public SpatialNoiseModelConfiguration( final ITime timeHorizon, final Collection<SpatialNoiseModelConfigurationItem> items )
   {
     m_timeHorizon = timeHorizon;
     m_items = items;
@@ -290,7 +221,7 @@ class MapsNoiseModelConfiguration
     return m_timeHorizon;
   }
 
-  public Collection<MapsNoiseModelConfigurationItem> getItems( )
+  public Collection<SpatialNoiseModelConfigurationItem> getItems( )
   {
     return m_items;
   }

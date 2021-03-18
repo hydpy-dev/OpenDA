@@ -1,5 +1,6 @@
 /**
- * Copyright (c) 2019 by
+ * Copyright (c) 2021 by
+ * - OpenDA Association
  * - Bundesanstalt für Gewässerkunde
  * - Björnsen Beratende Ingenieure GmbH
  * All rights reserved.
@@ -15,11 +16,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.openda.utils.ConfigTree;
 
 /**
+ * @author verlaanm
  * @author Gernot Belger
  */
-public class SpatialNoiseUtils
+public final class SpatialNoiseUtils
 {
-  private static final double radiusEarth = 6372800.0; // average radius in leastsquares sense in meters
+  private static final double radiusEarth = 6372800.0; // average radius in least squares sense in meters
 
   // distances are different on a globe
   public enum CoordinatesType
@@ -119,7 +121,6 @@ public class SpatialNoiseUtils
     {
       // simplified computation with sphere and chord length
       // we can consider both cheaper and more accurate alternatives
-
       final double lon1 = Math.toRadians( x1 );
       final double lat1 = Math.toRadians( y1 );
       final double lon2 = Math.toRadians( x2 );

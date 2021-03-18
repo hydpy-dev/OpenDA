@@ -1,5 +1,6 @@
 /**
  * Copyright (c) 2019 by
+ * - OpenDA Association
  * - Bundesanstalt für Gewässerkunde
  * - Björnsen Beratende Ingenieure GmbH
  * All rights reserved.
@@ -26,6 +27,9 @@ import org.openda.utils.Results;
 import org.openda.utils.Time;
 
 /**
+ * Holds the configuration information for the {@link SpatialNoiseModelInstance}.
+ *
+ * @author verlaanm
  * @author Gernot Belger
  */
 final class SpatialNoiseModelConfiguration
@@ -34,7 +38,7 @@ final class SpatialNoiseModelConfiguration
 
   private final ITime m_timeHorizon;
 
-  public static SpatialNoiseModelConfiguration read( final File workingDir, final String[] arguments, final ITime timeHorizon )
+  public static SpatialNoiseModelConfiguration read( final File workingDir, final String[] arguments, final ITime modelHorizon )
   {
     final String configString = arguments[0];
     Results.putMessage( "configstring = " + configString );
@@ -44,13 +48,37 @@ final class SpatialNoiseModelConfiguration
      */
     final ConfigTree conf = new ConfigTree( workingDir, configString );
 
-    /*
-     * parse simulationTimespan
-     * <simulationTimespan timeFormat="dateTimeString">201008241130,201008241140,...,201008242350</simulationTimespan>
-     * <!--
-     * <simulationTimespan timeFormat="mjd">48259.0,48259.125,...,48260.00</simulationTimespan>
-     */
+    final ITime noiseHorizon = parseTimeHorizon( conf, modelHorizon );
+
+    // read geometry definitions
+    final Map<String, ISpatialNoiseGeometry> geometries = readGeometries( conf );
+
+    final ConfigTree itemTrees[] = conf.getSubTrees( "noiseItem" );
+
+    final Collection<SpatialNoiseModelConfigurationItem> items = new ArrayList<>( itemTrees.length );
+
+    final double incrementTime = noiseHorizon.getStepMJD();
+
+    for( final ConfigTree itemTree : itemTrees )
+    {
+      final SpatialNoiseModelConfigurationItem item = readItem( itemTree, geometries, incrementTime );
+      items.add( item );
+    }
+
+    return new SpatialNoiseModelConfiguration( noiseHorizon, items );
+  }
+
+  /*
+   * parse simulationTimespan
+   * <simulationTimespan timeFormat="dateTimeString">201008241130,201008241140,...,201008242350</simulationTimespan>
+   * <!--
+   * <simulationTimespan timeFormat="mjd">48259.0,48259.125,...,48260.00</simulationTimespan>
+   */
+  private static ITime parseTimeHorizon( final ConfigTree conf, final ITime fallbackHorizon )
+  {
     final String timespanString = conf.getContentString( "simulationTimespan" );
+    // FIXME: if timespanString is empty AND fallbackHorizon not fully defined, we get these arbitrary values....
+    // TODO: instead throw an exception at least
     double startTime = 0.0;
     double endTime = 100.0;
     double incrementTime = 1.0;
@@ -76,7 +104,7 @@ final class SpatialNoiseModelConfiguration
     }
 
     // overrule with external settings
-    final Time time = new Time( timeHorizon );
+    final Time time = new Time( fallbackHorizon );
 
     if( !Double.isInfinite( time.getBeginMJD() ) )
       startTime = time.getBeginMJD();
@@ -93,37 +121,7 @@ final class SpatialNoiseModelConfiguration
     if( !Double.isNaN( time.getStepMJD() ) )
       incrementTime = time.getStepMJD();
 
-    final ITime adjustedTimeHorizon = new Time( startTime, endTime, incrementTime );
-
-    // read geometry definitions
-    final Map<String, ISpatialNoiseGeometry> geometries = readGeometries( conf );
-
-    /*
-     * Parse input per item
-     * <noiseItem id="windU"
-     * quantity="wind-u"
-     * unit="m/s" height="10.0"
-     * standardDeviation="1.0"
-     * timeCorrelationScale="12.0" timeCorrelationScaleUnit="hours"
-     * initialValue="0.0"
-     * horizontalCorrelationScale="500" horizontalCorrelationScaleUnit="km" >
-     * <grid type="cartesian" coordinates="wgs84" separable="true" >
-     * <x>-5,0,...,5</x>
-     * <y>50,55,...,60</y>
-     * </grid>
-     * </noiseItem>
-     */
-    final ConfigTree itemTrees[] = conf.getSubTrees( "noiseItem" );
-
-    final Collection<SpatialNoiseModelConfigurationItem> items = new ArrayList<>( itemTrees.length );
-
-    for( final ConfigTree itemTree : itemTrees )
-    {
-      final SpatialNoiseModelConfigurationItem item = readItem( itemTree, geometries, incrementTime );
-      items.add( item );
-    }
-
-    return new SpatialNoiseModelConfiguration( adjustedTimeHorizon, items );
+    return new Time( startTime, endTime, incrementTime );
   }
 
   private static Map<String, ISpatialNoiseGeometry> readGeometries( final ConfigTree conf )
@@ -155,6 +153,21 @@ final class SpatialNoiseModelConfiguration
     return factory.create( config );
   }
 
+  /*
+   * Parse input per item
+   * <noiseItem id="windU"
+   * quantity="wind-u"
+   * unit="m/s" height="10.0"
+   * standardDeviation="1.0"
+   * timeCorrelationScale="12.0" timeCorrelationScaleUnit="hours"
+   * initialValue="0.0"
+   * horizontalCorrelationScale="500" horizontalCorrelationScaleUnit="km" >
+   * <grid type="cartesian" coordinates="wgs84" separable="true" >
+   * <x>-5,0,...,5</x>
+   * <y>50,55,...,60</y>
+   * </grid>
+   * </noiseItem>
+   */
   private static SpatialNoiseModelConfigurationItem readItem( final ConfigTree itemConfig, final Map<String, ISpatialNoiseGeometry> geometries, final double incrementTime )
   {
     // id
@@ -182,6 +195,9 @@ final class SpatialNoiseModelConfiguration
     // spatial correlation
     final String geometryRef = itemConfig.getAsString( "@geometry", null );
 
+    // TODO: this breaks backwards compatibility to MapsNoiseModelFactory
+    // we could instead fallback to a 'default' factory which reads data from the noiseItem-node and
+    // but still creates the same instances as SpatialNoiseGridGeometryFactory.
     final ISpatialNoiseGeometry correlation = geometries.get( geometryRef );
     if( correlation == null )
       throw new RuntimeException( String.format( "noiseItem '%s': no geometry found with id '%s'", id, geometryRef ) );

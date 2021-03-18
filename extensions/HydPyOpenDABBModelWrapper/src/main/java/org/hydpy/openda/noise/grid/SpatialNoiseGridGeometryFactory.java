@@ -1,5 +1,6 @@
 /**
  * Copyright (c) 2019 by
+ * - OpenDA Association
  * - Bundesanstalt für Gewässerkunde
  * - Björnsen Beratende Ingenieure GmbH
  * All rights reserved.
@@ -21,6 +22,13 @@ import org.openda.utils.Array;
 import org.openda.utils.ConfigTree;
 
 /**
+ * Implementation of {@link ISpatialNoiseGeometryFactory} for grid-like geometries assuming a Gaussian distribution and a distance based correlation.
+ * <br/>
+ * To speed up calculations the coordinates can be treated as separable. This means that correlations
+ * are computed for both spatial directions separately. This is much faster, but is only approximate for
+ * spherical coordinates, especially near the poles.
+ *
+ * @author verlaanm
  * @author Gernot Belger
  */
 public final class SpatialNoiseGridGeometryFactory implements ISpatialNoiseGeometryFactory

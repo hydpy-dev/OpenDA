@@ -1,5 +1,6 @@
 /**
  * Copyright (c) 2019 by
+ * - OpenDA Association
  * - Bundesanstalt für Gewässerkunde
  * - Björnsen Beratende Ingenieure GmbH
  * All rights reserved.
@@ -25,6 +26,7 @@ import org.openda.utils.Vector;
 /**
  * 'State' of the {@link MapsNoiseModelInstance} used for saving/restoring its state from a file.
  *
+ * @author verlaanm
  * @author Gernot Belger
  */
 final class SpatialNoiseModelState implements IModelState
@@ -36,6 +38,30 @@ final class SpatialNoiseModelState implements IModelState
   private static final String PROPERTY_TIME = "time"; //$NON-NLS-1$
 
   private static final String PROPERTY_TIMESTEP = "timestep"; //$NON-NLS-1$
+
+  public static IModelState readPersistentState( final File persistentStateFile )
+  {
+    final Properties properties = new Properties();
+
+    try( final FileInputStream in = new FileInputStream( persistentStateFile ) )
+    {
+      properties.load( in );
+    }
+    catch( final IOException e )
+    {
+      Results.putMessage( "Exception: " + e.getMessage() );
+      throw new RuntimeException( "Error reading restart file for model: " + persistentStateFile.getAbsolutePath() );
+    }
+
+    // FIXME: we should do more validation if the properties are correctly set
+    final Vector x = new Vector( properties.getProperty( PROPERTY_STATE ) );
+
+    final boolean coldStart = Boolean.parseBoolean( properties.getProperty( PROPERTY_COLDSTART ) );
+    final double t = Double.parseDouble( properties.getProperty( PROPERTY_TIME ) );
+    final int timestep = Integer.parseInt( properties.getProperty( PROPERTY_TIMESTEP ) );
+
+    return new SpatialNoiseModelState( coldStart, t, timestep, x );
+  }
 
   private final boolean m_coldStart;
 
@@ -79,7 +105,6 @@ final class SpatialNoiseModelState implements IModelState
     final Properties properties = new Properties();
 
     // save state vector
-    // FIXME: copy really necessary?
     final Vector tempVec = new Vector( m_state );
     final int n = m_state.getSize() + 1;
 
@@ -96,29 +121,5 @@ final class SpatialNoiseModelState implements IModelState
     {
       throw new RuntimeException( "Could not create state file " + file.getAbsolutePath(), e );
     }
-  }
-
-  public static IModelState read( final File persistentStateFile )
-  {
-    final Properties properties = new Properties();
-
-    try( final FileInputStream in = new FileInputStream( persistentStateFile ) )
-    {
-      properties.load( in );
-    }
-    catch( final IOException e )
-    {
-      Results.putMessage( "Exception: " + e.getMessage() );
-      throw new RuntimeException( "Error reading restart file for model: " + persistentStateFile.getAbsolutePath() );
-    }
-
-    // FIXME: we should do more validation if the properties are correctly set
-    final Vector x = new Vector( properties.getProperty( PROPERTY_STATE ) );
-
-    final boolean coldStart = Boolean.parseBoolean( properties.getProperty( PROPERTY_COLDSTART ) );
-    final double t = Double.parseDouble( properties.getProperty( PROPERTY_TIME ) );
-    final int timestep = Integer.parseInt( properties.getProperty( PROPERTY_TIMESTEP ) );
-
-    return new SpatialNoiseModelState( coldStart, t, timestep, x );
   }
 }

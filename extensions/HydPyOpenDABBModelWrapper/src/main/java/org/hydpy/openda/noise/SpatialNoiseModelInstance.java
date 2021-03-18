@@ -1,21 +1,14 @@
-/* FIXME
- * Copyright (c) 2019 OpenDA Association
+/**
+ * Copyright (c) 2019 by
+ * - OpenDA Association
+ * - Bundesanstalt für Gewässerkunde
+ * - Björnsen Beratende Ingenieure GmbH
  * All rights reserved.
  *
- * This file is part of OpenDA.
- *
- * OpenDA is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
- *
- * OpenDA is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with OpenDA.  If not, see <http://www.gnu.org/licenses/>.
+ * This file is Free Software under the under the terms of the
+ * GNU Lesser General Public License (LGPL >=v3)
+ * and comes with ABSOLUTELY NO WARRANTY! Check out the
+ * documentation coming with HydPy for details.
  */
 package org.hydpy.openda.noise;
 
@@ -51,29 +44,15 @@ import org.openda.utils.TreeVector;
 import org.openda.utils.Vector;
 
 /**
- * FIXME: comment
- * Module for generating noise for timeseries of 2D maps with Gaussian distribution and
- * exponential time-correlation. The spatial correlation is Gaussian
- * This module is intended for coupling to another model, usually to extend a physical model
- * with some uncertainties.
- * To speed up calculations the coordinates can be treated as separable. This means that correlations
- * are computed for both spatial directions separately. This is much faster, but is only approximate for
- * spherical coordinates, especially near the poles.
- * Assumes the following structure for the input file:
- * <?xml version="1.0" encoding="UTF-8"?>
- * <mapsNoiseModelConfig>
- * <simulationTimespan timeFormat="dateTimeString">201008241200,201008241210,...,201008242350</simulationTimespan>
- * <noiseItem id="windU" quantity="wind-u" unit="m/s" height="10.0"
- * standardDeviation="1.0" timeCorrelationScale="12.0" timeCorrelationScaleUnit="hours"
- * initialValue="0.0" horizontalCorrelationScale="500" horizontalCorrelationScaleUnit="km" >
- * <grid type="cartesian" coordinates="wgs84" separable="true">
- * <x>-5,0,...,5</x>
- * <y>50,55,...,60</y>
- * </grid>
- * </noiseItem>
- * </mapsNoiseModelConfig>
+ * Module for generating noise for timeseries of spatially distributed data with (optionally) exponential time-correlation. The spatial correlation is Gaussian.
+ * This module is intended for coupling to another model, usually to extend a physical model with some uncertainties.
+ * <br/>
+ * Reads its configuration from an xml file adhering to the xml-schema specified in spatialNoiseModel.xsd
+ * <br/>
+ * The actual spatial distribution of the data and its correlation are delegated to implementors of {@link ISpatialNoiseGeometry}s.
  *
  * @author verlaanm
+ * @author Gernot Belger
  */
 final class SpatialNoiseModelInstance extends Instance implements IStochModelInstance
 {
@@ -326,7 +305,7 @@ final class SpatialNoiseModelInstance extends Instance implements IStochModelIns
     if( !persistentStateFile.exists() )
       throw new RuntimeException( "Could not find file for saved state:" + persistentStateFile.toString() );
 
-    return SpatialNoiseModelState.read( persistentStateFile );
+    return SpatialNoiseModelState.readPersistentState( persistentStateFile );
   }
 
   @Override

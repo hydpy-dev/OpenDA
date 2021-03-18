@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 by
+ * Copyright (c) 2021 by
  * - Bundesanstalt für Gewässerkunde
  * - Björnsen Beratende Ingenieure GmbH
  * All rights reserved.
@@ -26,7 +26,7 @@ import org.openda.utils.Matrix;
 /**
  * @author Gernot Belger
  */
-public class SpatialNoisePointsGeometry implements ISpatialNoiseGeometry
+final class SpatialNoisePointsGeometry implements ISpatialNoiseGeometry
 {
   private final CoordinatesType m_coordinatesType;
 
@@ -49,13 +49,13 @@ public class SpatialNoisePointsGeometry implements ISpatialNoiseGeometry
   }
 
   @Override
-  public final int[] getStateDimensions( )
+  public int[] getStateDimensions( )
   {
     return new int[] { m_x.length };
   }
 
   @Override
-  public final IArrayGeometryInfo getGeometryinfo( )
+  public IArrayGeometryInfo getGeometryinfo( )
   {
     // REMARK: set to null, because a) it only supports grid-like geometries b) its only used to transform between spatial different model- and noise-exchange item
     // However for the irregular points, we assume that model- and spatial- items match exactly.
@@ -75,7 +75,7 @@ public class SpatialNoisePointsGeometry implements ISpatialNoiseGeometry
     return m_sharedCorrelationCovariance.computeIfAbsent( standardWhiteNoise, this::createSpatialCorrelationCovariance );
   }
 
-  private final SpatialCorrelationCovariance createSpatialCorrelationCovariance( final double standardWhiteNoise )
+  private SpatialCorrelationCovariance createSpatialCorrelationCovariance( final double standardWhiteNoise )
   {
     final int n = m_x.length;
     final Matrix covariance = new Matrix( n, n );

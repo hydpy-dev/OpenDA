@@ -1,5 +1,6 @@
 /**
  * Copyright (c) 2019 by
+ * - OpenDA Association
  * - Bundesanstalt für Gewässerkunde
  * - Björnsen Beratende Ingenieure GmbH
  * All rights reserved.
@@ -14,6 +15,7 @@ package org.hydpy.openda.noise;
 import org.openda.exchange.ArrayExchangeItem;
 
 /**
+ * @author verlaanm
  * @author Gernot Belger
  */
 final class SpatialNoiseModelItem

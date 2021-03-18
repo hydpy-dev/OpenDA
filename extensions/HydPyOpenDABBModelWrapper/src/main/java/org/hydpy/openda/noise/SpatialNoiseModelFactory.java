@@ -1,5 +1,6 @@
 /**
  * Copyright (c) 2019 by
+ * - OpenDA Association
  * - Bundesanstalt für Gewässerkunde
  * - Björnsen Beratende Ingenieure GmbH
  * All rights reserved.
@@ -20,16 +21,14 @@ import org.openda.interfaces.IStochModelPostProcessor;
 import org.openda.interfaces.ITime;
 
 /**
- * FIXME: comment...
- * This class was derived from the original {@link MapsNoiseModelFactory} of OpenDA Core.
+ * This class was derived from the original {@link org.openda.noiseModels.MapsNoiseModelFactory} of OpenDA Core.
  * <br/>
- * FIXME: comment...
- * Module for modeling spatially and temporally correlated noise in 2d.
+ * Module for modeling spatially and temporally correlated noise.
  * A gaussian spatial correlation is assumed and exponential temporal correlation.
- * The probablities are all Gaussian.
+ * The probabilities are all Gaussian.
  *
  * @author verlaanm
- * @author belger
+ * @author Gernot Belger
  */
 public final class SpatialNoiseModelFactory implements IStochModelFactory, ITimeHorizonConsumer
 {

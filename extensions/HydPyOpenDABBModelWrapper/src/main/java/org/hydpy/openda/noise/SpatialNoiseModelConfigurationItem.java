@@ -1,5 +1,6 @@
 /**
  * Copyright (c) 2019 by
+ * - OpenDA Association
  * - Bundesanstalt für Gewässerkunde
  * - Björnsen Beratende Ingenieure GmbH
  * All rights reserved.
@@ -16,6 +17,12 @@ import org.openda.exchange.QuantityInfo;
 import org.openda.interfaces.IPrevExchangeItem.Role;
 import org.openda.interfaces.IStochVector;
 
+/**
+ * Holds configuration information for one noiseItem.
+ *
+ * @author verlaanm
+ * @author Gernot Belger
+ */
 final class SpatialNoiseModelConfigurationItem
 {
   private final String m_id;

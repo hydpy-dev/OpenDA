@@ -1,5 +1,6 @@
 /**
  * Copyright (c) 2019 by
+ * - OpenDA Association
  * - Bundesanstalt für Gewässerkunde
  * - Björnsen Beratende Ingenieure GmbH
  * All rights reserved.
@@ -20,6 +21,7 @@ import org.openda.interfaces.IArrayGeometryInfo;
 import org.openda.utils.Matrix;
 
 /**
+ * @author verlaanm
  * @author Gernot Belger
  */
 public abstract class AbstractSpatialNoiseGridGeometry implements ISpatialNoiseGeometry

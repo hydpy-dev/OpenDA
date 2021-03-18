@@ -2,6 +2,7 @@
  * Copyright (c) 2019 by
  * - Bundesanstalt für Gewässerkunde
  * - Björnsen Beratende Ingenieure GmbH
+ * - OpenDA Association
  * All rights reserved.
  *
  * This file is Free Software under the under the terms of the
@@ -20,6 +21,7 @@ import org.openda.exchange.ArrayGeometryInfo;
 import org.openda.interfaces.IStochVector;
 
 /**
+ * @author verlaanm
  * @author Gernot Belger
  */
 public class SpatialNoiseSeparableGridGeometry extends AbstractSpatialNoiseGridGeometry

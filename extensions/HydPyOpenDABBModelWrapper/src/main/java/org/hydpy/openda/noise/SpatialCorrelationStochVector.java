@@ -1,21 +1,14 @@
-/*
- * Copyright (c) 2019 OpenDA Association
+/**
+ * Copyright (c) 2019 by
+ * - OpenDA Association
+ * - Bundesanstalt für Gewässerkunde
+ * - Björnsen Beratende Ingenieure GmbH
  * All rights reserved.
  *
- * This file is part of OpenDA.
- *
- * OpenDA is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
- *
- * OpenDA is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with OpenDA.  If not, see <http://www.gnu.org/licenses/>.
+ * This file is Free Software under the under the terms of the
+ * GNU Lesser General Public License (LGPL >=v3)
+ * and comes with ABSOLUTELY NO WARRANTY! Check out the
+ * documentation coming with HydPy for details.
  */
 package org.hydpy.openda.noise;
 
@@ -27,6 +20,10 @@ import org.openda.utils.SqrtCovariance;
 import org.openda.utils.StochVector;
 import org.openda.utils.Vector;
 
+/**
+ * @author verlaanm
+ * @author Gernot Belger
+ */
 public final class SpatialCorrelationStochVector implements IStochVector
 {
   private final double m_standardDeviation;
@@ -108,13 +105,7 @@ public final class SpatialCorrelationStochVector implements IStochVector
   public String toString( )
   {
     String result = "SpatialCorrelationStochVector(";
-//    result += "lengthScale=" + m_lengthScale + ",";
     result += "standardDeviation=" + m_standardDeviation;
-//    if( x.length < 40 )
-//    {
-//      result += ",x=" + new Vector( x );
-//      result += ",y=" + new Vector( y );
-//    }
     result += ")";
     return result;
   }

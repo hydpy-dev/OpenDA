@@ -14,11 +14,9 @@ package org.hydpy.openda.noise.grid;
 
 import org.hydpy.openda.noise.ISpatialNoiseGeometry;
 import org.hydpy.openda.noise.SpatialCorrelationCovariance;
-import org.hydpy.openda.noise.SpatialNoiseUtils;
 import org.hydpy.openda.noise.SpatialNoiseUtils.CoordinatesType;
 import org.openda.exchange.ArrayGeometryInfo;
 import org.openda.interfaces.IArrayGeometryInfo;
-import org.openda.utils.Matrix;
 
 /**
  * @author verlaanm
@@ -69,26 +67,6 @@ public abstract class AbstractSpatialNoiseGridGeometry implements ISpatialNoiseG
 
   protected final SpatialCorrelationCovariance createSpatialCorrelationCovariance( final double standardWhiteNoise, final double[] x, final double[] y )
   {
-    final int n = x.length;
-    final Matrix covariance = new Matrix( n, n );
-
-    final double scale = standardWhiteNoise * standardWhiteNoise;
-
-    final double lengthScaleSquare = m_horizontalCorrelationScale * m_horizontalCorrelationScale;
-
-    for( int i = 0; i < n; i++ )
-    {
-      for( int j = 0; j < n; j++ )
-      {
-        final double dist = SpatialNoiseUtils.distance( m_coordsType, x[i], y[i], x[j], y[j] );
-        final double covij = scale * Math.exp( -0.5 * dist * dist / lengthScaleSquare );
-        covariance.setValue( i, j, covij );
-      }
-    }
-
-    final double determinantCov = covariance.determinant();
-    final Matrix sqrtCovariance = covariance.sqrt();
-
-    return new SpatialCorrelationCovariance( n, sqrtCovariance, determinantCov );
+    return SpatialCorrelationCovariance.fromCoordinates( standardWhiteNoise, m_coordsType, x, y, m_horizontalCorrelationScale );
   }
 }

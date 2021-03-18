@@ -17,11 +17,9 @@ import java.util.Map;
 import org.hydpy.openda.noise.ISpatialNoiseGeometry;
 import org.hydpy.openda.noise.SpatialCorrelationCovariance;
 import org.hydpy.openda.noise.SpatialCorrelationStochVector;
-import org.hydpy.openda.noise.SpatialNoiseUtils;
 import org.hydpy.openda.noise.SpatialNoiseUtils.CoordinatesType;
 import org.openda.interfaces.IArrayGeometryInfo;
 import org.openda.interfaces.IStochVector;
-import org.openda.utils.Matrix;
 
 /**
  * @author Gernot Belger
@@ -72,31 +70,7 @@ final class SpatialNoisePointsGeometry implements ISpatialNoiseGeometry
   // REMARK: we share the SpatialCorrelationCovariance between instances (per item-id).
   private SpatialCorrelationCovariance getSpatialCorrelationCovariance( final double standardWhiteNoise )
   {
-    return m_sharedCorrelationCovariance.computeIfAbsent( standardWhiteNoise, this::createSpatialCorrelationCovariance );
-  }
-
-  private SpatialCorrelationCovariance createSpatialCorrelationCovariance( final double standardWhiteNoise )
-  {
-    final int n = m_x.length;
-    final Matrix covariance = new Matrix( n, n );
-
-    final double scale = standardWhiteNoise * standardWhiteNoise;
-
-    final double lengthScaleSquare = m_horizontalCorrelationScale * m_horizontalCorrelationScale;
-
-    for( int i = 0; i < n; i++ )
-    {
-      for( int j = 0; j < n; j++ )
-      {
-        final double dist = SpatialNoiseUtils.distance( m_coordinatesType, m_x[i], m_y[i], m_x[j], m_y[j] );
-        final double covij = scale * Math.exp( -0.5 * dist * dist / lengthScaleSquare );
-        covariance.setValue( i, j, covij );
-      }
-    }
-
-    final double determinantCov = covariance.determinant();
-    final Matrix sqrtCovariance = covariance.sqrt();
-
-    return new SpatialCorrelationCovariance( n, sqrtCovariance, determinantCov );
+    return m_sharedCorrelationCovariance.computeIfAbsent( standardWhiteNoise, stdDev -> //
+    SpatialCorrelationCovariance.fromCoordinates( stdDev, m_coordinatesType, m_x, m_y, m_horizontalCorrelationScale ) );
   }
 }

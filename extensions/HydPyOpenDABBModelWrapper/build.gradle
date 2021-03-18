@@ -3,7 +3,7 @@ plugins {
     id 'eclipse'
 }
 
-project.version = '0.8.0'
+project.version = '0.9.0'
 project.description = 'The HydPy BlackBoxModel wrapper for OpenDA'
 
 // OpenDA 2.4.5 is currrently distributed with Java 1.8

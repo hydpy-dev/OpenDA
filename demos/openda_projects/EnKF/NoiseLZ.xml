@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<mapsNoiseModelConfig mmlns="http://www.openda.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/noiseModels/mapsNoiseModel.xsd">
-	<noiseItem id="noise_lz" quantity="lz" unit="mm" height="2.0" standardDeviation="0.2" timeCorrelationScale="2.0" timeCorrelationScaleUnit="days" initialValue="0.0" horizontalCorrelationScale="1.0" horizontalCorrelationScaleUnit="m">
-		<grid type="cartesian" coordinates="xy">
-			<y>1.0</y>
-			<x>1.0</x>
-		</grid>
-	</noiseItem>
-</mapsNoiseModelConfig>

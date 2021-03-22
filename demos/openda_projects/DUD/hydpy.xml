@@ -6,11 +6,20 @@
     <lastdate>1997-01-01T00:00:00</lastdate>
     <stepsize>1d</stepsize>
   </timegrid>
-  <selections />
-  <devices>
-    dill
-    land_dill
-  </devices>
+  <add_selections>
+    <add_selection>
+      <name>gauge</name>
+      <devices>dill</devices>
+    </add_selection>
+    <add_selection>
+      <name>catchment</name>
+      <devices>land_dill</devices>
+    </add_selection>
+  </add_selections>
+  <selections>
+    gauge
+    catchment
+  </selections>
   <conditions_io>
     <inputdir>init_1996_01_01_00_00_00</inputdir>
     <outputdir>init_1997-01-01_00_00_00</outputdir>
@@ -54,8 +63,8 @@
       <hland_v1>
         <control>
           <alpha>
-            <alias>alpha</alias>
-            <dim>0</dim>
+            <name>alpha</name>
+            <level>global</level>
             <init>2.0</init>
           </alpha>
         </control>

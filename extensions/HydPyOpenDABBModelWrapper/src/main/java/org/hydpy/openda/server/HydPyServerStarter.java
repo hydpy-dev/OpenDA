@@ -122,6 +122,9 @@ final class HydPyServerStarter
       /* if the test-call fails, we directly destroy the process, the manager can't do it */
       m_process.destroy();
 
+      /* we also shutdown the thread, else OpenDA might hang forever */
+      shutdownExecutor();
+
       throw e;
     }
   }
@@ -239,6 +242,11 @@ final class HydPyServerStarter
       e.printStackTrace();
     }
 
+    shutdownExecutor();
+  }
+
+  private void shutdownExecutor( )
+  {
     try
     {
       /* shutdown executor after calls to processes, as they will submit a task on shutdown */

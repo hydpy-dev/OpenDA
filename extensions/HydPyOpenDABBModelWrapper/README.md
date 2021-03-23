@@ -93,16 +93,17 @@ Example:
 
 The model factory requires the following arguments
 
-* serverPort: The web port on which to start the HydPy server. Use any free port on your machine. 
-* serverInstances (optional): The number of HydPy server processes that will be started (maximal). Defaults to 1. If greater 1 and the chosen algorithm allows multiple instances, _HydPyOpenDABBModelWrapper_ will automatically start several server instances and run simulations in parallel. Server instances will run on web ports starting with _serverPort_ up-to _serverPort+serverInstances-1_.
-* serverParallelStartup (optional): If server instances should be started in parallel at the beginning of the simulation. Defaults to 'false'. If 'true', ALL instances (regardless of how many are really used) will be startet directly and parallel to each other on startup which can be significantly faster for many instances.      
-* initializeWaitSeconds: The maximum time in seconds the wrapper implementation should wait for the HydPy server to start up. This time may depend on the actual HydPy project. Increase this if 'serverParallelStartup' is set to 'true', as starting several python processes at once will slow down the start-up time of each process. 
-* projectPath: The path to the HydPy project directory.
-* projectName: The name of the HydPy project within the project directory.
-* configFile: The name of the [HydPy servertools](https://hydpy-dev.github.io/hydpy/servertools.html) configuration file.
-* logDirectory (optional): The path to the directory where the output of the HydPy server processes will be written. If specified, for each server instance, two log files (one for the standard output and one for the error output) will be written. If omitted, all server outputs will be written to the console output streams of the java process.
-* templateDir (optional): The template directory for model instances.  
-* instanceDir (optional): The instance directory for model instances. The actual directories are post-fixed with the instance number. 
+* serverPort (integer): The web port on which to start the HydPy server. Use any free port on your machine. 
+* serverInstances (integer, optional): The number of HydPy server processes that will be started (maximal). Defaults to 1. If greater 1 and the chosen algorithm allows multiple instances, _HydPyOpenDABBModelWrapper_ will automatically start several server instances and run simulations in parallel. Server instances will run on web ports starting with _serverPort_ up-to _serverPort+serverInstances-1_.
+* serverParallelStartup (boolean, optional): If server instances should be started in parallel at the beginning of the simulation. Defaults to 'false'. If 'true', ALL instances (regardless of how many are really used) will be started directly and parallel to each other on startup which can be significantly faster for many instances.
+* serverPreStarted (boolean, optional): If set to 'true' the wrapper assumes HydPy to already have been started on the right port(s) and does not try to start the process itself. Defaults to 'false'. This flag is mainly meant for debug purposes.       
+* initializeWaitSeconds (integer): The maximum time in seconds the wrapper implementation should wait for the HydPy server to start up. This time may depend on the actual HydPy project. Increase this if 'serverParallelStartup' is set to 'true', as starting several python processes at once will slow down the start-up time of each process. 
+* projectPath (string): The path to the HydPy project directory.
+* projectName (string): The name of the HydPy project within the project directory.
+* configFile (string): The name of the [HydPy servertools](https://hydpy-dev.github.io/hydpy/servertools.html) configuration file.
+* logDirectory (string, optional): The path to the directory where the output of the HydPy server processes will be written. If specified, for each server instance, two log files (one for the standard output and one for the error output) will be written. If omitted, all server outputs will be written to the console output streams of the java process.
+* templateDir (string, optional): The template directory for model instances.  
+* instanceDir (string, optional): The instance directory for model instances. The actual directories are post-fixed with the instance number. 
 
 The wrapper resolves all arguments denoting files or directories relative to 
 the working directory of the factory.

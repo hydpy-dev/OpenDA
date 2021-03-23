@@ -30,6 +30,8 @@ final class HydPyServerConfiguration
 
   private static final String PROPERTY_SERVER_PARALLEL_STARTUP = "serverParallelStartup"; //$NON-NLS-1$
 
+  private static final String PROPERTY_SERVER_PRE_STARTED = "serverPreStarted"; //$NON-NLS-1$
+
   private static final String PROPERTY_INITIALIZE_SECONDS = "initializeWaitSeconds"; //$NON-NLS-1$
 
   private static final String PROPERTY_PROJECT_PATH = "projectPath"; //$NON-NLS-1$
@@ -58,6 +60,8 @@ final class HydPyServerConfiguration
   public final int maxProcesses;
 
   public final boolean parallelStartup;
+
+  public boolean preStarted;
 
   public final int initRetrySeconds;
 
@@ -88,6 +92,7 @@ final class HydPyServerConfiguration
       throw new RuntimeException( String.format( "Arguments '%s'+'%s': exceeds maximal possible port 0xFFFF", PROPERTY_SERVER_PORT, PROPERTY_SERVER_MAX_PROCESSES ) );
 
     parallelStartup = HydPyUtils.getOptionalPropertyAsBoolean( args, PROPERTY_SERVER_PARALLEL_STARTUP, false );
+    preStarted = HydPyUtils.getOptionalPropertyAsBoolean( args, PROPERTY_SERVER_PRE_STARTED, false );
 
     initRetrySeconds = HydPyUtils.getRequiredPropertyAsInt( args, PROPERTY_INITIALIZE_SECONDS );
 

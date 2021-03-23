@@ -120,7 +120,8 @@ final class HydPyServerStarter
     catch( final HydPyServerException e )
     {
       /* if the test-call fails, we directly destroy the process, the manager can't do it */
-      m_process.destroy();
+      if( m_process != null )
+        m_process.destroy();
 
       /* we also shutdown the thread, else OpenDA might hang forever */
       shutdownExecutor();
@@ -150,6 +151,12 @@ final class HydPyServerStarter
   {
     try
     {
+      if( m_config.preStarted )
+      {
+        System.out.format( "%s: assuming process is already started ...%n", m_name );
+        return null;
+      }
+
       final String command = m_config.serverExe;
       final String operation = "start_server";
       final String portArgument = Integer.toString( m_port );
@@ -197,6 +204,12 @@ final class HydPyServerStarter
     {
       try
       {
+        if( m_process == null )
+        {
+          /* this happen if preStarted is set to true, we 'simulate' a running process an try to call getVersion */
+          throw new IllegalThreadStateException();
+        }
+
         m_process.exitValue();
         throw new HydPyServerException( String.format( "%s: unexpectedly terminated", m_name ) );
       }
@@ -262,6 +275,9 @@ final class HydPyServerStarter
 
   public void kill( )
   {
+    if( m_process == null )
+      return;
+
     try
     {
       m_process.exitValue();

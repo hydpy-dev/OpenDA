@@ -249,10 +249,9 @@ public class HydPyModelFactory implements IModelFactory
   {
     if( m_bbFactory != null )
       m_bbFactory.finish();
-  }
 
-  public static void main( final String[] args )
-  {
-    throw new UnsupportedOperationException();
+    // REMARK: this is never called (which it should be) from the BBStochModelFactory.
+    // so we can't terminate HydPy here. for now, we do it in the HydPyStochModelFactory.
+    // HydPyServerManager.instance().finish();
   }
 }

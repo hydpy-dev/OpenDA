@@ -255,6 +255,8 @@ final class HydPyServerStarter
       e.printStackTrace();
     }
 
+    m_executor.submit( (Runnable)this::shutdownProcess );
+
     shutdownExecutor();
   }
 
@@ -265,12 +267,43 @@ final class HydPyServerStarter
       /* shutdown executor after calls to processes, as they will submit a task on shutdown */
       m_executor.shutdown();
       m_executor.awaitTermination( 5, TimeUnit.SECONDS );
-      System.out.format( "%s: shut down terminated%n", m_name );
     }
     catch( final InterruptedException e )
     {
       e.printStackTrace();
     }
+  }
+
+  private void shutdownProcess( )
+  {
+    final int timeout = 2000;
+    final int waitTime = 50;
+    for( int i = 0; i < timeout; i += waitTime )
+    {
+      try
+      {
+        m_process.exitValue();
+
+        /* process has terminated, stop waiting for it */
+        System.out.format( "%s: process terminated%n", m_name );
+        return;
+      }
+      catch( final IllegalThreadStateException e )
+      {
+        try
+        {
+          /* process was not yet terminated, wait for it */
+          System.out.format( "%s: waiting for process termination...%n", m_name );
+          Thread.sleep( waitTime );
+        }
+        catch( final InterruptedException e1 )
+        {
+          e1.printStackTrace();
+        }
+      }
+    }
+
+    System.out.format( "%s: timeout waiting for process termination, process will be killed%n", m_name );
   }
 
   public void kill( )

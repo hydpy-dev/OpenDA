@@ -293,9 +293,6 @@ final class HydPyOpenDACaller
   public void shutdown( )
   {
     log( "shutting down..." );
-
     m_client.shutdown();
-
-    log( "shut down done" );
   }
 }

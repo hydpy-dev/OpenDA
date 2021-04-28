@@ -22,6 +22,8 @@ public class HydPyStochModelFactory extends BBStochModelFactory
   @Override
   public void finish( )
   {
+    // REMARK: bad place, but BBStochModelFactory will not call finish on it's inner model factory (which it should)
+    // So this is the only place where we can terminate HydPy.
     HydPyServerManager.instance().finish();
 
     super.finish();

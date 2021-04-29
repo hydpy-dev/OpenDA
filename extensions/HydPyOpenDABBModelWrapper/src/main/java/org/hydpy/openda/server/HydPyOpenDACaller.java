@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.joda.time.Instant;
-import org.openda.interfaces.IPrevExchangeItem;
+import org.openda.interfaces.IExchangeItem;
 
 /**
  * Handles the OpenDA specific way on how to call a HydPy-Server.
@@ -185,7 +185,7 @@ final class HydPyOpenDACaller
   /**
    * Tells HydPy to initialize the state for instanceId with the defined start values. Should be called exactly once per unique instanceId.
    */
-  public List<IPrevExchangeItem> initializeInstance( final String instanceId ) throws HydPyServerException
+  public List<IExchangeItem> initializeInstance( final String instanceId ) throws HydPyServerException
   {
     log( "initializing state for instanceId = '%s'", instanceId );
 
@@ -205,7 +205,7 @@ final class HydPyOpenDACaller
     return parseItemValues( props );
   }
 
-  private List<IPrevExchangeItem> parseItemValues( final Properties props ) throws HydPyServerException
+  private List<IExchangeItem> parseItemValues( final Properties props ) throws HydPyServerException
   {
     /* pre-parse items */
     final Map<String, Object> preValues = preParseValues( props );
@@ -217,7 +217,7 @@ final class HydPyOpenDACaller
     final Instant endTime = (Instant)preValues.get( HydPyModelInstance.ITEM_ID_LAST_DATE );
 
     /* parse item values */
-    final List<IPrevExchangeItem> values = new ArrayList<>( preValues.size() );
+    final List<IExchangeItem> values = new ArrayList<>( preValues.size() );
 
     final Set<Entry<String, Object>> entrySet = preValues.entrySet();
     for( final Entry<String, Object> entry : entrySet )
@@ -227,7 +227,7 @@ final class HydPyOpenDACaller
 
       final Object preValue = entry.getValue();
 
-      final IPrevExchangeItem value = item.toExchangeItem( startTime, endTime, m_stepSeconds, preValue );
+      final IExchangeItem value = item.toExchangeItem( startTime, endTime, m_stepSeconds, preValue );
       values.add( value );
 
       final String valueText = item.printValue( value );
@@ -254,16 +254,16 @@ final class HydPyOpenDACaller
     return preValues;
   }
 
-  public void setItemValues( final String instanceId, final Collection<IPrevExchangeItem> values ) throws HydPyServerException
+  public void setItemValues( final String instanceId, final Collection<IExchangeItem> values ) throws HydPyServerException
   {
     log( "setting state for instanceId = '%s'", instanceId );
 
-    final Map<String, IPrevExchangeItem> sortedItems = new TreeMap<>();
-    for( final IPrevExchangeItem item : values )
+    final Map<String, IExchangeItem> sortedItems = new TreeMap<>();
+    for( final IExchangeItem item : values )
       sortedItems.put( item.getId(), item );
 
     final StringBuffer body = new StringBuffer();
-    for( final IPrevExchangeItem exItem : sortedItems.values() )
+    for( final IExchangeItem exItem : sortedItems.values() )
     {
       final String id = exItem.getId();
 
@@ -282,7 +282,7 @@ final class HydPyOpenDACaller
     m_client.execute( instanceId, METHODS_REGISTER_ITEMVALUES, body.toString() );
   }
 
-  public List<IPrevExchangeItem> simulate( final String instanceId ) throws HydPyServerException
+  public List<IExchangeItem> simulate( final String instanceId ) throws HydPyServerException
   {
     log( "running simulation for current state for instanceId = '%s'", instanceId );
 

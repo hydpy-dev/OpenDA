@@ -15,8 +15,8 @@ import org.joda.time.Instant;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.openda.exchange.DoubleExchangeItem;
-import org.openda.interfaces.IPrevExchangeItem;
-import org.openda.interfaces.IPrevExchangeItem.Role;
+import org.openda.interfaces.IExchangeItem;
+import org.openda.interfaces.IExchangeItem.Role;
 import org.openda.utils.Time;
 
 /**
@@ -38,7 +38,7 @@ final class TimeItem extends AbstractServerItem
   }
 
   @Override
-  public IPrevExchangeItem toExchangeItem( final Instant startTime, final Instant endTime, final long stepSeconds, final Object value )
+  public IExchangeItem toExchangeItem( final Instant startTime, final Instant endTime, final long stepSeconds, final Object value )
   {
     final Instant date = (Instant)value;
 
@@ -48,7 +48,7 @@ final class TimeItem extends AbstractServerItem
   }
 
   @Override
-  public String printValue( final IPrevExchangeItem exItem )
+  public String printValue( final IExchangeItem exItem )
   {
     final DoubleExchangeItem dblItem = (DoubleExchangeItem)exItem;
     final double value = dblItem.getValue();

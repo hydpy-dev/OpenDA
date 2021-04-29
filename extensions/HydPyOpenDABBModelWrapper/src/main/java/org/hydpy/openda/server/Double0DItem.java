@@ -13,8 +13,8 @@ package org.hydpy.openda.server;
 
 import org.joda.time.Instant;
 import org.openda.exchange.DoubleExchangeItem;
-import org.openda.interfaces.IPrevExchangeItem;
-import org.openda.interfaces.IPrevExchangeItem.Role;
+import org.openda.interfaces.IExchangeItem;
+import org.openda.interfaces.IExchangeItem.Role;
 
 /**
  * @author Gernot Belger
@@ -33,13 +33,13 @@ final class Double0DItem extends AbstractServerItem
   }
 
   @Override
-  public IPrevExchangeItem toExchangeItem( final Instant startTime, final Instant endTime, final long stepSeconds, final Object value )
+  public IExchangeItem toExchangeItem( final Instant startTime, final Instant endTime, final long stepSeconds, final Object value )
   {
     return new DoubleExchangeItem( getId(), getRole(), (Double)value );
   }
 
   @Override
-  public String printValue( final IPrevExchangeItem exItem )
+  public String printValue( final IExchangeItem exItem )
   {
     final DoubleExchangeItem dblItem = (DoubleExchangeItem)exItem;
     final double value = dblItem.getValue();

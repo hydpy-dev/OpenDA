@@ -22,18 +22,22 @@ import org.openda.exchange.ArrayExchangeItem;
 import org.openda.exchange.TimeInfo;
 import org.openda.interfaces.IDimensionIndex;
 import org.openda.interfaces.IExchangeItem;
+import org.openda.interfaces.IExchangeItem.Role;
 import org.openda.interfaces.IInstance;
+import org.openda.interfaces.ILocalizationDomains;
 import org.openda.interfaces.IModelState;
 import org.openda.interfaces.IObservationDescriptions;
-import org.openda.interfaces.IPrevExchangeItem;
-import org.openda.interfaces.IPrevExchangeItem.Role;
+import org.openda.interfaces.IObservationOperator;
 import org.openda.interfaces.IResultWriter;
 import org.openda.interfaces.IStochModelFactory.OutputLevel;
 import org.openda.interfaces.IStochModelInstance;
+import org.openda.interfaces.IStochModelInstanceDeprecated;
 import org.openda.interfaces.IStochVector;
 import org.openda.interfaces.ITime;
 import org.openda.interfaces.ITreeVector;
 import org.openda.interfaces.IVector;
+import org.openda.localization.LocalizationDomainsSimpleModel;
+import org.openda.observationOperators.ObservationOperatorDeprecatedModel;
 import org.openda.utils.Array;
 import org.openda.utils.DimensionIndex;
 import org.openda.utils.Instance;
@@ -42,6 +46,7 @@ import org.openda.utils.StochTreeVector;
 import org.openda.utils.Time;
 import org.openda.utils.TreeVector;
 import org.openda.utils.Vector;
+import org.openda.utils.geometry.GeometryUtils;
 
 /**
  * Module for generating noise for timeseries of spatially distributed data with (optionally) exponential time-correlation. The spatial correlation is Gaussian.
@@ -54,7 +59,7 @@ import org.openda.utils.Vector;
  * @author verlaanm
  * @author Gernot Belger
  */
-final class SpatialNoiseModelInstance extends Instance implements IStochModelInstance
+final class SpatialNoiseModelInstance extends Instance implements IStochModelInstance, IStochModelInstanceDeprecated
 {
   private final Map<String, SpatialNoiseModelItem> m_items = new HashMap<>();
 
@@ -140,7 +145,7 @@ final class SpatialNoiseModelInstance extends Instance implements IStochModelIns
   }
 
   @Override
-  public IPrevExchangeItem getExchangeItem( final String exchangeItemID )
+  public IExchangeItem getExchangeItem( final String exchangeItemID )
   {
     return m_items.get( exchangeItemID ).getOutputSeries();
   }
@@ -158,6 +163,12 @@ final class SpatialNoiseModelInstance extends Instance implements IStochModelIns
   }
 
   @Override
+  public IVector getState( final int iDomain )
+  {
+    return this.getState();
+  }
+
+  @Override
   public IVector getState( )
   {
     return m_state.clone();
@@ -167,6 +178,12 @@ final class SpatialNoiseModelInstance extends Instance implements IStochModelIns
   public void axpyOnState( final double alpha, final IVector vector )
   {
     m_state.axpy( alpha, vector ); // nothing special for this model
+  }
+
+  @Override
+  public void axpyOnState( final double alpha, final IVector vector, final int iDomain )
+  {
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -245,9 +262,59 @@ final class SpatialNoiseModelInstance extends Instance implements IStochModelIns
   }
 
   @Override
+  public ILocalizationDomains getLocalizationDomains( )
+  {
+    return new LocalizationDomainsSimpleModel();
+  }
+
+  @Override
   public IVector[] getObservedLocalization( final IObservationDescriptions observationDescriptions, final double distance )
   {
-    return null;
+
+    final IVector xObs = observationDescriptions.getValueProperties( "xposition" );
+    final IVector yObs = observationDescriptions.getValueProperties( "yposition" );
+    final IVector zObs = observationDescriptions.getValueProperties( "height" );
+    final String obsId[] = observationDescriptions.getStringProperties( "id" );
+    final int obsCount = observationDescriptions.getObservationCount();
+
+    final IVector[] obsVectorArray = new IVector[obsCount];
+    for( int i = 0; i < obsCount; i++ )
+    {
+
+      final ITreeVector modelWeightsTreeVector = getLocalizedCohnWeights( obsId[i], distance, xObs.getValue( i ), yObs.getValue( i ), zObs.getValue( i ) );
+
+      final TreeVector weightsForFullNoise = new TreeVector( "Noise-Weight" );
+      weightsForFullNoise.addChild( modelWeightsTreeVector );
+      obsVectorArray[i] = weightsForFullNoise;
+    }
+    return obsVectorArray;
+
+  }
+
+  private ITreeVector getLocalizedCohnWeights( final String obsId, final double distanceCohnMeters, final double xObs, final double yObs, final double zObs )
+  {
+    final TreeVector treeVector = new TreeVector( "weights-for " + obsId );
+
+    final Collection<SpatialNoiseModelItem> x = m_items.values();
+    for( final SpatialNoiseModelItem item : x )
+    {
+      final IExchangeItem echangeItem = item.getOutputSeries();
+
+      final double[] distancesForExchangeItem = echangeItem.getGeometryInfo().distanceToPoint( xObs, yObs, zObs ).getValuesAsDoubles();
+      final double[] weightsForExchangeItem = new double[distancesForExchangeItem.length];
+
+      for( int xy = 0; xy < distancesForExchangeItem.length; xy++ )
+        weightsForExchangeItem[xy] = GeometryUtils.calculateCohnWeight( distancesForExchangeItem[xy], distanceCohnMeters );
+
+      treeVector.addChild( item.getId(), weightsForExchangeItem );
+    }
+    return treeVector;
+  }
+
+  @Override
+  public IVector[] getObservedLocalization( final IObservationDescriptions observationDescriptions, final double distance, final int iDomain )
+  {
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -421,6 +488,19 @@ final class SpatialNoiseModelInstance extends Instance implements IStochModelIns
   public IVector getObservedValues( final IObservationDescriptions observationDescriptions )
   {
     throw new UnsupportedOperationException( "org.openda.noiseModels.MapsNoisModelInstance.getObservedValues(): Not implemented yet." );
+  }
+
+  /**
+   * Get the operator that can calculate model values corresponding to a number of observations
+   * This returns the operator that calculates what the observations would look like,
+   * if reality would be equal to the current stoch model state.
+   *
+   * @return Observation operator
+   */
+  @Override
+  public IObservationOperator getObservationOperator( )
+  {
+    return new ObservationOperatorDeprecatedModel( this );
   }
 
   @Override

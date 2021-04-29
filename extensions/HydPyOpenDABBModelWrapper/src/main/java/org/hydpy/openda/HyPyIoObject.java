@@ -18,14 +18,14 @@ import org.hydpy.openda.server.HydPyModelInstance;
 import org.hydpy.openda.server.HydPyServerException;
 import org.hydpy.openda.server.HydPyServerManager;
 import org.openda.blackbox.interfaces.IoObjectInterface;
-import org.openda.interfaces.IPrevExchangeItem;
+import org.openda.interfaces.IExchangeItem;
 
 /**
  * @author Gernot Belger
  */
 public final class HyPyIoObject implements IoObjectInterface
 {
-  private List<IPrevExchangeItem> m_exchangeItems = null;
+  private List<IExchangeItem> m_exchangeItems = null;
 
   private String m_instanceId = null;
 
@@ -52,9 +52,9 @@ public final class HyPyIoObject implements IoObjectInterface
   }
 
   @Override
-  public IPrevExchangeItem[] getExchangeItems( )
+  public IExchangeItem[] getExchangeItems( )
   {
-    return m_exchangeItems.toArray( new IPrevExchangeItem[m_exchangeItems.size()] );
+    return m_exchangeItems.toArray( new IExchangeItem[m_exchangeItems.size()] );
   }
 
   @Override

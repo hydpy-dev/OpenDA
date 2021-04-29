@@ -15,7 +15,6 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 
 import org.apache.commons.lang3.StringUtils;
-import org.joda.time.Instant;
 
 /**
  * Some static utils.
@@ -24,16 +23,9 @@ import org.joda.time.Instant;
  */
 final class HydPyUtils
 {
-  // REMARK: copied from Observer OpenDA, API, which is sadly not public
-  private static final double millisToDays = 1.0 / (1000 * 60 * 60 * 24);
-
-  private static final double secondsToDays = 1.0 / (60 * 60 * 24);
-
-  private static final double daysToMillis = (1000 * 60 * 60 * 24);
-
   private static final double daysToSeconds = (60 * 60 * 24);
 
-  private static final double mjdAtJanFirst1970 = 40587.0;
+  private static final double secondsToDays = 1.0 / daysToSeconds;
 
   private HydPyUtils( )
   {
@@ -136,17 +128,18 @@ final class HydPyUtils
     return buffer.toString();
   }
 
-  // FIXME: check if w can reuse the Time utility class of openDA
-
-  public static double dateToMjd( final Instant date )
+  public static String[] parseStringArray( final String text )
   {
-    return date.getMillis() * millisToDays + mjdAtJanFirst1970; // convert from millis to days and add offset for mjd
-  }
+    final StringTokenizer st = new StringTokenizer( text, "[], " );
 
-  public static Instant mjdToDate( final double mjd )
-  {
-    final long timeInMillis = Math.round( (mjd - mjdAtJanFirst1970) * daysToMillis );
-    return new Instant( timeInMillis );
+    final int countTokens = st.countTokens();
+
+    final String[] values = new String[countTokens];
+
+    for( int i = 0; i < values.length; i++ )
+      values[i] = st.nextToken();
+
+    return values;
   }
 
   public static double durationToMjd( final long seconds )

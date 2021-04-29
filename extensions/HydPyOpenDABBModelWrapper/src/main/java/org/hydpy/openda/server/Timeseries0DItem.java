@@ -15,6 +15,7 @@ import org.joda.time.Instant;
 import org.openda.exchange.timeseries.TimeSeries;
 import org.openda.interfaces.IPrevExchangeItem;
 import org.openda.interfaces.IPrevExchangeItem.Role;
+import org.openda.utils.Time;
 
 /**
  * @author Gernot Belger
@@ -48,7 +49,7 @@ final class Timeseries0DItem extends AbstractServerItem
       // REMARK: HydPy thinks in time-intervals, hence we have one timestep less --> start with startTime + stepSeconds
       time = time.plus( stepMillis );
 
-      times[i] = HydPyUtils.dateToMjd( time );
+      times[i] = Time.milliesToMjd( time.getMillis() );
     }
 
     if( !time.equals( endTime ) )
@@ -68,7 +69,7 @@ final class Timeseries0DItem extends AbstractServerItem
 
     final double[] dateValues = new double[mjdValues.length];
     for( int i = 0; i < dateValues.length; i++ )
-      dateValues[i] = HydPyUtils.mjdToDate( mjdValues[i] ).getMillis();
+      dateValues[i] = Time.mjdToMillies( mjdValues[i] );
 
     return HydPyUtils.printDoubleArray( mjdValues );
   }

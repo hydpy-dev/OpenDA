@@ -17,6 +17,7 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.openda.exchange.DoubleExchangeItem;
 import org.openda.interfaces.IPrevExchangeItem;
 import org.openda.interfaces.IPrevExchangeItem.Role;
+import org.openda.utils.Time;
 
 /**
  * @author Gernot Belger
@@ -41,7 +42,7 @@ final class TimeItem extends AbstractServerItem
   {
     final Instant date = (Instant)value;
 
-    final double mjd = HydPyUtils.dateToMjd( date );
+    final double mjd = Time.milliesToMjd( date.getMillis() );
 
     return new DoubleExchangeItem( getId(), getRole(), mjd );
   }
@@ -51,7 +52,9 @@ final class TimeItem extends AbstractServerItem
   {
     final DoubleExchangeItem dblItem = (DoubleExchangeItem)exItem;
     final double value = dblItem.getValue();
-    final Instant date = HydPyUtils.mjdToDate( value );
+
+    final long timeInMillis = Time.mjdToMillies( value );
+    final Instant date = new Instant( timeInMillis );
 
     return HYD_PY_DATE_TIME_PARSER.print( date );
   }

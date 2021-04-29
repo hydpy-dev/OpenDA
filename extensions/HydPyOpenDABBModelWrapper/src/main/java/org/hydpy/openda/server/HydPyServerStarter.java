@@ -21,7 +21,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.http.client.utils.URIBuilder;
 
@@ -124,7 +123,7 @@ final class HydPyServerStarter
         m_process.destroy();
 
       /* we also shutdown the thread, else OpenDA might hang forever */
-      shutdownExecutor();
+      m_executor.shutdown();
 
       throw e;
     }
@@ -256,22 +255,7 @@ final class HydPyServerStarter
     }
 
     m_executor.submit( (Runnable)this::shutdownProcess );
-
-    shutdownExecutor();
-  }
-
-  private void shutdownExecutor( )
-  {
-    try
-    {
-      /* shutdown executor after calls to processes, as they will submit a task on shutdown */
-      m_executor.shutdown();
-      m_executor.awaitTermination( 5, TimeUnit.SECONDS );
-    }
-    catch( final InterruptedException e )
-    {
-      e.printStackTrace();
-    }
+    m_executor.shutdown();
   }
 
   private void shutdownProcess( )
@@ -303,7 +287,9 @@ final class HydPyServerStarter
       }
     }
 
-    System.out.format( "%s: timeout waiting for process termination, process will be killed%n", m_name );
+    /* process was not correctly terminated, kill */
+    System.err.format( "%s: timeout waiting for process termination, process will be killed%n", m_name );
+    m_process.destroy();
   }
 
   public void kill( )

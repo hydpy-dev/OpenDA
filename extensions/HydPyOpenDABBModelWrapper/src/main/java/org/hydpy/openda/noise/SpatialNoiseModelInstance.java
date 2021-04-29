@@ -23,6 +23,7 @@ import org.openda.exchange.TimeInfo;
 import org.openda.interfaces.IDimensionIndex;
 import org.openda.interfaces.IExchangeItem;
 import org.openda.interfaces.IExchangeItem.Role;
+import org.openda.interfaces.IGeometryInfo;
 import org.openda.interfaces.IInstance;
 import org.openda.interfaces.ILocalizationDomains;
 import org.openda.interfaces.IModelState;
@@ -270,7 +271,6 @@ final class SpatialNoiseModelInstance extends Instance implements IStochModelIns
   @Override
   public IVector[] getObservedLocalization( final IObservationDescriptions observationDescriptions, final double distance )
   {
-
     final IVector xObs = observationDescriptions.getValueProperties( "xposition" );
     final IVector yObs = observationDescriptions.getValueProperties( "yposition" );
     final IVector zObs = observationDescriptions.getValueProperties( "height" );
@@ -280,27 +280,28 @@ final class SpatialNoiseModelInstance extends Instance implements IStochModelIns
     final IVector[] obsVectorArray = new IVector[obsCount];
     for( int i = 0; i < obsCount; i++ )
     {
-
       final ITreeVector modelWeightsTreeVector = getLocalizedCohnWeights( obsId[i], distance, xObs.getValue( i ), yObs.getValue( i ), zObs.getValue( i ) );
 
       final TreeVector weightsForFullNoise = new TreeVector( "Noise-Weight" );
       weightsForFullNoise.addChild( modelWeightsTreeVector );
       obsVectorArray[i] = weightsForFullNoise;
     }
-    return obsVectorArray;
 
+    return obsVectorArray;
   }
 
   private ITreeVector getLocalizedCohnWeights( final String obsId, final double distanceCohnMeters, final double xObs, final double yObs, final double zObs )
   {
     final TreeVector treeVector = new TreeVector( "weights-for " + obsId );
 
-    final Collection<SpatialNoiseModelItem> x = m_items.values();
-    for( final SpatialNoiseModelItem item : x )
+    for( final SpatialNoiseModelItem item : m_items.values() )
     {
       final IExchangeItem echangeItem = item.getOutputSeries();
 
-      final double[] distancesForExchangeItem = echangeItem.getGeometryInfo().distanceToPoint( xObs, yObs, zObs ).getValuesAsDoubles();
+      // FIXME: geometry info might be null
+      final IGeometryInfo geometryInfo = echangeItem.getGeometryInfo();
+
+      final double[] distancesForExchangeItem = geometryInfo.distanceToPoint( xObs, yObs, zObs ).getValuesAsDoubles();
       final double[] weightsForExchangeItem = new double[distancesForExchangeItem.length];
 
       for( int xy = 0; xy < distancesForExchangeItem.length; xy++ )
@@ -308,6 +309,7 @@ final class SpatialNoiseModelInstance extends Instance implements IStochModelIns
 
       treeVector.addChild( item.getId(), weightsForExchangeItem );
     }
+
     return treeVector;
   }
 
@@ -363,7 +365,7 @@ final class SpatialNoiseModelInstance extends Instance implements IStochModelIns
   @Override
   public void releaseInternalState( final IModelState savedInternalState )
   {
-    /* nothing to do, let the garbace collector do its work */
+    /* nothing to do, let the garbage collector do its work */
   }
 
   @Override

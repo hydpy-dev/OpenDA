@@ -181,7 +181,6 @@ final class HydPyServerClient
     {
       final URI endpoint = buildEndpoint( PATH_CLOSE_SERVER, null, null );
       callGet( endpoint, m_timeoutMillis );
-      // TODO: check if process was correctly terminated, needs bigger java version
     }
     catch( final HydPyServerException e )
     {

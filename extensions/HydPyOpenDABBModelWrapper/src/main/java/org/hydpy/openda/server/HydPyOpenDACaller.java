@@ -78,6 +78,9 @@ final class HydPyOpenDACaller
           "GET_query_parameteritemvalues," + //
           "GET_query_simulationdates"; //
 
+  // FIXME
+  private static final String METHODS_REQUEST_ITEMNAMES = "GET_query_itemnames";
+
   private static final String ITEM_ID_FIRST_DATE_INIT = "firstdate_init"; //$NON-NLS-1$
 
   private static final String ITEM_ID_LAST_DATE_INIT = "lastdate_init"; //$NON-NLS-1$
@@ -280,6 +283,21 @@ final class HydPyOpenDACaller
     }
 
     m_client.execute( instanceId, METHODS_REGISTER_ITEMVALUES, body.toString() );
+  }
+
+  public String[] getItemNames( final String itemId ) throws HydPyServerException
+  {
+    if( true )
+    {
+      final String[] elementNames = new String[] { "teg_1" };
+      return elementNames;
+    }
+
+    // FIXME: use itemID
+
+    final Properties props = m_client.execute( null, METHODS_REQUEST_ITEMNAMES );
+    final String value = props.getProperty( "FIXME" );
+    return HydPyUtils.parseStringArray( value );
   }
 
   public List<IPrevExchangeItem> simulate( final String instanceId ) throws HydPyServerException

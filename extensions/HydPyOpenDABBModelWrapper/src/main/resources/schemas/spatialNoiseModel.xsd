@@ -35,19 +35,16 @@
       <documentation>geometry defining the spatial extent and correlation of a noise item</documentation>
     </annotation>
     <sequence>
-      <!-- TODO: not ideal, either we should (again) delegate to a separate config-xml-file
-        or we should allow factories to extend the geometry type, or...
-      -->
-      <any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
+      <choice>
+        <!-- REMARK: still a fixed choice: we might replace this with a more extensible mechanism -->
+        <element ref="hydpy:grid" />
+        <element ref="hydpy:points" />
+        <element ref="hydpy:pointsHydPy" />
+      </choice>
     </sequence>
     <attribute name="id" type="ID" use="required">
       <annotation>
         <documentation>The identifier for the geometry</documentation>
-      </annotation>
-    </attribute>
-    <attribute name="factory" type="string" use="required">
-      <annotation>
-        <documentation>Factory class for the geometry implementation. Must implement org.hydpy.openda.noise.ISpatialNoiseGeometry</documentation>
       </annotation>
     </attribute>
     <attribute name="coordinates" type="hydpy:NoiseGridCoordSystemType" use="optional" default="xy">
@@ -118,10 +115,11 @@
       </annotation>
     </attribute>
   </complexType>
+
   <complexType name="SpatialNoiseModelConfigType">
     <sequence>
-      <element name="simulationTimespan" type="oda:simulationTimespanXML" />
-      <element name="geometry" type="hydpy:GeometryType"></element>
+      <element name="simulationTimespan" type="oda:simulationTimespanXML" minOccurs="0" maxOccurs="1" />
+      <element name="geometry" type="hydpy:GeometryType" maxOccurs="unbounded"/>
       <element name="noiseItem" type="hydpy:NoiseItemType" maxOccurs="unbounded" />
     </sequence>
   </complexType>
@@ -129,5 +127,35 @@
     <annotation>
       <documentation>Configuration for OpenDA's noise model</documentation>
     </annotation>
+  </element>
+
+  <element name="grid">
+    <complexType>
+      <sequence>
+        <element name="x" type="string">
+        </element>
+        <element name="y" type="string">
+        </element>
+      </sequence>
+      <attribute name="separable" type="boolean" default="false" />
+    </complexType>
+  </element>
+
+  <element name="points">
+    <complexType>
+      <sequence>
+        <element name="x" type="string">
+        </element>
+        <element name="y" type="string">
+        </element>
+      </sequence>
+    </complexType>
+  </element>
+
+  <element name="pointsHydPy">
+    <complexType>
+      <attribute name="modelExchangeItem" type="string" use="required"/>
+      <attribute name="locationsFile" type="string" use="required"/>
+    </complexType>
   </element>
 </schema>

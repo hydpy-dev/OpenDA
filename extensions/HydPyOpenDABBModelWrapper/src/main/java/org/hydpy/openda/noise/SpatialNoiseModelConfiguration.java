@@ -17,12 +17,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
+import org.hydpy.openda.noise.SpatialNoiseUtils.CoordinatesType;
+import org.hydpy.openda.noise.grid.SpatialNoiseGridGeometryFactory;
+import org.hydpy.openda.noise.points.HydPySpatialNoisePointsGeometryFactory;
+import org.hydpy.openda.noise.points.SpatialNoisePointsGeometryFactory;
 import org.openda.exchange.QuantityInfo;
 import org.openda.exchange.timeseries.TimeUtils;
 import org.openda.interfaces.ITime;
 import org.openda.utils.ConfigTree;
-import org.openda.utils.ObjectSupport;
 import org.openda.utils.Results;
 import org.openda.utils.Time;
 
@@ -34,6 +38,14 @@ import org.openda.utils.Time;
  */
 final class SpatialNoiseModelConfiguration
 {
+  private static final Map<String, ISpatialNoiseGeometryFactory> FACTORIES = new HashMap<>();
+  static
+  {
+    FACTORIES.put( "grid", new SpatialNoiseGridGeometryFactory() );
+    FACTORIES.put( "points", new SpatialNoisePointsGeometryFactory() );
+    FACTORIES.put( "pointsHydPy", new HydPySpatialNoisePointsGeometryFactory() );
+  }
+
   private final Collection<SpatialNoiseModelConfigurationItem> m_items;
 
   private final ITime m_timeHorizon;
@@ -51,7 +63,7 @@ final class SpatialNoiseModelConfiguration
     final ITime noiseHorizon = parseTimeHorizon( conf, modelHorizon );
 
     // read geometry definitions
-    final Map<String, ISpatialNoiseGeometry> geometries = readGeometries( conf );
+    final Map<String, ISpatialNoiseGeometry> geometries = readGeometries( conf, workingDir );
 
     final ConfigTree itemTrees[] = conf.getSubTrees( "noiseItem" );
 
@@ -124,7 +136,7 @@ final class SpatialNoiseModelConfiguration
     return new Time( startTime, endTime, incrementTime );
   }
 
-  private static Map<String, ISpatialNoiseGeometry> readGeometries( final ConfigTree conf )
+  private static Map<String, ISpatialNoiseGeometry> readGeometries( final ConfigTree conf, final File workingDir )
   {
     final ConfigTree configs[] = conf.getSubTrees( "geometry" );
 
@@ -136,21 +148,26 @@ final class SpatialNoiseModelConfiguration
       if( id == null )
         throw new RuntimeException( "Missing 'id' in geometry definition." );
 
-      final ISpatialNoiseGeometry geometry = readGeometry( config );
+      final ISpatialNoiseGeometry geometry = readGeometry( config, workingDir );
       geometries.put( id, geometry );
     }
 
     return geometries;
   }
 
-  private static ISpatialNoiseGeometry readGeometry( final ConfigTree config )
+  private static ISpatialNoiseGeometry readGeometry( final ConfigTree config, final File workingDir )
   {
-    final String implClass = config.getAsString( "@factory", null );
-    if( implClass == null )
-      throw new RuntimeException( "Missing 'factory' in geometry definition." );
+    final CoordinatesType coordinatesType = SpatialNoiseUtils.parseCoordinatesType( config );
+    final double horizontalCorrelationScale = SpatialNoiseUtils.parseHorizontalCorrelationScale( config );
 
-    final ISpatialNoiseGeometryFactory factory = (ISpatialNoiseGeometryFactory)ObjectSupport.createNewInstance( implClass, ISpatialNoiseGeometryFactory.class );
-    return factory.create( config );
+    for( final Entry<String, ISpatialNoiseGeometryFactory> factoryEntry : FACTORIES.entrySet() )
+    {
+      final ConfigTree[] subTrees = config.getSubTrees( factoryEntry.getKey() );
+      if( subTrees != null && subTrees.length > 0 )
+        return factoryEntry.getValue().create( subTrees[0], workingDir, coordinatesType, horizontalCorrelationScale );
+    }
+
+    throw new RuntimeException( "Unknown geometry type." );
   }
 
   /*

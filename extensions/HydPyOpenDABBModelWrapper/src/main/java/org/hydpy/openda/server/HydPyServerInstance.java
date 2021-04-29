@@ -115,6 +115,11 @@ final class HydPyServerInstance
     m_executor.submit( task );
   }
 
+  public synchronized String[] getItemNames( final String itemId ) throws HydPyServerException
+  {
+    return getServer().getItemNames( itemId );
+  }
+
   public synchronized void simulate( final String instanceId )
   {
     final Callable<List<IPrevExchangeItem>> task = new Callable<List<IPrevExchangeItem>>()

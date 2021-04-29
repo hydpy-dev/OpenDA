@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- REMARK: there seems to be no schema defining this algorithm -->
-<sequentialAlgorithm xmlns="http://www.openda.org">
+<SequentialEnsembleSimulationConfig xmlns="http://www.openda.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/algorithm/sequentialEnsembleSimulation.xsd">
   <analysisTimes type="fromObservationTimes"></analysisTimes>
   <mainModel stochParameter="false" stochForcing="false" stochInit="false" />
   <ensembleSize>3</ensembleSize>
   <ensembleModel stochParameter="false" stochForcing="false" stochInit="true" />
-</sequentialAlgorithm>
+</SequentialEnsembleSimulationConfig>

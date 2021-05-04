@@ -17,16 +17,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hydpy.openda.noise.SpatialNoiseUtils.CoordinatesType;
-import org.hydpy.openda.noise.grid.SpatialNoiseGridGeometryFactory;
-import org.hydpy.openda.noise.points.HydPySpatialNoisePointsGeometryFactory;
-import org.hydpy.openda.noise.points.SpatialNoisePointsGeometryFactory;
 import org.openda.exchange.QuantityInfo;
 import org.openda.exchange.timeseries.TimeUtils;
 import org.openda.interfaces.ITime;
 import org.openda.utils.ConfigTree;
+import org.openda.utils.ObjectSupport;
 import org.openda.utils.Results;
 import org.openda.utils.Time;
 
@@ -38,14 +36,6 @@ import org.openda.utils.Time;
  */
 final class SpatialNoiseModelConfiguration
 {
-  private static final Map<String, ISpatialNoiseGeometryFactory> FACTORIES = new HashMap<>();
-  static
-  {
-    FACTORIES.put( "grid", new SpatialNoiseGridGeometryFactory() );
-    FACTORIES.put( "points", new SpatialNoisePointsGeometryFactory() );
-    FACTORIES.put( "pointsHydPy", new HydPySpatialNoisePointsGeometryFactory() );
-  }
-
   private final Collection<SpatialNoiseModelConfigurationItem> m_items;
 
   private final ITime m_timeHorizon;
@@ -160,14 +150,16 @@ final class SpatialNoiseModelConfiguration
     final CoordinatesType coordinatesType = SpatialNoiseUtils.parseCoordinatesType( config );
     final double horizontalCorrelationScale = SpatialNoiseUtils.parseHorizontalCorrelationScale( config );
 
-    for( final Entry<String, ISpatialNoiseGeometryFactory> factoryEntry : FACTORIES.entrySet() )
-    {
-      final ConfigTree[] subTrees = config.getSubTrees( factoryEntry.getKey() );
-      if( subTrees != null && subTrees.length > 0 )
-        return factoryEntry.getValue().create( subTrees[0], workingDir, coordinatesType, horizontalCorrelationScale );
-    }
+    final ConfigTree child = config.getFirstChild();
+    if( child == null )
+      throw new RuntimeException( "Missing geomtry configuration" );
 
-    throw new RuntimeException( "Unknown geometry type." );
+    final String factoryName = child.getAsString( "@factory", null );
+    if( StringUtils.isBlank( factoryName ) )
+      throw new RuntimeException( "Missing 'factory' attribute in geometry configuration" );
+
+    final ISpatialNoiseGeometryFactory factory = (ISpatialNoiseGeometryFactory)ObjectSupport.createNewInstance( factoryName, ISpatialNoiseGeometryFactory.class );
+    return factory.create( child, workingDir, coordinatesType, horizontalCorrelationScale );
   }
 
   /*
@@ -213,7 +205,7 @@ final class SpatialNoiseModelConfiguration
     final String geometryRef = itemConfig.getAsString( "@geometry", null );
 
     // TODO: this breaks backwards compatibility to MapsNoiseModelFactory
-    // we could instead fallback to a 'default' factory which reads data from the noiseItem-node and
+    // we might instead fallback to a 'default' factory which reads data from the noiseItem-node and
     // but still creates the same instances as SpatialNoiseGridGeometryFactory.
     final ISpatialNoiseGeometry correlation = geometries.get( geometryRef );
     if( correlation == null )

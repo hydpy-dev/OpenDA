@@ -36,10 +36,7 @@
     </annotation>
     <sequence>
       <choice>
-        <!-- REMARK: still a fixed choice: we might replace this with a more extensible mechanism -->
-        <element ref="hydpy:grid" />
-        <element ref="hydpy:points" />
-        <element ref="hydpy:pointsHydPy" />
+        <element ref="hydpy:_geometryConfiguration" />
       </choice>
     </sequence>
     <attribute name="id" type="ID" use="required">
@@ -54,7 +51,7 @@
     </attribute>
     <attribute name="horizontalCorrelationScale" type="double" use="required">
       <annotation>
-        <!-- FIXME: 'horizontol' is too grid specific but also has nothing to do with the fact that the geometry is a grid -->
+        <!-- FIXME: 'horizontal' is too grid specific but also has nothing to do with the fact that the geometry is a grid -->
         <documentation>Interval specifying the horizontal spatial correlation between the consecutive values</documentation>
       </annotation>
     </attribute>
@@ -119,7 +116,7 @@
   <complexType name="SpatialNoiseModelConfigType">
     <sequence>
       <element name="simulationTimespan" type="oda:simulationTimespanXML" minOccurs="0" maxOccurs="1" />
-      <element name="geometry" type="hydpy:GeometryType" maxOccurs="unbounded"/>
+      <element name="geometry" type="hydpy:GeometryType" maxOccurs="unbounded" />
       <element name="noiseItem" type="hydpy:NoiseItemType" maxOccurs="unbounded" />
     </sequence>
   </complexType>
@@ -129,33 +126,130 @@
     </annotation>
   </element>
 
-  <element name="grid">
+  <element name="_geometryConfiguration" type="hydpy:AbstractGeometryConfigurationType">
+    <annotation>
+      <documentation>Base type for all configuration elements of geometry implementations.</documentation>
+    </annotation>
+  </element>
+  <complexType name="AbstractGeometryConfigurationType">
+    <attribute name="factory" use="required">
+      <annotation>
+        <documentation>Implementation class of this specific geometry. Must implement org.hydpy.openda.noise.ISpatialNoiseGeometryFactory</documentation>
+      </annotation>
+    </attribute>
+  </complexType>
+
+  <element name="_grid" substitutionGroup="hydpy:_geometryConfiguration" type="hydpy:AbstractGridType" abstract="true" />
+  <complexType name="AbstractGridType" abstract="true">
+    <complexContent>
+      <restriction base="hydpy:AbstractGeometryConfigurationType">
+        <attribute name="factory" fixed="org.hydpy.openda.noise.grid.SpatialNoiseGridGeometryFactory" use="required" />
+      </restriction>
+    </complexContent>
+  </complexType>
+
+  <element name="grid" substitutionGroup="hydpy:_grid">
+    <annotation>
+      <documentation>A regular grid defined by its coordinates in x and y direction.</documentation>
+    </annotation>
     <complexType>
-      <sequence>
-        <element name="x" type="string">
-        </element>
-        <element name="y" type="string">
-        </element>
-      </sequence>
-      <attribute name="separable" type="boolean" default="false" />
+      <complexContent>
+        <extension base="hydpy:AbstractGridType">
+          <sequence>
+            <element name="x" type="hydpy:CoordinatesType" />
+            <element name="y" type="hydpy:CoordinatesType" />
+          </sequence>
+          <attribute name="separable" type="boolean" default="false">
+            <annotation>
+              <documentation>To speed up calculations the coordinates can be treated as separable. This means that correlations
+                are computed for both spatial directions separately. This is much faster, but is only approximate for
+                spherical coordinates, especially near the poles.
+              </documentation>
+            </annotation>
+          </attribute>
+        </extension>
+      </complexContent>
     </complexType>
   </element>
 
-  <element name="points">
+  <element name="_points" substitutionGroup="hydpy:_geometryConfiguration" type="hydpy:AbstractPointsType" abstract="true" />
+  <complexType name="AbstractPointsType" abstract="true">
+    <complexContent>
+      <restriction base="hydpy:AbstractGeometryConfigurationType">
+        <attribute name="factory" fixed="org.hydpy.openda.noise.points.SpatialNoisePointsGeometryFactory" use="required" />
+      </restriction>
+    </complexContent>
+  </complexType>
+
+  <element name="points" substitutionGroup="hydpy:_points">
+    <annotation>
+      <documentation>An arbitrary set of points.</documentation>
+    </annotation>
     <complexType>
-      <sequence>
-        <element name="x" type="string">
-        </element>
-        <element name="y" type="string">
-        </element>
-      </sequence>
+      <complexContent>
+        <extension base="hydpy:AbstractPointsType">
+          <sequence>
+            <element name="x" type="hydpy:CoordinatesType" />
+            <element name="y" type="hydpy:CoordinatesType" />
+          </sequence>
+        </extension>
+      </complexContent>
     </complexType>
   </element>
 
-  <element name="pointsHydPy">
+  <element name="_pointsHydPy" substitutionGroup="hydpy:_geometryConfiguration" type="hydpy:AbstractPointsHydPyType" abstract="true" />
+  <complexType name="AbstractPointsHydPyType" abstract="true">
+    <complexContent>
+      <restriction base="hydpy:AbstractGeometryConfigurationType">
+        <attribute name="factory" fixed="org.hydpy.openda.noise.points.HydPySpatialNoisePointsGeometryFactory" use="required" />
+      </restriction>
+    </complexContent>
+  </complexType>
+
+  <element name="pointsHydPy" substitutionGroup="hydpy:_pointsHydPy">
+    <annotation>
+      <documentation>Specialized spatial distribution of 'point' locations, where the order (within the noise vector) will be
+        fetched from a HydPy-Server instance via its method 'getItemNames'. This ensures that the order (and dimension) of the spatial noise vector fits the model structure without need for defining it twice.
+        The actual locations will be (for now) fetched from a separate
+        'locationsFile' that maps
+        HydPy element names to locations.
+        For the future it is planned to also fetch the location information directly from the HydPy model.
+        Usage of this spatial geometry prerequisites the usage of the org.hydpy.openda.HydPyModelFactory.
+      </documentation>
+    </annotation>
     <complexType>
-      <attribute name="modelExchangeItem" type="string" use="required"/>
-      <attribute name="locationsFile" type="string" use="required"/>
+      <complexContent>
+        <extension base="hydpy:AbstractPointsHydPyType">
+          <attribute name="modelExchangeItem" type="string" use="required">
+            <annotation>
+              <documentation>Id of the exchange item from which the order and dimension of the spatial noise vector will be derived.</documentation>
+            </annotation>
+          </attribute>
+          <attribute name="locationsFile" type="string" use="required">
+            <annotation>
+              <documentation>Path to an external file containing a mapping between HydPy element names and their geographic location.
+                The path will be resolved against the working dir of the spatial noise model.
+                The file format is a tabular separated table with three columns: element-name, x-coordinate and y-coordinate.
+                Empty lines or lines starting with '#' are ignored.
+                The locations file must
+                contain
+                one location for each element within the spatial noise vector
+                aka the referenced exchange item. However the file may define more locations than needed, e.g. in order to be reused for different element sub-sets.
+              </documentation>
+            </annotation>
+          </attribute>
+        </extension>
+      </complexContent>
     </complexType>
   </element>
+
+  <simpleType name="CoordinatesType">
+    <annotation>
+      <documentation>Definition of the points along a coordinate axis (all points, or: start,next,...,end)</documentation>
+    </annotation>
+    <restriction base="string">
+      <pattern value="[0-9.,\- ]+" />
+    </restriction>
+  </simpleType>
+
 </schema>

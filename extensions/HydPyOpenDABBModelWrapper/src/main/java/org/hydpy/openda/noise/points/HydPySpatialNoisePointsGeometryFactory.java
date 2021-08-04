@@ -14,7 +14,9 @@ package org.hydpy.openda.noise.points;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -64,8 +66,6 @@ public final class HydPySpatialNoisePointsGeometryFactory implements ISpatialNoi
 
     final File locationsFile = new File( workingDir, locationsPath );
 
-    // REMARK: open stream myself because OpenDA's CSVReader will not close it
-    // itself.
     try( final CsvReader csvReader = new CsvReader( locationsFile ) )
     {
       csvReader.setColumnSeparatorChar( '\t' );
@@ -120,16 +120,27 @@ public final class HydPySpatialNoisePointsGeometryFactory implements ISpatialNoi
     final double[] x = new double[elementNames.length];
     final double[] y = new double[elementNames.length];
 
+    final Set<String> missingNames = new HashSet<>();
+
     for( int i = 0; i < elementNames.length; i++ )
     {
       final String elementName = elementNames[i];
       final Vector2D point = locations.get( elementName );
+
       if( point == null )
-        throw new RuntimeException( String.format( "No corresponding element '%s' found in locations file", elementName ) );
+      {
+        if( missingNames.isEmpty() )
+          System.err.format( "Missing elements in locations file for item '%s':%n", itemId );
+        System.err.print( '\t' );
+        System.err.println( elementName );
+      }
 
       x[i] = point.getX();
       y[i] = point.getY();
     }
+
+    if( !missingNames.isEmpty() )
+      throw new RuntimeException( String.format( "Missing elements in locations file for item '%s':%n", itemId ) );
 
     return Pair.of( x, y );
   }
@@ -143,7 +154,7 @@ public final class HydPySpatialNoisePointsGeometryFactory implements ISpatialNoi
     }
     catch( final Exception e )
     {
-      throw new RuntimeException( String.format( "Failed to fetch ordered element list for item '%s' from HydPy", itemId ) );
+      throw new RuntimeException( String.format( "Failed to fetch ordered element list for item '%s' from HydPy", itemId ), e );
     }
   }
 }

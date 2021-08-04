@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <spatialNoiseModelConfig xmlns="https://github.com/hydpy-dev/OpenDA" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://github.com/hydpy-dev/OpenDA FIXME">
   <geometry id="irregularpoints" coordinates="xy" horizontalCorrelationScale="1.0" horizontalCorrelationScaleUnit="m">
-    <points factory="org.hydpy.openda.noise.points.SpatialNoisePointsGeometryFactory">
-      <x>1.0</x>
-      <y>1.0</y>
-    </points>
+    <points factory="org.hydpy.openda.noise.points.HydPySpatialNoisePointsGeometryFactory" modelExchangeItem="lz" locationsFile="locations_lz.txt"/>
   </geometry>
   <noiseItem id="noise_lz" quantity="LZ" unit="mm" standardDeviation="0.2" timeCorrelationScale="2.0" timeCorrelationScaleUnit="days" initialValue="0.0" geometry="irregularpoints" />
 </spatialNoiseModelConfig>

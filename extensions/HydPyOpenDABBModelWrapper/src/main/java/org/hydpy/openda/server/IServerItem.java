@@ -11,7 +11,7 @@
  */
 package org.hydpy.openda.server;
 
-import org.openda.interfaces.IPrevExchangeItem.Role;
+import org.openda.interfaces.IExchangeItem.Role;
 
 /**
  * @author Gernot Belger

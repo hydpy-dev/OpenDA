@@ -13,8 +13,8 @@ package org.hydpy.openda.server;
 
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.Instant;
-import org.openda.interfaces.IPrevExchangeItem;
-import org.openda.interfaces.IPrevExchangeItem.Role;
+import org.openda.interfaces.IExchangeItem;
+import org.openda.interfaces.IExchangeItem.Role;
 
 /**
  * @author Gernot Belger
@@ -92,7 +92,7 @@ abstract class AbstractServerItem implements IServerItem
 
   public abstract Object parseValue( final String valueText ) throws HydPyServerException;
 
-  public abstract IPrevExchangeItem toExchangeItem( Instant startTime, Instant endTime, long stepSeconds, final Object value ) throws HydPyServerException;
+  public abstract IExchangeItem toExchangeItem( Instant startTime, Instant endTime, long stepSeconds, final Object value ) throws HydPyServerException;
 
-  public abstract String printValue( IPrevExchangeItem exItem ) throws HydPyServerException;
+  public abstract String printValue( IExchangeItem exItem ) throws HydPyServerException;
 }

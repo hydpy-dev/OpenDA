@@ -14,7 +14,7 @@ package org.hydpy.openda.server;
 import java.util.Collection;
 import java.util.List;
 
-import org.openda.interfaces.IPrevExchangeItem;
+import org.openda.interfaces.IExchangeItem;
 
 /**
  * Wraps a 'real' HydPyServer together with an instanceId.
@@ -46,12 +46,12 @@ public final class HydPyModelInstance
     return m_server.getItems();
   }
 
-  public List<IPrevExchangeItem> getItemValues( ) throws HydPyServerException
+  public List<IExchangeItem> getItemValues( ) throws HydPyServerException
   {
     return m_server.getItemValues( m_instanceId );
   }
 
-  public void setItemValues( final Collection<IPrevExchangeItem> values )
+  public void setItemValues( final Collection<IExchangeItem> values )
   {
     m_server.setItemValues( m_instanceId, values );
   }

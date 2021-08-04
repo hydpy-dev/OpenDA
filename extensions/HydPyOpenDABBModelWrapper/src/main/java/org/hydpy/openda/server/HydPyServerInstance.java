@@ -20,7 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import org.openda.interfaces.IPrevExchangeItem;
+import org.openda.interfaces.IExchangeItem;
 
 /**
  * Represents one server instance which can be used by it's associated model instances to run simulations on.
@@ -29,7 +29,7 @@ import org.openda.interfaces.IPrevExchangeItem;
  */
 final class HydPyServerInstance
 {
-  private final Map<String, Future<List<IPrevExchangeItem>>> m_currentSimulations = new HashMap<>();
+  private final Map<String, Future<List<IExchangeItem>>> m_currentSimulations = new HashMap<>();
 
   private final HydPyOpenDACaller m_server;
 
@@ -69,10 +69,10 @@ final class HydPyServerInstance
 
   public synchronized void initializeInstance( final String instanceId )
   {
-    final Callable<List<IPrevExchangeItem>> task = new Callable<List<IPrevExchangeItem>>()
+    final Callable<List<IExchangeItem>> task = new Callable<List<IExchangeItem>>()
     {
       @Override
-      public List<IPrevExchangeItem> call( ) throws HydPyServerException
+      public List<IExchangeItem> call( ) throws HydPyServerException
       {
         return getServer().initializeInstance( instanceId );
       }
@@ -81,15 +81,15 @@ final class HydPyServerInstance
     m_currentSimulations.put( instanceId, m_executor.submit( task ) );
   }
 
-  public List<IPrevExchangeItem> getItemValues( final String instanceId ) throws HydPyServerException
+  public List<IExchangeItem> getItemValues( final String instanceId ) throws HydPyServerException
   {
-    final Future<List<IPrevExchangeItem>> currentSimulation = m_currentSimulations.get( instanceId );
+    final Future<List<IExchangeItem>> currentSimulation = m_currentSimulations.get( instanceId );
     if( currentSimulation == null )
       throw new HydPyServerException( "Get item values before simulation/initialization" );
 
     try
     {
-      final List<IPrevExchangeItem> itemValues = currentSimulation.get();
+      final List<IExchangeItem> itemValues = currentSimulation.get();
       // we keep the last simulation forever in case of consecutive 'getItemsValues'
       // m_currentSimulation = null;
       return itemValues;
@@ -100,7 +100,7 @@ final class HydPyServerInstance
     }
   }
 
-  public void setItemValues( final String instanceId, final Collection<IPrevExchangeItem> values )
+  public void setItemValues( final String instanceId, final Collection<IExchangeItem> values )
   {
     final Callable<Void> task = new Callable<Void>()
     {
@@ -117,10 +117,10 @@ final class HydPyServerInstance
 
   public synchronized void simulate( final String instanceId )
   {
-    final Callable<List<IPrevExchangeItem>> task = new Callable<List<IPrevExchangeItem>>()
+    final Callable<List<IExchangeItem>> task = new Callable<List<IExchangeItem>>()
     {
       @Override
-      public List<IPrevExchangeItem> call( ) throws HydPyServerException
+      public List<IExchangeItem> call( ) throws HydPyServerException
       {
         // REMARK: we always directly simulate and fetch the results in one call
         return getServer().simulate( instanceId );

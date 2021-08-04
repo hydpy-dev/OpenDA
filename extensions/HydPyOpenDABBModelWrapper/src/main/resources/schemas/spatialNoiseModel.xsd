@@ -57,7 +57,7 @@
     </attribute>
     <attribute name="horizontalCorrelationScale" type="double" use="required">
       <annotation>
-        <!-- FIXME: 'horizontol' is too grid specific but also has nothing to do with the fact that the geometry is a grid -->
+        <!-- FIXME: name of 'horizontal' is too grid specific but also has nothing to do with the fact that the geometry is a grid -->
         <documentation>Interval specifying the horizontal spatial correlation between the consecutive values</documentation>
       </annotation>
     </attribute>

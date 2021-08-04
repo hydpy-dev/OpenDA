@@ -30,11 +30,11 @@ import org.openda.blackbox.config.BBModelConfig;
 import org.openda.blackbox.config.BBModelVectorConfig;
 import org.openda.blackbox.config.BBWrapperConfig;
 import org.openda.blackbox.config.BBWrapperConfig.CloneType;
-import org.openda.blackbox.config.IoObjectConfig;
+import org.openda.blackbox.config.DataObjectConfig;
 import org.openda.blackbox.interfaces.IModelFactory;
 import org.openda.blackbox.wrapper.BBModelFactory;
+import org.openda.interfaces.IExchangeItem.Role;
 import org.openda.interfaces.IModelInstance;
-import org.openda.interfaces.IPrevExchangeItem.Role;
 import org.openda.interfaces.IStochModelFactory.OutputLevel;
 import org.openda.interfaces.ITime;
 
@@ -165,7 +165,7 @@ public class HydPyModelFactory implements IModelFactory
 
     final Collection<BBAction> finalizeActions = Collections.emptyList();
 
-    final HashMap<String, IoObjectConfig> ioObjects = initializeIoObjects( aliasDefinitions );
+    final HashMap<String, DataObjectConfig> ioObjects = initializeIoObjects( aliasDefinitions );
 
     return new BBWrapperConfig( aliasDefinitions, cloneType, templateName, instanceName, initializeActions, computeActions, additionalComputeActions, finalizeActions, ioObjects );
   }
@@ -187,13 +187,13 @@ public class HydPyModelFactory implements IModelFactory
     return new BBAction( configDir, exePath, className, arguments, actualWorkingDirectory, checkOutputs, checkReturnStatus, ignoreReturnStatus, aliasDefinitions );
   }
 
-  private HashMap<String, IoObjectConfig> initializeIoObjects( final AliasDefinitions aliasDefinitions )
+  private HashMap<String, DataObjectConfig> initializeIoObjects( final AliasDefinitions aliasDefinitions )
   {
-    final HashMap<String, IoObjectConfig> ioObjects = new HashMap<>();
+    final HashMap<String, DataObjectConfig> ioObjects = new HashMap<>();
 
     final String inputFileame = null;
     final String[] arguments = new String[] { "%instanceNumber%" };
-    ioObjects.put( IO_OBJECT_ID, new IoObjectConfig( IO_OBJECT_ID, HyPyIoObject.class.getName(), inputFileame, aliasDefinitions, arguments ) );
+    ioObjects.put( IO_OBJECT_ID, new DataObjectConfig( IO_OBJECT_ID, HyPyIoObject.class.getName(), inputFileame, aliasDefinitions, arguments ) );
 
     return ioObjects;
   }

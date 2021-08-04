@@ -26,6 +26,8 @@ import org.openda.interfaces.IStochVector;
  */
 final class SpatialNoisePointsGeometry implements ISpatialNoiseGeometry
 {
+  private final Map<Double, SpatialCorrelationCovariance> m_correlationCovariance = new HashMap<>();
+
   private final CoordinatesType m_coordinatesType;
 
   private final double m_horizontalCorrelationScale;
@@ -34,14 +36,13 @@ final class SpatialNoisePointsGeometry implements ISpatialNoiseGeometry
 
   private final double[] m_y;
 
-  private final Map<Double, SpatialCorrelationCovariance> m_sharedCorrelationCovariance = new HashMap<>();
-
   public SpatialNoisePointsGeometry( final CoordinatesType coordinatesType, final double horizontalCorrelationScale, final double[] x, final double[] y )
   {
     assert x.length == y.length;
 
     m_coordinatesType = coordinatesType;
     m_horizontalCorrelationScale = horizontalCorrelationScale;
+
     m_x = x;
     m_y = y;
   }
@@ -67,10 +68,10 @@ final class SpatialNoisePointsGeometry implements ISpatialNoiseGeometry
     return new SpatialCorrelationStochVector( standardWhiteNoise, covarianceMatrix );
   }
 
-  // REMARK: we share the SpatialCorrelationCovariance between instances (per item-id).
+  // REMARK: we share the SpatialCorrelationCovariance between instances.
   private SpatialCorrelationCovariance getSpatialCorrelationCovariance( final double standardWhiteNoise )
   {
-    return m_sharedCorrelationCovariance.computeIfAbsent( standardWhiteNoise, stdDev -> //
+    return m_correlationCovariance.computeIfAbsent( standardWhiteNoise, stdDev -> //
     SpatialCorrelationCovariance.fromCoordinates( stdDev, m_coordinatesType, m_x, m_y, m_horizontalCorrelationScale ) );
   }
 }

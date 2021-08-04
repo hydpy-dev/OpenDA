@@ -12,6 +12,9 @@
  */
 package org.hydpy.openda.noise;
 
+import java.io.File;
+
+import org.hydpy.openda.noise.SpatialNoiseUtils.CoordinatesType;
 import org.openda.utils.ConfigTree;
 
 /**
@@ -24,5 +27,5 @@ public interface ISpatialNoiseGeometryFactory
   /**
    * Creates a new {@link ISpatialNoiseGeometry} from the xml-snippet of its definition in the corresponding xml file.
    */
-  ISpatialNoiseGeometry create( ConfigTree correlationConfig );
+  ISpatialNoiseGeometry create( ConfigTree config, File workingDir, CoordinatesType coordinatesType, double horizontalCorrelationScale );
 }

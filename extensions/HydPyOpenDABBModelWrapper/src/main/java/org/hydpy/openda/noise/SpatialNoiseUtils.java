@@ -67,13 +67,9 @@ public final class SpatialNoiseUtils
   }
 
   /**
-   * Parse a string with a list of numbers eg 1.0,2.0,3.0
+   * Parse a string with a list of numbers e.g. 1.0,2.0,3.0
    * or 1.0,2.0,...,10.0 for sequence with fixed steps
    * into a double[] array
-   *
-   * @param valuesString
-   *          String containing the double values
-   * @return values as doubles
    */
   public static double[] parseCoordinates( final ConfigTree config, final String attribute )
   {

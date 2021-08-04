@@ -60,4 +60,9 @@ public final class HydPyModelInstance
   {
     m_server.simulate( m_instanceId );
   }
+
+  public String[] getItemNames( final String itemId ) throws HydPyServerException
+  {
+    return m_server.getItemNames( itemId );
+  }
 }

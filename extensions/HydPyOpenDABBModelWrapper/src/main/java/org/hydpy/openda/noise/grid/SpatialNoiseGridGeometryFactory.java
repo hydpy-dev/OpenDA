@@ -12,6 +12,8 @@
  */
 package org.hydpy.openda.noise.grid;
 
+import java.io.File;
+
 import org.hydpy.openda.noise.ISpatialNoiseGeometry;
 import org.hydpy.openda.noise.ISpatialNoiseGeometryFactory;
 import org.hydpy.openda.noise.SpatialNoiseUtils;
@@ -41,15 +43,11 @@ public final class SpatialNoiseGridGeometryFactory implements ISpatialNoiseGeome
    * </grid>
    */
   @Override
-  public ISpatialNoiseGeometry create( final ConfigTree config )
+  public ISpatialNoiseGeometry create( final ConfigTree config, final File workingDir, final CoordinatesType coordinatesType, final double horizontalCorrelationScale )
   {
-    final CoordinatesType coordsType = SpatialNoiseUtils.parseCoordinatesType( config );
-
     final boolean separable = config.getAsBoolean( "@separable", true );
 
     // spatial correlation
-    final double horizontalCorrelationScale = SpatialNoiseUtils.parseHorizontalCorrelationScale( config );
-
     final double[] x = SpatialNoiseUtils.parseCoordinates( config, "x" );
     final double[] y = SpatialNoiseUtils.parseCoordinates( config, "y" );
 
@@ -62,8 +60,8 @@ public final class SpatialNoiseGridGeometryFactory implements ISpatialNoiseGeome
     final ArrayGeometryInfo geometryInfo = new ArrayGeometryInfo( latitudeArray, latitudeValueIndices, latitudeQuantityInfo, longitudeArray, longitudeValueIndices, longitudeQuantityInfo, null, null, null );
 
     if( separable )
-      return new SpatialNoiseSeparableGridGeometry( horizontalCorrelationScale, coordsType, geometryInfo, x, y );
+      return new SpatialNoiseSeparableGridGeometry( horizontalCorrelationScale, coordinatesType, geometryInfo, x, y );
     else
-      return new SpatialNoiseGridGeometry( horizontalCorrelationScale, coordsType, geometryInfo, x, y );
+      return new SpatialNoiseGridGeometry( horizontalCorrelationScale, coordinatesType, geometryInfo, x, y );
   }
 }

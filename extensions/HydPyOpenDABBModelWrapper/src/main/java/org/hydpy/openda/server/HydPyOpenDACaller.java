@@ -78,11 +78,16 @@ final class HydPyOpenDACaller
           "GET_query_parameteritemvalues," + //
           "GET_query_simulationdates"; //
 
+  // FIXME
+  private static final String METHODS_REQUEST_ITEMNAMES = "GET_query_itemnames";
+
   private static final String ITEM_ID_FIRST_DATE_INIT = "firstdate_init"; //$NON-NLS-1$
 
   private static final String ITEM_ID_LAST_DATE_INIT = "lastdate_init"; //$NON-NLS-1$
 
   private static final String ITEM_ID_STEP_SIZE = "stepsize"; //$NON-NLS-1$
+
+  private final Map<String, String[]> m_itemNames = new HashMap<>();
 
   private final String m_name;
 
@@ -280,6 +285,30 @@ final class HydPyOpenDACaller
     }
 
     m_client.execute( instanceId, METHODS_REGISTER_ITEMVALUES, body.toString() );
+  }
+
+  public synchronized String[] getItemNames( final String itemId ) throws HydPyServerException
+  {
+    if( m_itemNames == null )
+    {
+      final Properties props = m_client.execute( null, METHODS_REQUEST_ITEMNAMES );
+
+      /* fetch and parse and the names */
+      final Set<String> itemIds = props.stringPropertyNames();
+      for( final String item : itemIds )
+      {
+        final String value = props.getProperty( item );
+        final String[] itemNames = HydPyUtils.parseStringArray( value );
+        /* we cache them, because they never change, and we get them all at once */
+        m_itemNames.put( item, itemNames );
+      }
+    }
+
+    final String[] itemNames = m_itemNames.get( itemId );
+    if( itemNames == null )
+      throw new HydPyServerException( String.format( "No sub-element names found for item: %s", itemId ) );
+
+    return itemNames;
   }
 
   public List<IExchangeItem> simulate( final String instanceId ) throws HydPyServerException

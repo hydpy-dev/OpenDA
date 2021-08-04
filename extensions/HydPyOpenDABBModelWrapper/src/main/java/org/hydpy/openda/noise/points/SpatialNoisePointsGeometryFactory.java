@@ -11,6 +11,8 @@
  */
 package org.hydpy.openda.noise.points;
 
+import java.io.File;
+
 import org.hydpy.openda.noise.ISpatialNoiseGeometry;
 import org.hydpy.openda.noise.ISpatialNoiseGeometryFactory;
 import org.hydpy.openda.noise.SpatialNoiseUtils;
@@ -26,13 +28,8 @@ import org.openda.utils.ConfigTree;
 public final class SpatialNoisePointsGeometryFactory implements ISpatialNoiseGeometryFactory
 {
   @Override
-  public ISpatialNoiseGeometry create( final ConfigTree config )
+  public ISpatialNoiseGeometry create( final ConfigTree config, final File workingDir, final CoordinatesType coordinatesType, final double horizontalCorrelationScale )
   {
-    final CoordinatesType coordinatesType = SpatialNoiseUtils.parseCoordinatesType( config );
-
-    // spatial correlation
-    final double horizontalCorrelationScale = SpatialNoiseUtils.parseHorizontalCorrelationScale( config );
-
     final double[] x = SpatialNoiseUtils.parseCoordinates( config, "x" );
     final double[] y = SpatialNoiseUtils.parseCoordinates( config, "y" );
 

@@ -201,6 +201,8 @@ final class HydPyServerStarter
 
     for( int i = 0; i < retries; i++ )
     {
+      final long startTime = System.currentTimeMillis();
+
       try
       {
         if( m_process == null )
@@ -234,6 +236,18 @@ final class HydPyServerStarter
             ex.printStackTrace();
 
           /* continue waiting */
+          try
+          {
+            // REMARK: make sure we wait 250ms in any case, because the first calls to HydPy might return immediately
+            // It then might happen, that we dont wait the full time and skip the check too early, before HydPy was really started.
+            final long waitTime = System.currentTimeMillis() - startTime;
+            if( waitTime < 250 )
+              Thread.sleep( 250 );
+          }
+          catch( final InterruptedException e1 )
+          {
+            e1.printStackTrace();
+          }
         }
       }
     }

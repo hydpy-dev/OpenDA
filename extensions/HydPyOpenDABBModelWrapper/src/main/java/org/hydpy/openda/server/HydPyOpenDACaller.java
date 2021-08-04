@@ -79,7 +79,7 @@ final class HydPyOpenDACaller
           "GET_query_simulationdates"; //
 
   // FIXME
-  private static final String METHODS_REQUEST_ITEMNAMES = "GET_query_itemnames";
+  private static final String METHODS_REQUEST_ITEMNAMES = "GET_query_itemsubnames";
 
   private static final String ITEM_ID_FIRST_DATE_INIT = "firstdate_init"; //$NON-NLS-1$
 
@@ -87,7 +87,7 @@ final class HydPyOpenDACaller
 
   private static final String ITEM_ID_STEP_SIZE = "stepsize"; //$NON-NLS-1$
 
-  private final Map<String, String[]> m_itemNames = new HashMap<>();
+  private Map<String, String[]> m_itemNames = null;
 
   private final String m_name;
 
@@ -291,6 +291,8 @@ final class HydPyOpenDACaller
   {
     if( m_itemNames == null )
     {
+      m_itemNames = new HashMap<>();
+
       final Properties props = m_client.execute( null, METHODS_REQUEST_ITEMNAMES );
 
       /* fetch and parse and the names */

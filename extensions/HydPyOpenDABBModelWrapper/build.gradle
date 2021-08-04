@@ -3,6 +3,8 @@ plugins {
     id 'eclipse'
 }
 
+apply plugin: 'java-library'
+
 project.version = '0.10.0'
 project.description = 'The HydPy BlackBoxModel wrapper for OpenDA'
 
@@ -20,10 +22,6 @@ eclipse {
 
 repositories {
     mavenCentral()
-    
-    flatDir {
-        dirs "$projectDir/externalLibs/OpenDA"
-    }
 }
 
 configurations {
@@ -39,13 +37,13 @@ configurations {
 dependencies {
     implementation group: 'org.apache.httpcomponents', name: 'fluent-hc', version: '4.5.13'
 
+	openDaLibs fileTree(include: ["*.jar"], dir: "externalLibs/OpenDA")
+
     // Those libs are part of OpenDA and will be automatically in the classpath when we run OpenDA with this extension.
     // They will be not included in our distribution. 
     openDaLibs group: 'joda-time', name: 'joda-time', version: '2.9.6'
     openDaLibs group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
     openDaLibs group: 'org.apache.commons', name: 'commons-math3', version: '3.3'
-
-    openDaLibs name: 'openda_core'
 }
 
 java {

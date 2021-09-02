@@ -8,7 +8,7 @@ apply plugin: 'java-library'
 project.version = '0.10.0'
 project.description = 'The HydPy BlackBoxModel wrapper for OpenDA'
 
-// OpenDA 2.4.5 is currrently distributed with Java 1.8
+// OpenDA 3.0.0 is currrently distributed with Java 1.8
 def javaVersion = JavaVersion.VERSION_1_8;
 sourceCompatibility = javaVersion;
 targetCompatibility = javaVersion; // defaults to sourceCompatibility

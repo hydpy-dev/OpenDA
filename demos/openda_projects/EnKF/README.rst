@@ -13,8 +13,9 @@
 
 Run in parallel
 ---------------
-This is also an example on how-to setup the model wrapper to distribute
-ensemble simulation onto several HydPy server instances. See 'model.xml'.
+The given configuration is an example of setting up the model wrapper to
+distribute ensemble simulation onto several HydPy server instances.  See
+`model.xml`_.
 
 Adjust model states with the Ensemble Kalman Filter
 ---------------------------------------------------
@@ -110,7 +111,7 @@ The `OpenDA`_ configuration resembles the configuration of the
 enables not only `stochInit` but also `stochForcing` for stepwise state
 perturbations, and files `model.xml`_ and `hydpy.xml`_ define an exchange item
 for changing the value of state `LZ`_ instead of parameter `Alpha`_.  Using 20
-ensemble members and the `MapsNoiseModel` for generating the stochastic
+ensemble members and the `SpatialNoiseModel` for generating the stochastic
 perturbations, the Ensemble Kalman Filter returns the following corrected
 discharge series:
 

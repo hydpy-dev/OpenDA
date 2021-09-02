@@ -12,7 +12,9 @@
   </modelFactory>
   <vectorSpecification>
     <state>
-      <noiseModel id="NoiseModelLZ" className="org.hydpy.openda.noise.SpatialNoiseModelFactory" workingDirectory=".">
+      <noiseModel id="NoiseModelLZ"
+                  className="org.hydpy.openda.noise.SpatialNoiseModelFactory"
+                  workingDirectory=".">
         <configFile>spatialNoise.xml</configFile>
         <exchangeItems>
           <exchangeItem id="noise_lz" operation="add">

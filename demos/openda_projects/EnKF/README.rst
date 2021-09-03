@@ -20,7 +20,7 @@ distribute ensemble simulation onto several HydPy server instances.  See
 Adjust model states with the Ensemble Kalman Filter
 ---------------------------------------------------
 
-This example extends the `multiple sequential runs` example.  Now `OpenDA`_
+This example extends the `multiple sequential runs`_ example.  Now `OpenDA`_
 does not only perturb some model properties randomly but does so to improve
 simulations.  There is also a similarity to the `calibration example`_, in so
 far that both are artificial data experiments. In the `calibration example`_,

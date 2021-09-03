@@ -1,2 +1,6 @@
-# Sub-Element Name<Tab>X-coordinate<Tab>Y-coordinate
-land_lahn_1	1.0	1.0
+# name (sub-)element<Tab>x-coordinate<Tab>y-coordinate
+land_dill	452768	5618947
+land_lahn_1	491581	5637733
+land_lahn_2	475787	5612540
+land_lahn_3	441226	5585423
+land_lahn_4	415193	5575379

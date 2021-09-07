@@ -157,6 +157,7 @@ outlet, which is affected by all modifications above.
 ...     _ = pyplot.ylabel("Q [m3/s]")
 ...     _ = pyplot.xlabel("day")
 ...     _ = pyplot.legend()
+...     _ = pyplot.title(name)
 ...     pyplot.savefig(f"results/discharge_{nodename}.png")
 ...     pyplot.clf()
 

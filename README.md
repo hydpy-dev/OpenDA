@@ -16,8 +16,8 @@ the [demo projects](demos).  For a deeper understanding of the possibilities
 and limitations of the [wrapper](extensions/HydPyOpenDABBModelWrapper),
 see the documentation on [OpenDA](http://openda.org/) and 
 [HydPy](https://github.com/hydpy-dev/hydpy) (especially the on the
-[HydPy server](https://hydpy-dev.github.io/hydpy/servertools.html), as well
-as the current [OpenDA issues](https://github.com/hydpy-dev/OpenDA/issues)
+[HydPy server](https://hydpy-dev.github.io/hydpy/master/servertools.html), as 
+well  as the current [OpenDA issues](https://github.com/hydpy-dev/OpenDA/issues)
 and [HydPy issues](https://github.com/hydpy-dev/hydpy/issues) related to
 [OpenDA](http://openda.org/).
 

@@ -1,12 +1,12 @@
 
 .. _`OpenDA`: https://www.openda.org/
-.. _`HydPy server`: https://hydpy-dev.github.io/hydpy/servertools.html#hydpy.exe.servertools.HydPyServer
+.. _`HydPy server`: https://hydpy-dev.github.io/hydpy/master/servertools.html#hydpy.exe.servertools.HydPyServer
 .. _`HydPy`: https://github.com/hydpy-dev/hydpy
 .. _`calibration example`: ../DUD
 .. _`HydPyOpenDABBModelWrapper`: ./../../../extensions/HydPyOpenDABBModelWrapper
-.. _`HydPy main class`: https://hydpy-dev.github.io/hydpy/hydpytools.html#hydpy.core.hydpytools.HydPy
+.. _`HydPy main class`: https://hydpy-dev.github.io/hydpy/master/hydpytools.html#hydpy.core.hydpytools.HydPy
 .. _`hydpy.xml`: hydpy.xml
-.. _`Alpha`: https://hydpy-dev.github.io/hydpy/hland.html#hydpy.models.hland
+.. _`Alpha`: https://hydpy-dev.github.io/hydpy/master/hland.html#hydpy.models.hland
 .. _`main.oda`: main.oda
 .. _`DUD`: https://www.jstor.org/stable/1268154?seq=1#page_scan_tab_contents
 

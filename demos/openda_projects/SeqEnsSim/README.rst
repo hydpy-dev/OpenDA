@@ -1,14 +1,14 @@
 
 .. _`single sequential run`: ../SeqSim
-.. _`LahnH`: https://hydpy-dev.github.io/hydpy/examples.html#hydpy.core.examples
-.. _`Alpha`: https://hydpy-dev.github.io/hydpy/hland.html#hydpy.models.hland.hland_control.Alpha
+.. _`LahnH`: https://hydpy-dev.github.io/hydpy/master/examples.html#hydpy.examples
+.. _`Alpha`: https://hydpy-dev.github.io/hydpy/master/hland.html#hydpy.models.hland.hland_control.Alpha
 .. _`main.oda`: main.oda
 .. _`algorithm.xml`: algorithm.xml
 .. _`model.xml`: model.xml
 .. _`OpenDA`: https://www.openda.org/
 .. _`HydPyOpenDABBModelWrapper`: ./../../../extensions/HydPyOpenDABBModelWrapper
-.. _`HydPy server`: https://hydpy-dev.github.io/hydpy/servertools.html#hydpy.exe.servertools.HydPyServer
-.. _`UZ`: https://hydpy-dev.github.io/hydpy/hland.html#hydpy.models.hland.hland_states.UZ
+.. _`HydPy server`: https://hydpy-dev.github.io/hydpy/master/servertools.html#hydpy.exe.servertools.HydPyServer
+.. _`UZ`: https://hydpy-dev.github.io/hydpy/master/hland.html#hydpy.models.hland.hland_states.UZ
 
 Perform an ensemble of sequential runs
 --------------------------------------

@@ -40,9 +40,9 @@ Please see to the [HydPy-OpenDA example projects](../../demos).
 
 ### Prerequisites
 
-* A HydPy installation, see the [HydPy documentation](https://hydpy-dev.github.io/hydpy/).
+* A HydPy installation, see the [HydPy documentation](https://hydpy-dev.github.io/hydpy/master).
 * An OpenDA installation, see the [OpenDA documentation](http://openda.org/index.php/documentation).
-* A running HydPy project, see the [LahnH example project](https://hydpy-dev.github.io/hydpy/examples.html#hydpy.core.examples.prepare_full_example_1)
+* A running HydPy project, see the [LahnH example project](https://hydpy-dev.github.io/hydpy/master/examples.html#hydpy.examples.prepare_full_example_1)
 
 ### OpenDA configuration 
 
@@ -100,7 +100,7 @@ The model factory requires the following arguments
 * initializeWaitSeconds (integer): The maximum time in seconds the wrapper implementation should wait for the HydPy server to start up. This time may depend on the actual HydPy project. Increase this if 'serverParallelStartup' is set to 'true', as starting several python processes at once will slow down the start-up time of each process. 
 * projectPath (string): The path to the HydPy project directory.
 * projectName (string): The name of the HydPy project within the project directory.
-* configFile (string): The name of the [HydPy servertools](https://hydpy-dev.github.io/hydpy/servertools.html) configuration file.
+* configFile (string): The name of the [HydPy servertools](https://hydpy-dev.github.io/hydpy/master/servertools.html) configuration file.
 * logDirectory (string, optional): The path to the directory where the output of the HydPy server processes will be written. If specified, for each server instance, two log files (one for the standard output and one for the error output) will be written. If omitted, all server outputs will be written to the console output streams of the java process.
 * templateDir (string, optional): The template directory for model instances.  
 * instanceDir (string, optional): The instance directory for model instances. The actual directories are post-fixed with the instance number. 
@@ -124,7 +124,7 @@ of server instances.
 
 ### HydPy Project Configuration 
 
-The HydPy OpenDA wrapper is based on the [HydPy servertools](https://hydpy-dev.github.io/hydpy/servertools.html), 
+The HydPy OpenDA wrapper is based on the [HydPy servertools](https://hydpy-dev.github.io/hydpy/master/servertools.html), 
 which starts HydPy in a REST-full server mode, which in turn is controlled by the OpenDA wrapper. 
 This requires the HydPy project to be set-up in the servertools specific way.
 
@@ -145,7 +145,7 @@ With proper configuration, start the main OpenDa batch file, usually via
 `oda_run_batch.bat myOdaFile.oda`.
 
 In turn, the HyPy wrapper starts the 
-[HydPy server](https://hydpy-dev.github.io/hydpy/servertools.html), which is 
+[HydPy server](https://hydpy-dev.github.io/hydpy/master/servertools.html), which is 
 optimised for fast communication with OpenDA.
 
 Depending on your HyPy and [Python](https://www.python.org/) installation two additional system environment variables can be set:

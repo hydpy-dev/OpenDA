@@ -2,27 +2,27 @@
 .. _`DUD`: https://www.jstor.org/stable/1268154?seq=1#page_scan_tab_contents
 .. _`HydPy`: https://github.com/hydpy-dev/hydpy
 .. _`OpenDA`: https://www.openda.org/
-.. _`Alpha`: https://hydpy-dev.github.io/hydpy/hland.html#hydpy.models.hland.hland_control.Alpha
-.. _`hland_v1`: https://hydpy-dev.github.io/hydpy/hland_v1.html
-.. _`LahnH`: https://hydpy-dev.github.io/hydpy/examples.html#hydpy.core.examples.prepare_full_example_1
+.. _`Alpha`: https://hydpy-dev.github.io/hydpy/master/hland.html#hydpy.models.hland.hland_control.Alpha
+.. _`hland_v1`: https://hydpy-dev.github.io/hydpy/master/hland_v1.html
+.. _`LahnH`: https://hydpy-dev.github.io/hydpy/master/examples.html#hydpy.examples.prepare_full_example_1
 .. _`observation file`: data/dill.discharge.noos
 .. _`HydPy projects`: ../../hydpy_projects
-.. _`HydPy main class`: https://hydpy-dev.github.io/hydpy/hydpytools.html#hydpy.core.hydpytools.HydPy
-.. _`module pub`: https://hydpy-dev.github.io/hydpy/pubtools.html#hydpy.core.pubtools.Pub
-.. _`print_values`: https://hydpy-dev.github.io/hydpy/objecttools.html#hydpy.core.objecttools.print_values
-.. _`run_subprocess`: https://hydpy-dev.github.io/hydpy/commandtools.html#hydpy.exe.commandtools.run_subprocess
-.. _`printprogress`: https://hydpy-dev.github.io/hydpy/optiontools.html#hydpy.core.optiontools.Options.printprogress
-.. _`reprdigits`: https://hydpy-dev.github.io/hydpy/optiontools.html#hydpy.core.optiontools.Options.reprdigits
+.. _`HydPy main class`: https://hydpy-dev.github.io/hydpy/master/hydpytools.html#hydpy.core.hydpytools.HydPy
+.. _`module pub`: https://hydpy-dev.github.io/hydpy/master/pubtools.html#hydpy.core.pubtools.Pub
+.. _`print_values`: https://hydpy-dev.github.io/hydpy/master/objecttools.html#hydpy.core.objecttools.print_values
+.. _`run_subprocess`: https://hydpy-dev.github.io/hydpy/master/commandtools.html#hydpy.exe.commandtools.run_subprocess
+.. _`printprogress`: https://hydpy-dev.github.io/hydpy/master/optiontools.html#hydpy.core.optiontools.Options.printprogress
+.. _`reprdigits`: https://hydpy-dev.github.io/hydpy/master/optiontools.html#hydpy.core.optiontools.Options.reprdigits
 .. _`main.oda`: main.oda
 .. _`HydPyOpenDABBModelWrapper`: ./../../../extensions/HydPyOpenDABBModelWrapper
-.. _`HydPy server`: https://hydpy-dev.github.io/hydpy/servertools.html#hydpy.exe.servertools.HydPyServer
+.. _`HydPy server`: https://hydpy-dev.github.io/hydpy/master/servertools.html#hydpy.exe.servertools.HydPyServer
 .. _`model.xml`: model.xml
-.. _`GetItem`: https://hydpy-dev.github.io/hydpy/itemtools.html#hydpy.core.itemtools.GetItem
+.. _`GetItem`: https://hydpy-dev.github.io/hydpy/master/itemtools.html#hydpy.core.itemtools.GetItem
 .. _`hydpy.xml`: hydpy.xml
-.. _`SetItem`: https://hydpy-dev.github.io/hydpy/itemtools.html#hydpy.core.itemtools.SetItem
+.. _`SetItem`: https://hydpy-dev.github.io/hydpy/master/itemtools.html#hydpy.core.itemtools.SetItem
 .. _`HydPyConfigMultipleRuns.xsd`: https://github.com/hydpy-dev/hydpy/blob/master/hydpy/conf/HydPyConfigMultipleRuns.xsd
-.. _`xmltools`: https://hydpy-dev.github.io/hydpy/xmltools.html
-.. _`servertools`: https://hydpy-dev.github.io/hydpy/servertools.html
+.. _`xmltools`: https://hydpy-dev.github.io/hydpy/master/xmltools.html
+.. _`servertools`: https://hydpy-dev.github.io/hydpy/master/servertools.html
 .. _`runpy`: https://docs.python.org/library/runpy.html
 
 Calibrating model parameters with DUD

@@ -3,9 +3,9 @@
 .. _`OpenDA`: https://www.openda.org/
 .. _`calibration example`: ../DUD
 .. _`DUD`: https://www.jstor.org/stable/1268154?seq=1#page_scan_tab_contents
-.. _`Alpha`: https://hydpy-dev.github.io/hydpy/hland.html#hydpy.models.hland
-.. _`LZ`: https://hydpy-dev.github.io/hydpy/hland.html#hydpy.models.hland.hland_states.LZ
-.. _`LahnH`: https://hydpy-dev.github.io/hydpy/examples.html#hydpy.core.examples.prepare_full_example_1
+.. _`Alpha`: https://hydpy-dev.github.io/hydpy/master/hland.html#hydpy.models.hland
+.. _`LZ`: https://hydpy-dev.github.io/hydpy/master/hland.html#hydpy.models.hland.hland_states.LZ
+.. _`LahnH`: https://hydpy-dev.github.io/hydpy/master/examples.html#hydpy.examples.prepare_full_example_1
 .. _`main.oda`: main.oda
 .. _`algorithm.xml`: algorithm.xml
 .. _`model.xml`: model.xml

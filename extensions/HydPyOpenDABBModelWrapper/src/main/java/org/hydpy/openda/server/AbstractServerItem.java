@@ -19,7 +19,7 @@ import org.openda.interfaces.IExchangeItem.Role;
 /**
  * @author Gernot Belger
  */
-abstract class AbstractServerItem implements IServerItem
+abstract class AbstractServerItem<TYPE> implements IServerItem
 {
   private static final String TYPE_DOUBLE_0D = "Double0D";
 
@@ -27,14 +27,17 @@ abstract class AbstractServerItem implements IServerItem
 
   private static final String TYPE_TIMESERIES_0D = "TimeSeries0D";
 
+  private static final String TYPE_TIMESERIES_1D = "TimeSeries1D";
+
   private static final String TYPE_TIME = "TimeItem";
 
   private static final String TYPE_DURATION = "DurationItem";
 
-  public static AbstractServerItem fromHydPyType( final String id, final String hydPyType )
+  public static AbstractServerItem< ? > fromHydPyType( final String id, final String hydPyType )
   {
     final String split[] = StringUtils.split( hydPyType, "(" );
 
+    // FIXME: we probably need this to avoid excessive server/client communication of simulation timeseries
     final Role role = Role.InOut;
 
     switch( split[0].trim() )
@@ -48,6 +51,9 @@ abstract class AbstractServerItem implements IServerItem
       case TYPE_TIMESERIES_0D:
         return new Timeseries0DItem( id, role );
 
+      case TYPE_TIMESERIES_1D:
+        return new Timeseries1DItem( id, role );
+
       case TYPE_TIME:
         return new TimeItem( id, role );
 
@@ -58,12 +64,12 @@ abstract class AbstractServerItem implements IServerItem
     throw new IllegalArgumentException( String.format( "Invalid item type: %s", hydPyType ) );
   }
 
-  public static AbstractServerItem newTimeItem( final String id )
+  public static AbstractServerItem< ? > newTimeItem( final String id )
   {
     return new TimeItem( id, Role.InOut );
   }
 
-  public static AbstractServerItem newDurationItem( final String id )
+  public static AbstractServerItem< ? > newDurationItem( final String id )
   {
     return new DurationItem( id, Role.InOut );
   }
@@ -90,9 +96,11 @@ abstract class AbstractServerItem implements IServerItem
     return m_role;
   }
 
-  public abstract Object parseValue( final String valueText ) throws HydPyServerException;
+  public abstract TYPE parseValue( final String valueText ) throws HydPyServerException;
 
-  public abstract IExchangeItem toExchangeItem( Instant startTime, Instant endTime, long stepSeconds, final Object value ) throws HydPyServerException;
+  public abstract IExchangeItem toExchangeItem( Instant startTime, Instant endTime, long stepSeconds, final TYPE value );
 
-  public abstract String printValue( IExchangeItem exItem ) throws HydPyServerException;
+  public abstract TYPE toValue( Instant startTime, Instant endTime, long stepSeconds, IExchangeItem exItem );
+
+  public abstract String printValue( TYPE value );
 }

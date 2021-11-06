@@ -11,10 +11,21 @@
  */
 package org.hydpy.openda.server;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.Instant;
+import org.json.JSONArray;
+import org.openda.exchange.timeseries.TimeUtils;
+import org.openda.interfaces.IArray;
+import org.openda.utils.Array;
+import org.openda.utils.Time;
 
 /**
  * Some static utils.
@@ -74,6 +85,16 @@ final class HydPyUtils
     return Boolean.parseBoolean( value );
   }
 
+  public static <E extends Enum<E>> E getOptionalPropertyAsEnum( final Properties properties, final String key, final E defaultValue )
+  {
+    final String value = properties.getProperty( key );
+    if( StringUtils.isBlank( value ) )
+      return defaultValue;
+
+    @SuppressWarnings( "unchecked" ) final E result = (E)Enum.valueOf( defaultValue.getClass(), value );
+    return result;
+  }
+
   private static int parseInt( final String key, final String value )
   {
     try
@@ -130,14 +151,16 @@ final class HydPyUtils
 
   public static String[] parseStringArray( final String text )
   {
-    final StringTokenizer st = new StringTokenizer( text, "[], " );
+    // TODO: ugly hack
+    if( !text.startsWith( "[" ) )
+      return new String[] { text };
 
-    final int countTokens = st.countTokens();
+    final JSONArray array = new JSONArray( text );
 
-    final String[] values = new String[countTokens];
+    final String[] values = new String[array.length()];
 
-    for( int i = 0; i < values.length; i++ )
-      values[i] = st.nextToken();
+    for( int i = 0; i < array.length(); i++ )
+      values[i] = array.getString( i );
 
     return values;
   }
@@ -151,5 +174,151 @@ final class HydPyUtils
   {
     final long timeInSeconds = Math.round( mjd * daysToSeconds );
     return timeInSeconds;
+  }
+
+  /**
+   * Builds and array of mjd times from a given number of steps, the start time and the step in seconds.
+   *
+   * @throws IllegalStateException,
+   *           if the resulting last time does not matches the given expected end time.
+   */
+  public static double[] buildTimes( final int numSteps, final Instant startTime, final long stepSeconds, final Instant expectedEndTime )
+  {
+    final double[] times = new double[numSteps];
+    Instant time = startTime;
+
+    final long stepMillis = stepSeconds * 1000;
+
+    for( int i = 0; i < times.length; i++ )
+    {
+      // REMARK: HydPy thinks in time-intervals, hence we have one timestep less --> start with startTime + stepSeconds
+      time = time.plus( stepMillis );
+
+      times[i] = Time.milliesToMjd( time.getMillis() );
+    }
+
+    if( !time.equals( expectedEndTime ) )
+      throw new IllegalStateException();
+
+    return times;
+  }
+
+  /**
+   * Builds and array of time from a given startTime^+ step, end time and step in seconds.
+   *
+   * @throws IllegalStateException,
+   *           if the end time is not exactly matched or if start time is not before end time.
+   */
+  public static Instant[] buildTimes( final Instant startTime, final Instant endTime, final long stepSeconds )
+  {
+    if( !startTime.isBefore( endTime ) )
+      throw new IllegalStateException( "start time not before end time" );
+
+    final List<Instant> times = new ArrayList<>();
+
+    final long stepMillis = stepSeconds * 1000;
+    Instant currentTime = startTime.plus( stepMillis );
+    while( !endTime.isBefore( currentTime ) )
+    {
+      times.add( currentTime );
+
+      if( currentTime.isEqual( endTime ) )
+        return times.toArray( new Instant[times.size()] );
+
+      currentTime = currentTime.plus( stepMillis );
+    }
+
+    throw new IllegalStateException( "end time was not exactly met." );
+  }
+
+  public static IArray swapArray2D( final IArray array )
+  {
+    final int[] dimensions = array.getDimensions();
+    final int[] swappedDimensions = new int[] { dimensions[1], dimensions[0] };
+
+    final Array swappedArray = new Array( swappedDimensions );
+
+    final int[] iter = new int[2];
+    final int[] swappedIter = new int[2];
+    for( iter[0] = 0, swappedIter[1] = 0; //
+        iter[0] < dimensions[0]; //
+        iter[0]++, swappedIter[1]++ )
+    {
+      for( iter[1] = 0, swappedIter[0] = 0; //
+          iter[1] < dimensions[1]; //
+          iter[1]++, swappedIter[0]++ )
+      {
+        final double value = array.getValueAsDouble( iter );
+        swappedArray.setValueAsDouble( swappedIter, value );
+      }
+    }
+
+    return swappedArray;
+  }
+
+  public static Instant[] mjdToInstant( final double[] times )
+  {
+    final Instant[] instants = new Instant[times.length];
+
+    for( int i = 0; i < instants.length; i++ )
+      instants[i] = new Instant( TimeUtils.mjdToDate( times[i] ) );
+
+    return instants;
+  }
+
+  public static double instantToMjd( final Instant instant )
+  {
+    return TimeUtils.date2Mjd( instant.toDate() );
+  }
+
+  /**
+   * Same as {@link #submitAndLogExceptions(ExecutorService, Callable)} for void return values.
+   */
+  public static Future<Void> submitAndLogExceptions( final ExecutorService executor, final Runnable callable )
+  {
+    final Callable<Void> wrapper = new Callable<Void>()
+    {
+      @Override
+      public Void call( ) throws Exception
+      {
+        try
+        {
+          callable.run();
+          return null;
+        }
+        catch( final Exception e )
+        {
+          e.printStackTrace();
+          throw e;
+        }
+      }
+    };
+
+    return submitAndLogExceptions( executor, wrapper );
+  }
+
+  /**
+   * Submits a callable to the given executor.
+   * Wraps the callable, so any exception will be logged.
+   * This is necessary, as exceptions will typically only propagated once Future#get is called, which we sometimes don't do.
+   */
+  public static <RESULT> Future<RESULT> submitAndLogExceptions( final ExecutorService executor, final Callable<RESULT> callable )
+  {
+    return executor.submit( new Callable<RESULT>()
+    {
+      @Override
+      public RESULT call( ) throws Exception
+      {
+        try
+        {
+          return callable.call();
+        }
+        catch( final Exception e )
+        {
+          e.printStackTrace();
+          throw e;
+        }
+      }
+    } );
   }
 }

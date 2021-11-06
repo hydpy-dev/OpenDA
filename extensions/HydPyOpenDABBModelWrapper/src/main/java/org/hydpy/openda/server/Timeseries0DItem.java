@@ -15,12 +15,11 @@ import org.joda.time.Instant;
 import org.openda.exchange.timeseries.TimeSeries;
 import org.openda.interfaces.IExchangeItem;
 import org.openda.interfaces.IExchangeItem.Role;
-import org.openda.utils.Time;
 
 /**
  * @author Gernot Belger
  */
-final class Timeseries0DItem extends AbstractServerItem
+final class Timeseries0DItem extends AbstractServerItem<double[]>
 {
   public Timeseries0DItem( final String id, final Role role )
   {
@@ -28,49 +27,34 @@ final class Timeseries0DItem extends AbstractServerItem
   }
 
   @Override
-  public Object parseValue( final String valueText )
+  public double[] parseValue( final String valueText )
   {
     return HydPyUtils.parseDoubleArray( valueText );
   }
 
   @Override
-  public IExchangeItem toExchangeItem( final Instant startTime, final Instant endTime, final long stepSeconds, final Object value )
+  public IExchangeItem toExchangeItem( final Instant startTime, final Instant endTime, final long stepSeconds, final double[] value )
   {
-    final double[] values = (double[])value;
+    final double[] times = HydPyUtils.buildTimes( value.length, startTime, stepSeconds, endTime );
 
-    final double[] times = new double[values.length];
-
-    Instant time = startTime;
-
-    final long stepMillis = stepSeconds * 1000;
-
-    for( int i = 0; i < times.length; i++ )
-    {
-      // REMARK: HydPy thinks in time-intervals, hence we have one timestep less --> start with startTime + stepSeconds
-      time = time.plus( stepMillis );
-
-      times[i] = Time.milliesToMjd( time.getMillis() );
-    }
-
-    if( !time.equals( endTime ) )
-      throw new IllegalStateException();
-
-    final TimeSeries timeSeries = new TimeSeries( times, values );
+    final TimeSeries timeSeries = new TimeSeries( times, value );
     timeSeries.setId( getId() );
     return timeSeries;
   }
 
   @Override
-  public String printValue( final IExchangeItem exItem )
+  public double[] toValue( final Instant startTime, final Instant endTime, final long stepSeconds, final IExchangeItem exItem )
   {
     final TimeSeries timeSeries = (TimeSeries)exItem;
 
-    final double[] mjdValues = timeSeries.getValuesAsDoubles();
+    final TimeSeries subsset = timeSeries.selectTimeSubset( HydPyUtils.instantToMjd( startTime ), HydPyUtils.instantToMjd( endTime ) );
 
-    final double[] dateValues = new double[mjdValues.length];
-    for( int i = 0; i < dateValues.length; i++ )
-      dateValues[i] = Time.mjdToMillies( mjdValues[i] );
+    return subsset.getValuesAsDoubles();
+  }
 
-    return HydPyUtils.printDoubleArray( mjdValues );
+  @Override
+  public String printValue( final double[] value )
+  {
+    return HydPyUtils.printDoubleArray( value );
   }
 }

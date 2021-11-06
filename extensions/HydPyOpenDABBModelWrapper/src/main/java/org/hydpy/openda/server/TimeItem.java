@@ -22,7 +22,7 @@ import org.openda.utils.Time;
 /**
  * @author Gernot Belger
  */
-final class TimeItem extends AbstractServerItem
+final class TimeItem extends AbstractServerItem<Instant>
 {
   private static final DateTimeFormatter HYD_PY_DATE_TIME_PARSER = ISODateTimeFormat.dateTimeNoMillis();
 
@@ -32,15 +32,15 @@ final class TimeItem extends AbstractServerItem
   }
 
   @Override
-  public Object parseValue( final String valueText )
+  public Instant parseValue( final String valueText )
   {
     return Instant.parse( valueText, HYD_PY_DATE_TIME_PARSER );
   }
 
   @Override
-  public IExchangeItem toExchangeItem( final Instant startTime, final Instant endTime, final long stepSeconds, final Object value )
+  public IExchangeItem toExchangeItem( final Instant startTime, final Instant endTime, final long stepSeconds, final Instant value )
   {
-    final Instant date = (Instant)value;
+    final Instant date = value;
 
     final double mjd = Time.milliesToMjd( date.getMillis() );
 
@@ -48,14 +48,18 @@ final class TimeItem extends AbstractServerItem
   }
 
   @Override
-  public String printValue( final IExchangeItem exItem )
+  public Instant toValue( final Instant startTime, final Instant endTime, final long stepSeconds, final IExchangeItem exItem )
   {
     final DoubleExchangeItem dblItem = (DoubleExchangeItem)exItem;
     final double value = dblItem.getValue();
 
     final long timeInMillis = Time.mjdToMillies( value );
-    final Instant date = new Instant( timeInMillis );
+    return new Instant( timeInMillis );
+  }
 
-    return HYD_PY_DATE_TIME_PARSER.print( date );
+  @Override
+  public String printValue( final Instant value )
+  {
+    return HYD_PY_DATE_TIME_PARSER.print( value );
   }
 }

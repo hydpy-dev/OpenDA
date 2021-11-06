@@ -19,7 +19,7 @@ import org.openda.interfaces.IExchangeItem.Role;
 /**
  * @author Gernot Belger
  */
-final class Double1DItem extends AbstractServerItem
+final class Double1DItem extends AbstractServerItem<double[]>
 {
   public Double1DItem( final String id, final Role role )
   {
@@ -27,24 +27,27 @@ final class Double1DItem extends AbstractServerItem
   }
 
   @Override
-  public Object parseValue( final String valueText )
+  public double[] parseValue( final String valueText )
   {
     return HydPyUtils.parseDoubleArray( valueText );
   }
 
   @Override
-  public IExchangeItem toExchangeItem( final Instant startTime, final Instant endTime, final long stepSeconds, final Object value )
+  public IExchangeItem toExchangeItem( final Instant startTime, final Instant endTime, final long stepSeconds, final double[] value )
   {
-    final double[] values = (double[])value;
-    return new DoublesExchangeItem( getId(), getRole(), values );
+    return new DoublesExchangeItem( getId(), getRole(), value );
   }
 
   @Override
-  public String printValue( final IExchangeItem exItem )
+  public double[] toValue( final Instant startTime, final Instant endTime, final long stepSeconds, final IExchangeItem exItem )
   {
     final DoublesExchangeItem dblItem = (DoublesExchangeItem)exItem;
-    final double[] doubles = dblItem.getValuesAsDoubles();
+    return dblItem.getValuesAsDoubles();
+  }
 
-    return HydPyUtils.printDoubleArray( doubles );
+  @Override
+  public String printValue( final double[] value )
+  {
+    return HydPyUtils.printDoubleArray( value );
   }
 }

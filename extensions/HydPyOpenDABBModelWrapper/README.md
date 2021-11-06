@@ -104,9 +104,9 @@ The model factory requires the following arguments
 * configFile (string): The name of the [HydPy servertools](https://hydpy-dev.github.io/hydpy/master/servertools.html) configuration file.
 * logMode (string, optional): Options for enabling additional logging. Possible values are 'off' (default if not set), 'console' and 'file'. If activated (i.e. not 'off') the client calls to the HydPy server instances are logged, as well as the process outputs of the HydPy server instances. If set to 'file', the argument 'logDirectory' must also be set. If set to 'console' all these output will be written to the console output stream of the OpenDa process.
 * logDirectory (string, optional): The path to the directory where the additional logging output be written. 'logMode' must be set to 'file' to activate this. If specified, for each server instance, three log files will be written:
-  * HydPy_Client_<instanceId>.log: the calls from the wrapper to the HydPy server instances.
-  * HydPy_Server_<instanceId>.log: the process output stream of the HydPy server instance
-  * HydPy_Server_<instanceId>.err: the process error stream of the HydPy server instance
+  * HydPy\_Client\_\<instanceId\>.log: the calls from the wrapper to the HydPy server instances.
+  * HydPy\_Server\_\<instanceId\>.log: the process output stream of the HydPy server instance
+  * HydPy\_Server\_\<instanceId\>.err: the process error stream of the HydPy server instance
 * templateDir (string, optional): The template directory for model instances.  
 * instanceDir (string, optional): The instance directory for model instances. The actual directories are post-fixed with the instance number. 
 

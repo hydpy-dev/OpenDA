@@ -20,6 +20,13 @@ import java.util.Properties;
  */
 final class HydPyServerConfiguration
 {
+  public enum LogMode
+  {
+    off,
+    console,
+    file
+  }
+
   private static final String ENVIRONMENT_HYD_PY_PYTHON_EXE = "HYD_PY_PYTHON_EXE"; //$NON-NLS-1$
 
   private static final String ENVIRONMENT_HYD_PY_SCRIPT_PATH = "HYD_PY_SCRIPT_PATH"; //$NON-NLS-1$
@@ -39,6 +46,8 @@ final class HydPyServerConfiguration
   private static final String PROPERTY_PROJECT_NAME = "projectName"; //$NON-NLS-1$
 
   private static final String PROPERTY_CONFIG_FILE = "configFile"; //$NON-NLS-1$
+
+  private static final String PROPERTY_LOG_MODE = "logMode"; //$NON-NLS-1$
 
   private static final String PROPERTY_LOG_DIRECTORY = "logDirectory"; //$NON-NLS-1$
 
@@ -70,6 +79,8 @@ final class HydPyServerConfiguration
   public final String modelName;
 
   public final Path configFile;
+
+  public LogMode logMode;
 
   public final Path logDirectory;
 
@@ -108,7 +119,12 @@ final class HydPyServerConfiguration
     if( !Files.isRegularFile( configFile ) )
       throw new RuntimeException( String.format( "Argument '%s': File does not exist: %s", PROPERTY_CONFIG_FILE, configFile ) );
 
+    logMode = HydPyUtils.getOptionalPropertyAsEnum( args, PROPERTY_LOG_MODE, LogMode.off );
+
     final String logDirectoryArgument = args.getProperty( PROPERTY_LOG_DIRECTORY, null );
     logDirectory = logDirectoryArgument == null ? null : workingDir.resolve( logDirectoryArgument ).normalize();
+
+    if( logMode == LogMode.file && logDirectoryArgument == null )
+      throw new RuntimeException( String.format( "Argument '%s': set to '%s', but '%s' not set", PROPERTY_LOG_DIRECTORY, LogMode.file, PROPERTY_LOG_DIRECTORY ) );
   }
 }

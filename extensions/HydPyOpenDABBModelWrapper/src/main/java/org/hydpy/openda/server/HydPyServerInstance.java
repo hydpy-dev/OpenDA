@@ -69,16 +69,9 @@ final class HydPyServerInstance
 
   public synchronized void initializeInstance( final String instanceId )
   {
-    final Callable<List<IExchangeItem>> task = new Callable<List<IExchangeItem>>()
-    {
-      @Override
-      public List<IExchangeItem> call( ) throws HydPyServerException
-      {
-        return getServer().initializeInstance( instanceId );
-      }
-    };
+    final Future<List<IExchangeItem>> future = HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().initializeInstance( instanceId ) );
 
-    m_currentSimulations.put( instanceId, m_executor.submit( task ) );
+    m_currentSimulations.put( instanceId, future );
   }
 
   public List<IExchangeItem> getItemValues( final String instanceId ) throws HydPyServerException
@@ -102,17 +95,12 @@ final class HydPyServerInstance
 
   public void setItemValues( final String instanceId, final Collection<IExchangeItem> values )
   {
-    final Callable<Void> task = new Callable<Void>()
-    {
-      @Override
-      public Void call( ) throws HydPyServerException
-      {
-        getServer().setItemValues( instanceId, values );
-        return null;
-      }
+    final Callable<Void> callable = ( ) -> {
+      getServer().setItemValues( instanceId, values );
+      return null;
     };
 
-    m_executor.submit( task );
+    HydPyUtils.submitAndLogExceptions( m_executor, callable );
   }
 
   public synchronized String[] getItemNames( final String itemId ) throws HydPyServerException
@@ -122,31 +110,13 @@ final class HydPyServerInstance
 
   public synchronized void simulate( final String instanceId )
   {
-    final Callable<List<IExchangeItem>> task = new Callable<List<IExchangeItem>>()
-    {
-      @Override
-      public List<IExchangeItem> call( ) throws HydPyServerException
-      {
-        // REMARK: we always directly simulate and fetch the results in one call
-        return getServer().simulate( instanceId );
-      }
-    };
-
-    m_currentSimulations.put( instanceId, m_executor.submit( task ) );
+    // REMARK: we always directly simulate and fetch the results in one call
+    final Future<List<IExchangeItem>> future = HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().simulate( instanceId ) );
+    m_currentSimulations.put( instanceId, future );
   }
 
   public void shutdown( )
   {
-    final Callable<Void> task = new Callable<Void>()
-    {
-      @Override
-      public Void call( )
-      {
-        getServer().shutdown();
-        return null;
-      }
-    };
-
-    m_executor.submit( task );
+    HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().shutdown() );
   }
 }

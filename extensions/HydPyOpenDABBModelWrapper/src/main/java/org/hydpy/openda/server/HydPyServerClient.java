@@ -11,7 +11,8 @@
  */
 package org.hydpy.openda.server;
 
-import java.io.InputStream;
+import java.io.PrintStream;
+import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -24,6 +25,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
+import org.apache.http.util.EntityUtils;
 
 /**
  * Represents a client calling a HydPy server process which handles the basic http calls.
@@ -48,13 +50,19 @@ final class HydPyServerClient
 
   private final int m_timeoutMillis = 60000;
 
-  public HydPyServerClient( final URI address )
+  private final PrintStream m_debugOut;
+
+  public HydPyServerClient( final URI address, final PrintStream debugOut )
   {
     m_address = address;
+    m_debugOut = debugOut;
   }
 
   private HttpEntity callGet( final URI endpoint, final int timeout ) throws HydPyServerException
   {
+    m_debugOut.println( "Calling GET:" );
+    m_debugOut.println( endpoint );
+
     final Request request = Request.Get( endpoint );
     return callServer( request, timeout );
   }
@@ -62,7 +70,6 @@ final class HydPyServerClient
   private Properties callGetAndParse( final URI endpoint, final int timeoutMillis ) throws HydPyServerException
   {
     final HttpEntity entity = callGet( endpoint, timeoutMillis );
-
     return parseAsProperties( entity );
   }
 
@@ -71,11 +78,16 @@ final class HydPyServerClient
     try
     {
       final Properties props = new Properties();
-      try( final InputStream content = entity.getContent() )
-      {
-        props.load( content );
-        return props;
-      }
+
+      final String content = EntityUtils.toString( entity );
+
+      m_debugOut.println( "Received from HydPy Server:" );
+      m_debugOut.println( content );
+
+      final StringReader reader = new StringReader( content );
+
+      props.load( reader );
+      return props;
     }
     catch( final Exception e )
     {
@@ -111,6 +123,10 @@ final class HydPyServerClient
 
   private HttpEntity callPost( final URI endpoint, final int timeout, final String body ) throws HydPyServerException
   {
+    m_debugOut.println( "Calling POST:" );
+    m_debugOut.println( endpoint );
+    m_debugOut.println( body );
+
     final ContentType contentType = ContentType.TEXT_PLAIN.withCharset( StandardCharsets.UTF_8 );
 
     final Request request = Request.Post( endpoint ).bodyString( body, contentType );
@@ -186,5 +202,13 @@ final class HydPyServerClient
     {
       e.printStackTrace();
     }
+  }
+
+  public void debugOut( final String name, final String message, final Object... arguments )
+  {
+    m_debugOut.print( name );
+    m_debugOut.print( ": " ); //$NON-NLS-1$
+    m_debugOut.format( message, arguments );
+    m_debugOut.println();
   }
 }

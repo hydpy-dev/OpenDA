@@ -51,10 +51,13 @@ final class HydPyOpenDACaller
           "POST_register_simulationdates," + //
           /* and fetch them */
           "GET_query_conditionitemvalues," + //
-          "GET_query_getitemvalues," + //
+          // FIXME: revert! oder statt condition und parameter
+          "GET_query_itemvalues," + //
           "GET_query_parameteritemvalues," + //
           "GET_query_simulationdates"; //
 
+  // IMPORTANT: register_simulationdates must be called before the rest,
+  // as timeseries-items will be cut to exactly this time span.
   private static final String METHODS_REGISTER_ITEMVALUES = //
       "POST_register_simulationdates," + //
           "POST_register_parameteritemvalues," + //
@@ -74,7 +77,8 @@ final class HydPyOpenDACaller
           "GET_update_getitemvalues," + //
           /* and retrieve them directly */
           "GET_query_conditionitemvalues," + //
-          "GET_query_getitemvalues," + //
+          // FIXME
+          "GET_query_itemvalues," + //
           "GET_query_parameteritemvalues," + //
           "GET_query_simulationdates"; //
 
@@ -93,7 +97,7 @@ final class HydPyOpenDACaller
 
   private final HydPyServerClient m_client;
 
-  private final Map<String, AbstractServerItem> m_itemIndex;
+  private final Map<String, AbstractServerItem< ? >> m_itemIndex;
 
   private final long m_stepSeconds;
 
@@ -108,14 +112,14 @@ final class HydPyOpenDACaller
 
     final List<IServerItem> items = requestItems();
 
-    final Map<String, AbstractServerItem> itemIndex = new HashMap<>( items.size() );
+    final Map<String, AbstractServerItem< ? >> itemIndex = new HashMap<>( items.size() );
     for( final IServerItem item : items )
-      itemIndex.put( item.getId(), (AbstractServerItem)item );
+      itemIndex.put( item.getId(), (AbstractServerItem< ? >)item );
     m_itemIndex = Collections.unmodifiableMap( itemIndex );
 
     /* Retrieve initial state and also init-dates and stepsize */
     // REMARK: HydPy always need instanceId; we give fake one here
-    log( "requesting fixed item states and initial time-grid" );
+    m_client.debugOut( m_name, "requesting fixed item states and initial time-grid" );
     final Properties props = m_client.execute( HydPyServerManager.ANY_INSTANCE, METHODS_REQUEST_INITIAL_STATE );
 
     m_firstDateValue = props.getProperty( ITEM_ID_FIRST_DATE_INIT );
@@ -127,9 +131,9 @@ final class HydPyOpenDACaller
     props.remove( ITEM_ID_LAST_DATE_INIT );
     props.remove( ITEM_ID_STEP_SIZE );
 
-    /* detemrine step seconds */
-    final AbstractServerItem stepServerItem = getItem( ITEM_ID_STEP_SIZE );
-    m_stepSeconds = (long)stepServerItem.parseValue( stepValue );
+    /* determine step seconds */
+    final AbstractServerItem<Long> stepServerItem = getItem( ITEM_ID_STEP_SIZE );
+    m_stepSeconds = stepServerItem.parseValue( stepValue );
   }
 
   public String getName( )
@@ -137,23 +141,12 @@ final class HydPyOpenDACaller
     return m_name;
   }
 
-  /**
-   * For debug purposes only
-   */
-  private void log( final String message, final Object... arguments )
-  {
-    System.out.print( getName() );
-    System.out.print( ": " ); //$NON-NLS-1$
-    System.out.format( message, arguments );
-    System.out.println();
-  }
-
-  private AbstractServerItem getItem( final String id )
+  private <TYPE> AbstractServerItem<TYPE> getItem( final String id )
   {
     if( m_itemIndex == null )
       throw new IllegalStateException();
 
-    final AbstractServerItem item = m_itemIndex.get( id );
+    @SuppressWarnings( "unchecked" ) final AbstractServerItem<TYPE> item = (AbstractServerItem<TYPE>)m_itemIndex.get( id );
 
     if( item == null )
       throw new IllegalArgumentException( String.format( "Invalid item id: %s", id ) );
@@ -171,7 +164,7 @@ final class HydPyOpenDACaller
     {
       final String value = props.getProperty( property );
 
-      final AbstractServerItem item = AbstractServerItem.fromHydPyType( property, value );
+      final AbstractServerItem< ? > item = AbstractServerItem.fromHydPyType( property, value );
       items.add( item );
     }
 
@@ -192,7 +185,7 @@ final class HydPyOpenDACaller
    */
   public List<IExchangeItem> initializeInstance( final String instanceId ) throws HydPyServerException
   {
-    log( "initializing state for instanceId = '%s'", instanceId );
+    m_client.debugOut( m_name, "initializing state for instanceId = '%s'", instanceId );
 
     // REMARK: special handling for the simulation-timegrid: we set the whole (aka init) timegrid as starting state for the simulation-timegrid
     // OpenDa will soon request all items and especially the start/stop time and expect the complete, yet unchanged, simulation-time
@@ -228,15 +221,12 @@ final class HydPyOpenDACaller
     for( final Entry<String, Object> entry : entrySet )
     {
       final String id = entry.getKey();
-      final AbstractServerItem item = getItem( id );
+      final AbstractServerItem<Object> item = getItem( id );
 
       final Object preValue = entry.getValue();
 
       final IExchangeItem value = item.toExchangeItem( startTime, endTime, m_stepSeconds, preValue );
       values.add( value );
-
-      final String valueText = item.printValue( value );
-      log( "%s=%s", id, valueText );
     }
 
     return values;
@@ -248,7 +238,7 @@ final class HydPyOpenDACaller
 
     for( final String property : props.stringPropertyNames() )
     {
-      final AbstractServerItem item = getItem( property );
+      final AbstractServerItem< ? > item = getItem( property );
 
       final String valueText = props.getProperty( property );
 
@@ -261,27 +251,35 @@ final class HydPyOpenDACaller
 
   public void setItemValues( final String instanceId, final Collection<IExchangeItem> values ) throws HydPyServerException
   {
-    log( "setting state for instanceId = '%s'", instanceId );
+    m_client.debugOut( m_name, "setting state for instanceId = '%s'", instanceId );
 
     final Map<String, IExchangeItem> sortedItems = new TreeMap<>();
     for( final IExchangeItem item : values )
       sortedItems.put( item.getId(), item );
+
+    /* fetch current time range */
+    final IExchangeItem startExItem = sortedItems.get( HydPyModelInstance.ITEM_ID_FIRST_DATE );
+    final IExchangeItem endExItem = sortedItems.get( HydPyModelInstance.ITEM_ID_LAST_DATE );
+    final AbstractServerItem<Instant> startItem = getItem( HydPyModelInstance.ITEM_ID_FIRST_DATE );
+    final AbstractServerItem<Instant> endItem = getItem( HydPyModelInstance.ITEM_ID_LAST_DATE );
+    final Instant startTime = startItem.toValue( null, null, 0l, startExItem );
+    final Instant endTime = endItem.toValue( null, null, 0l, endExItem );
 
     final StringBuffer body = new StringBuffer();
     for( final IExchangeItem exItem : sortedItems.values() )
     {
       final String id = exItem.getId();
 
-      final AbstractServerItem item = getItem( id );
-      final String valueText = item.printValue( exItem );
+      final AbstractServerItem<Object> item = getItem( id );
+
+      final Object value = item.toValue( startTime, endTime, m_stepSeconds, exItem );
+      final String valueText = item.printValue( value );
 
       body.append( id );
       body.append( '=' );
       body.append( valueText );
       body.append( '\r' );
       body.append( '\n' );
-
-      log( "%s=%s", id, valueText );
     }
 
     m_client.execute( instanceId, METHODS_REGISTER_ITEMVALUES, body.toString() );
@@ -315,7 +313,7 @@ final class HydPyOpenDACaller
 
   public List<IExchangeItem> simulate( final String instanceId ) throws HydPyServerException
   {
-    log( "running simulation for current state for instanceId = '%s'", instanceId );
+    m_client.debugOut( m_name, "running simulation for current state for instanceId = '%s'", instanceId );
 
     final Properties props = m_client.execute( instanceId, METHODS_SIMULATE_AND_QUERY_ITEMVALUES );
     return parseItemValues( props );
@@ -323,7 +321,7 @@ final class HydPyOpenDACaller
 
   public void shutdown( )
   {
-    log( "shutting down..." );
+    m_client.debugOut( m_name, "shutting down..." );
     m_client.shutdown();
   }
 }

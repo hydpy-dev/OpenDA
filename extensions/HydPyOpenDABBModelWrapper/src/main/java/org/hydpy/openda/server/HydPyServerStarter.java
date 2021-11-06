@@ -13,16 +13,21 @@ package org.hydpy.openda.server;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.lang.ProcessBuilder.Redirect;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 
+import org.apache.commons.io.output.NullPrintStream;
 import org.apache.http.client.utils.URIBuilder;
+import org.hydpy.openda.server.HydPyServerConfiguration.LogMode;
 
 /**
  * @author Gernot Belger
@@ -45,6 +50,11 @@ final class HydPyServerStarter
 
   private Process m_process = null;
 
+  // REMARK: initialize with System.out so we do not need to worry about NPE.
+  private PrintStream m_debugOut = System.out;
+
+  private PrintStream m_debugOutToClose = null;
+
   public HydPyServerStarter( final HydPyServerConfiguration config, final int processId )
   {
     m_config = config;
@@ -56,16 +66,7 @@ final class HydPyServerStarter
     final ThreadFactory threadFactory = new HydPyThreadFactory( m_name );
     m_executor = Executors.newSingleThreadExecutor( threadFactory );
 
-    final Callable<HydPyServerInstance> task = new Callable<HydPyServerInstance>()
-    {
-      @Override
-      public HydPyServerInstance call( ) throws Exception
-      {
-        return doStart();
-      }
-    };
-
-    m_future = m_executor.submit( task );
+    m_future = HydPyUtils.submitAndLogExceptions( m_executor, this::doStart );
   }
 
   /**
@@ -98,17 +99,19 @@ final class HydPyServerStarter
 
     final long start = System.currentTimeMillis();
 
-    m_process = startProcess();
+    m_debugOut = createDebugOut();
 
-    final HydPyServerClient client = new HydPyServerClient( address );
+    m_process = startProcess( m_debugOut );
+
+    final HydPyServerClient client = new HydPyServerClient( address, m_debugOut );
 
     try
     {
-      tryCallServer( client );
+      tryCallServer( client, m_debugOut );
 
       final long end = System.currentTimeMillis();
       final double time = (end - start) / 1000.0;
-      System.out.format( "%s: ready after %.2f seconds%n", m_name, time );
+      m_debugOut.format( "%s: ready after %.2f seconds%n", m_name, time );
 
       /* wrap for OpenDA specific calling */
       final HydPyOpenDACaller openDaCaller = new HydPyOpenDACaller( m_name, client );
@@ -129,6 +132,43 @@ final class HydPyServerStarter
     }
   }
 
+  private PrintStream createDebugOut( )
+  {
+    final LogMode logMode = m_config.logMode;
+    switch( logMode )
+    {
+      case off:
+        /* print into the void */
+        return new NullPrintStream();
+
+      case console:
+        return System.out;
+
+      case file:
+      {
+        try
+        {
+          final Path logDir = m_config.logDirectory;
+          final String filename = String.format( "HydPy_Client_%d.log", m_processId );
+
+          final File file = new File( logDir.toFile(), filename );
+          // REMARK: default charset should be ok, this is for debugging only
+          m_debugOutToClose = new PrintStream( file, Charset.defaultCharset() );
+          return m_debugOutToClose;
+        }
+        catch( final IOException e )
+        {
+          e.printStackTrace();
+          System.err.println( "Failed to create logfile, falling back to console output" );
+          return System.out;
+        }
+      }
+
+      default:
+        throw new IllegalStateException();
+    }
+  }
+
   private URI createAddress( ) throws HydPyServerException
   {
     try
@@ -146,13 +186,13 @@ final class HydPyServerStarter
     }
   }
 
-  private Process startProcess( ) throws HydPyServerException
+  private Process startProcess( final PrintStream debugOut ) throws HydPyServerException
   {
     try
     {
       if( m_config.preStarted )
       {
-        System.out.format( "%s: assuming process is already started ...%n", m_name );
+        debugOut.format( "%s: assuming process is already started ...%n", m_name );
         return null;
       }
 
@@ -164,27 +204,19 @@ final class HydPyServerStarter
       final ProcessBuilder builder = new ProcessBuilder( command, m_config.hydPyScript, operation, portArgument, m_config.modelName, configFile ) //
           .directory( m_config.modelDir.toFile() );
 
-      if( m_config.logDirectory == null )
-        builder.inheritIO();
-      else
-      {
-        final File logFile = new File( m_config.logDirectory.toFile(), String.format( "HydPy_Server_%d.log", m_processId ) );
-        final File errFile = new File( m_config.logDirectory.toFile(), String.format( "HydPy_Server_%d.err", m_processId ) );
-        builder.redirectError( errFile );
-        builder.redirectOutput( logFile );
-      }
+      configureProcessForLogging( builder );
 
-      System.out.format( "%s: starting ...%n", m_name );
+      debugOut.format( "%s: starting ...%n", m_name );
       final List<String> commandLine = builder.command();
-      System.out.println( "Working-Directory:" );
-      System.out.println( m_config.modelDir );
-      System.out.println( "Command-Line:" );
+      debugOut.println( "Working-Directory:" );
+      debugOut.println( m_config.modelDir );
+      debugOut.println( "Command-Line:" );
       for( final String commmandPart : commandLine )
       {
-        System.out.print( commmandPart );
-        System.out.print( ' ' );
+        debugOut.print( commmandPart );
+        debugOut.print( ' ' );
       }
-      System.out.println();
+      debugOut.println();
 
       return builder.start();
     }
@@ -194,7 +226,36 @@ final class HydPyServerStarter
     }
   }
 
-  private void tryCallServer( final HydPyServerClient client ) throws HydPyServerException
+  private void configureProcessForLogging( final ProcessBuilder builder )
+  {
+    switch( m_config.logMode )
+    {
+      case off:
+        // FIXME: java 9 feature!
+        builder.redirectError( Redirect.DISCARD );
+        builder.redirectOutput( Redirect.DISCARD );
+        return;
+
+      case console:
+        builder.inheritIO();
+        return;
+
+      case file:
+      {
+        final File logFile = new File( m_config.logDirectory.toFile(), String.format( "HydPy_Server_%d.log", m_processId ) );
+        final File errFile = new File( m_config.logDirectory.toFile(), String.format( "HydPy_Server_%d.err", m_processId ) );
+        builder.redirectError( errFile );
+        builder.redirectOutput( logFile );
+        return;
+      }
+
+      default:
+        throw new IllegalStateException();
+    }
+
+  }
+
+  private void tryCallServer( final HydPyServerClient client, final PrintStream debugOut ) throws HydPyServerException
   {
     final int retries = m_config.initRetrySeconds * 4;
     final int timeoutMillis = 250;
@@ -224,13 +285,13 @@ final class HydPyServerStarter
           if( version.compareTo( VERSION_SUPPORTED ) < 0 )
             System.err.format( "WARNING: HydPy Version of Server (%s) is LESS than the supported vrsion (%s) of this wrapper, do expect compatibility problems.%n", version, VERSION_SUPPORTED );
           else if( version.compareTo( VERSION_SUPPORTED ) > 0 )
-            System.out.format( "INFO: HydPy Version of Server (%s) is GREATER than the supported vrsion (%s) of this wrapper%n", version, VERSION_SUPPORTED );
+            debugOut.format( "INFO: HydPy Version of Server (%s) is GREATER than the supported vrsion (%s) of this wrapper%n", version, VERSION_SUPPORTED );
           return;
         }
         catch( final HydPyServerException ex )
         {
-          System.out.format( "%s: waiting for startup...%n", m_name );
-          System.out.format( "%s: %s%n", m_name, ex.getLocalizedMessage() );
+          debugOut.format( "%s: waiting for startup...%n", m_name );
+          debugOut.format( "%s: %s%n", m_name, ex.getLocalizedMessage() );
 
           if( i == retries - 1 )
             ex.printStackTrace();
@@ -268,8 +329,27 @@ final class HydPyServerStarter
       e.printStackTrace();
     }
 
-    m_executor.submit( (Runnable)this::shutdownProcess );
+    HydPyUtils.submitAndLogExceptions( m_executor, this::shutdownProcessAndCloseDebugOut );
+
     m_executor.shutdown();
+  }
+
+  private void shutdownProcessAndCloseDebugOut( )
+  {
+    shutdownProcess();
+
+    if( m_debugOutToClose != null )
+    {
+      try
+      {
+        m_debugOutToClose.close();
+        m_debugOutToClose = null;
+      }
+      catch( final Exception e )
+      {
+        e.printStackTrace();
+      }
+    }
   }
 
   private void shutdownProcess( )
@@ -283,7 +363,7 @@ final class HydPyServerStarter
         m_process.exitValue();
 
         /* process has terminated, stop waiting for it */
-        System.out.format( "%s: process terminated%n", m_name );
+        m_debugOut.format( "%s: process terminated%n", m_name );
         return;
       }
       catch( final IllegalThreadStateException e )
@@ -291,7 +371,7 @@ final class HydPyServerStarter
         try
         {
           /* process was not yet terminated, wait for it */
-          System.out.format( "%s: waiting for process termination...%n", m_name );
+          m_debugOut.format( "%s: waiting for process termination...%n", m_name );
           Thread.sleep( waitTime );
         }
         catch( final InterruptedException e1 )
@@ -302,7 +382,7 @@ final class HydPyServerStarter
     }
 
     /* process was not correctly terminated, kill */
-    System.err.format( "%s: timeout waiting for process termination, process will be killed%n", m_name );
+    m_debugOut.format( "%s: timeout waiting for process termination, process will be killed%n", m_name );
     m_process.destroy();
   }
 

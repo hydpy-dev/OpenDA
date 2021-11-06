@@ -22,6 +22,10 @@ eclipse {
 
 repositories {
     mavenCentral()
+    // REMARK: inlcude openda libs as a flatDir repository, gradle buildship will then be able to declare the source attachments for eclipse.
+    flatDir { 
+        dirs 'externalLibs/OpenDA'
+	}
 }
 
 configurations {
@@ -36,8 +40,10 @@ configurations {
 
 dependencies {
     implementation group: 'org.apache.httpcomponents', name: 'fluent-hc', version: '4.5.13'
+	implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
+	implementation group: 'org.json', name: 'json', version: '20210307'	    
 
-	openDaLibs fileTree(include: ["*.jar"], dir: "externalLibs/OpenDA")
+	openDaLibs ':openda_core'
 
     // Those libs are part of OpenDA and will be automatically in the classpath when we run OpenDA with this extension.
     // They will be not included in our distribution. 

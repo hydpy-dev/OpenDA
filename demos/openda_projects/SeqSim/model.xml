@@ -6,6 +6,7 @@
     <arg>projectPath:../../hydpy_projects</arg>
     <arg>projectName:LahnH</arg>
     <arg>configFile:hydpy.xml</arg>
+    <arg>logMode:file</arg>
     <arg>logDirectory:results</arg>
   </modelFactory>
   <vectorSpecification>

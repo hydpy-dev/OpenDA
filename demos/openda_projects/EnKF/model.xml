@@ -8,13 +8,12 @@
     <arg>projectPath:../../hydpy_projects</arg>
     <arg>projectName:LahnH</arg>
     <arg>configFile:hydpy.xml</arg>
+    <arg>logMode:file</arg>
     <arg>logDirectory:results</arg>
   </modelFactory>
   <vectorSpecification>
     <state>
-      <noiseModel id="NoiseModelLZ"
-                  className="org.hydpy.openda.noise.SpatialNoiseModelFactory"
-                  workingDirectory=".">
+      <noiseModel id="NoiseModelLZ" className="org.hydpy.openda.noise.SpatialNoiseModelFactory" workingDirectory=".">
         <configFile>spatialNoise.xml</configFile>
         <exchangeItems>
           <exchangeItem id="noise_lz" operation="add">

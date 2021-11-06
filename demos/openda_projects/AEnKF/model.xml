@@ -1,31 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<blackBoxStochModel
-        xmlns="http://www.openda.org"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/blackBoxStochModelConfig.xsd">
-  <modelFactory
-          className="org.hydpy.openda.HydPyModelFactory"
-          workingDirectory=".">
+<blackBoxStochModel xmlns="http://www.openda.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/blackBoxStochModelConfig.xsd">
+  <modelFactory className="org.hydpy.openda.HydPyModelFactory" workingDirectory=".">
     <arg>serverPort:8080</arg>
     <arg>serverInstances:5</arg>
-    <arg>serverParallelStartup:true</arg>    
+    <arg>serverParallelStartup:true</arg>
     <arg>initializeWaitSeconds:120</arg>
     <arg>projectPath:../../hydpy_projects</arg>
     <arg>projectName:LahnH</arg>
     <arg>configFile:hydpy.xml</arg>
+    <arg>logMode:file</arg>
     <arg>logDirectory:results</arg>
   </modelFactory>
   <vectorSpecification>
     <state>
-      <noiseModel id="NoiseModelLZ"
-                  className="org.hydpy.openda.noise.SpatialNoiseModelFactory"
-                  workingDirectory=".">
-          <configFile>spatialNoise.xml</configFile>
-          <exchangeItems>
-              <exchangeItem id="noise_lz" operation="add">
-                  <modelExchangeItem id="lz"/>
-              </exchangeItem>
-          </exchangeItems>
+      <noiseModel id="NoiseModelLZ" className="org.hydpy.openda.noise.SpatialNoiseModelFactory" workingDirectory=".">
+        <configFile>spatialNoise.xml</configFile>
+        <exchangeItems>
+          <exchangeItem id="noise_lz" operation="add">
+            <modelExchangeItem id="lz" />
+          </exchangeItem>
+        </exchangeItems>
       </noiseModel>
     </state>
     <predictor>

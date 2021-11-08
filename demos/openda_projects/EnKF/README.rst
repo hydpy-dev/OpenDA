@@ -141,7 +141,7 @@ and includes uncertainty bounds for the estimated value of `LZ`_:
 >>> _ = pyplot.plot(sim_corrected, 'black', label='corrected')
 >>> _ = pyplot.plot(sim_corrected + 1.96 * sim_uncertainty, 'grey', label='uncertainty')
 >>> _ = pyplot.plot(sim_corrected - 1.96 * sim_uncertainty, 'grey')
->>> _ = pyplot.ylabel('Q [m3/s]')
+>>> _ = pyplot.ylabel('Q [m³/s]')
 >>> _ = pyplot.xlabel('day')
 >>> _ = pyplot.legend()
 >>> pyplot.savefig('results/discharge_lahn_1.png')

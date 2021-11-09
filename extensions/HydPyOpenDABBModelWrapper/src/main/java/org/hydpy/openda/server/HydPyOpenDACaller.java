@@ -40,7 +40,7 @@ final class HydPyOpenDACaller
       "GET_query_itemtypes"; //
 
   private static final String METHODS_REQUEST_INITIAL_STATE = //
-      /* tell hyd py to write default values into state-register */
+      /* tell HydPy to write default values into state-register */
       "GET_register_initialitemvalues," + //
       /* and also query the initialization time grid (i.e. time span and step with which the HydPy is configured */
           "GET_query_initialisationtimegrid"; //
@@ -50,39 +50,36 @@ final class HydPyOpenDACaller
       "GET_register_initialitemvalues," + //
           "POST_register_simulationdates," + //
           /* and fetch them */
-          "GET_query_conditionitemvalues," + //
-          // FIXME: revert! oder statt condition und parameter
           "GET_query_itemvalues," + //
-          "GET_query_parameteritemvalues," + //
           "GET_query_simulationdates"; //
 
   // IMPORTANT: register_simulationdates must be called before the rest,
   // as timeseries-items will be cut to exactly this time span.
   private static final String METHODS_REGISTER_ITEMVALUES = //
       "POST_register_simulationdates," + //
-          "POST_register_parameteritemvalues," + //
-          "POST_register_conditionitemvalues";
+          "POST_register_changeitemvalues";
 
   private static final String METHODS_SIMULATE_AND_QUERY_ITEMVALUES = //
       /* activate current instance-state */
       "GET_activate_simulationdates," + //
-          "GET_activate_parameteritemvalues," + //
+
           "GET_load_internalconditions," + //
-          "GET_activate_conditionitemvalues," + //
+          "GET_activate_changeitemvalues," + //
+
           /* run simulation */
           "GET_simulate," + //
           /* apply hydpy state to instance-state */
           "GET_save_internalconditions," + //
+
+          // TODO: check, warum gibts hier keine combi methode?
           "GET_update_conditionitemvalues," + //
           "GET_update_getitemvalues," + //
+          "GET_update_inputitemvalues," + //
+
           /* and retrieve them directly */
-          "GET_query_conditionitemvalues," + //
-          // FIXME
           "GET_query_itemvalues," + //
-          "GET_query_parameteritemvalues," + //
           "GET_query_simulationdates"; //
 
-  // FIXME
   private static final String METHODS_REQUEST_ITEMNAMES = "GET_query_itemsubnames";
 
   private static final String ITEM_ID_FIRST_DATE_INIT = "firstdate_init"; //$NON-NLS-1$
@@ -211,8 +208,12 @@ final class HydPyOpenDACaller
     preValues.put( ITEM_ID_STEP_SIZE, m_stepSeconds );
 
     /* fetch fixed items value necessary to parse timeseries */
-    final Instant startTime = (Instant)preValues.get( HydPyModelInstance.ITEM_ID_FIRST_DATE );
-    final Instant endTime = (Instant)preValues.get( HydPyModelInstance.ITEM_ID_LAST_DATE );
+//    FIXME globale simulationszeiten hier!
+    // FIXME: check
+//    final Instant startTime = (Instant)preValues.get( HydPyModelInstance.ITEM_ID_FIRST_DATE );
+//    final Instant endTime = (Instant)preValues.get( HydPyModelInstance.ITEM_ID_LAST_DATE );
+    final Instant startTime = new Instant( m_firstDateValue );
+    final Instant endTime = new Instant( m_lastDateValue );
 
     /* parse item values */
     final List<IExchangeItem> values = new ArrayList<>( preValues.size() );

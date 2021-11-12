@@ -1,7 +1,7 @@
 
 # Optimising HydPy simulations with OpenDA
 
-<img src="logo.png" align="right" width="500">
+<img src="logo.png" align="right" width="350">
 
 This repository provides a [wrapper](extensions/HydPyOpenDABBModelWrapper), 
 for coupling [HydPy](https://github.com/hydpy-dev/hydpy) (programmed

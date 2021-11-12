@@ -21,7 +21,6 @@ import org.openda.interfaces.IArray;
 import org.openda.interfaces.IArrayTimeInfo;
 import org.openda.interfaces.IExchangeItem;
 import org.openda.interfaces.IExchangeItem.Role;
-import org.openda.interfaces.ITimeInfo;
 import org.openda.utils.Array;
 
 /**
@@ -78,21 +77,23 @@ public class Timeseries1DItem extends AbstractServerItem<IArray>
   {
     final ArrayExchangeItem timeSeries = (ArrayExchangeItem)exItem;
 
-    final Instant[] targetTimes = HydPyUtils.buildTimes( startTime, endTime, stepSeconds );
+//    final Instant[] targetTimes = HydPyUtils.buildTimes( startTime, endTime, stepSeconds );
 
-    final ITimeInfo timeInfo = timeSeries.getTimeInfo();
-    final double[] times = timeInfo.getTimes();
-    final Instant[] instants = HydPyUtils.mjdToInstant( times );
+//    final ITimeInfo timeInfo = timeSeries.getTimeInfo();
+//    final double[] times = timeInfo.getTimes();
+//    final Instant[] instants = HydPyUtils.mjdToInstant( times );
 
-    final int[] timeIndices = findTimeIndices( instants, targetTimes );
-    final int startIndex = timeIndices[0];
-    final int endIndex = timeIndices[timeIndices.length - 1];
+//    final int[] timeIndices = findTimeIndices( instants, targetTimes );
+//    final int startIndex = timeIndices[0];
+//    final int endIndex = timeIndices[timeIndices.length - 1];
 
     final IArray values = timeSeries.getArray();
 
-    final IArray slice = values.getSlice( 0, startIndex, endIndex );
+//    final IArray slice = values.getSlice( 0, startIndex, endIndex );
 
-    return slice;
+//    return slice;
+
+    return values;
   }
 
   private int[] findTimeIndices( final Instant[] times, final Instant[] targetTimes )

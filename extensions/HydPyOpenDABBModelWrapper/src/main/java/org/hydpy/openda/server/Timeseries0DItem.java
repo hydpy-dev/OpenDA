@@ -47,9 +47,10 @@ final class Timeseries0DItem extends AbstractServerItem<double[]>
   {
     final TimeSeries timeSeries = (TimeSeries)exItem;
 
-    final TimeSeries subsset = timeSeries.selectTimeSubset( HydPyUtils.instantToMjd( startTime ), HydPyUtils.instantToMjd( endTime ) );
+//    final TimeSeries subsset = timeSeries.selectTimeSubset( HydPyUtils.instantToMjd( startTime ), HydPyUtils.instantToMjd( endTime ) );
+//    return subsset.getValuesAsDoubles();
 
-    return subsset.getValuesAsDoubles();
+    return timeSeries.getValuesAsDoubles();
   }
 
   @Override

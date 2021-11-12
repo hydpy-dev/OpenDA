@@ -1,4 +1,6 @@
 
+![HydPy-OpenDA-Adapter](logo.png)
+
 # Optimising HydPy simulations with OpenDA
 
 This repository provides a [wrapper](extensions/HydPyOpenDABBModelWrapper), 

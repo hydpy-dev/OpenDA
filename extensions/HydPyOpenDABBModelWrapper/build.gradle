@@ -41,7 +41,10 @@ configurations {
 dependencies {
     implementation group: 'org.apache.httpcomponents', name: 'fluent-hc', version: '4.5.13'
 	implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
-	implementation group: 'org.json', name: 'json', version: '20210307'	    
+	implementation group: 'org.json', name: 'json', version: '20210307'
+	// OpenDA shipf with slf4j-api (and uses it) bit doesn_'t ship with any StaticLoggerBinder
+	// So we add it here so in our case we avoid the ugly log messages about that	
+	runtimeOnly group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.21', transitive: false
 
 	openDaLibs ':openda_core'
 

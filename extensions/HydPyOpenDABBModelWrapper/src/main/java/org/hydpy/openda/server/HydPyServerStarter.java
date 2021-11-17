@@ -14,7 +14,6 @@ package org.hydpy.openda.server;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.lang.ProcessBuilder.Redirect;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -231,9 +230,15 @@ final class HydPyServerStarter
     switch( m_config.logMode )
     {
       case off:
-        // FIXME: java 9 feature!
-        builder.redirectError( Redirect.DISCARD );
-        builder.redirectOutput( Redirect.DISCARD );
+        // FIXME: as soon as OpenDA goes to Java >9; use Redirect.DISCARD instead and remove
+        // the pipe stream which is later constructed
+        // builder.redirectError( Redirect.DISCARD );
+        // builder.redirectOutput( Redirect.DISCARD );
+        // Simulate the Java 9 behavior
+        final File NULL_FILE = new File( System.getProperty( "os.name" ).startsWith( "Windows" ) ? "NUL" : "/dev/null" );
+        builder.redirectError( NULL_FILE );
+        builder.redirectOutput( NULL_FILE );
+
         return;
 
       case console:

@@ -64,12 +64,12 @@ abstract class AbstractServerItem<TYPE> implements IServerItem
     throw new IllegalArgumentException( String.format( "Invalid item type: %s", hydPyType ) );
   }
 
-  public static AbstractServerItem< ? > newTimeItem( final String id )
+  public static AbstractServerItem<Instant> newTimeItem( final String id )
   {
     return new TimeItem( id, Role.InOut );
   }
 
-  public static AbstractServerItem< ? > newDurationItem( final String id )
+  public static AbstractServerItem<Long> newDurationItem( final String id )
   {
     return new DurationItem( id, Role.InOut );
   }

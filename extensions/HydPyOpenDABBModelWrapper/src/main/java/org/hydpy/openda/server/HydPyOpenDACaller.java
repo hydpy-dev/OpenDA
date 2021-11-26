@@ -109,11 +109,6 @@ final class HydPyOpenDACaller
 
     final List<IServerItem> items = requestItems();
 
-    final Map<String, AbstractServerItem< ? >> itemIndex = new HashMap<>( items.size() );
-    for( final IServerItem item : items )
-      itemIndex.put( item.getId(), (AbstractServerItem< ? >)item );
-    m_itemIndex = Collections.unmodifiableMap( itemIndex );
-
     /* Retrieve initial state and also init-dates and stepsize */
     // REMARK: HydPy always need instanceId; we give fake one here
     m_client.debugOut( m_name, "requesting fixed item states and initial time-grid" );
@@ -128,9 +123,20 @@ final class HydPyOpenDACaller
     props.remove( ITEM_ID_LAST_DATE_INIT );
     props.remove( ITEM_ID_STEP_SIZE );
 
-    /* determine step seconds */
-    final AbstractServerItem<Long> stepServerItem = getItem( ITEM_ID_STEP_SIZE );
-    m_stepSeconds = stepServerItem.parseValue( stepValue );
+    /* add fixed grid items and determine step seconds */
+    final AbstractServerItem<Long> stepItem = AbstractServerItem.newDurationItem( HydPyModelInstance.ITEM_ID_STEP_SIZE );
+    m_stepSeconds = stepItem.parseValue( stepValue );
+
+    /* REMARK: HydPy thinks in time interval, but OpenDA does not. We always adjust by one timestep when reading/writing to/from HydPy */
+    items.add( AbstractServerItem.newTimeItem( HydPyModelInstance.ITEM_ID_FIRST_DATE ) );
+    items.add( AbstractServerItem.newTimeItem( HydPyModelInstance.ITEM_ID_LAST_DATE ) );
+    items.add( stepItem );
+
+    /* build item inded */
+    final Map<String, AbstractServerItem< ? >> itemIndex = new HashMap<>( items.size() );
+    for( final IServerItem item : items )
+      itemIndex.put( item.getId(), (AbstractServerItem< ? >)item );
+    m_itemIndex = Collections.unmodifiableMap( itemIndex );
   }
 
   public String getName( )
@@ -164,10 +170,6 @@ final class HydPyOpenDACaller
       final AbstractServerItem< ? > item = AbstractServerItem.fromHydPyType( property, value );
       items.add( item );
     }
-
-    items.add( AbstractServerItem.newTimeItem( HydPyModelInstance.ITEM_ID_FIRST_DATE ) );
-    items.add( AbstractServerItem.newTimeItem( HydPyModelInstance.ITEM_ID_LAST_DATE ) );
-    items.add( AbstractServerItem.newDurationItem( HydPyModelInstance.ITEM_ID_STEP_SIZE ) );
 
     return items;
   }

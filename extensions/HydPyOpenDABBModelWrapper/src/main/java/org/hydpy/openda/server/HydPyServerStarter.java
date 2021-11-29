@@ -322,7 +322,7 @@ final class HydPyServerStarter
     throw new HydPyServerException( message );
   }
 
-  public void shutdown( )
+  public Future<Void> shutdown( )
   {
     try
     {
@@ -334,9 +334,11 @@ final class HydPyServerStarter
       e.printStackTrace();
     }
 
-    HydPyUtils.submitAndLogExceptions( m_executor, this::shutdownProcessAndCloseDebugOut );
+    final Future<Void> future = HydPyUtils.submitAndLogExceptions( m_executor, this::shutdownProcessAndCloseDebugOut );
 
     m_executor.shutdown();
+
+    return future;
   }
 
   private void shutdownProcessAndCloseDebugOut( )
@@ -359,6 +361,9 @@ final class HydPyServerStarter
 
   private void shutdownProcess( )
   {
+    if( m_process == null )
+      return;
+
     final int timeout = 2000;
     final int waitTime = 50;
     for( int i = 0; i < timeout; i += waitTime )

@@ -30,8 +30,9 @@ final class HydPyThreadFactory implements ThreadFactory
   {
     final ThreadGroup group = Thread.currentThread().getThreadGroup();
     final Thread thread = new Thread( group, r, m_name );
-    thread.setDaemon( false );
+    thread.setDaemon( true );
     thread.setPriority( Thread.NORM_PRIORITY );
+
     return thread;
   }
 }

@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hydpy.openda.server.HydPyModelInstance;
 import org.hydpy.openda.server.HydPyServerException;
 import org.hydpy.openda.server.HydPyServerManager;
@@ -37,10 +38,19 @@ public final class HyPyIoObject implements IDataObject
   {
     try
     {
-      if( arguments.length != 2 )
-        throw new RuntimeException( "IO-Object expects exactly two arguments, the second one is the instance-number" );
+      final String filename = arguments[0];
+      if( !StringUtils.isBlank( filename ) )
+      {
+        HydPyServerManager.create( workingDir, filename );
+        m_instanceId = HydPyServerManager.ANY_INSTANCE;
+      }
+      else
+      {
+        if( arguments.length < 2 )
+          throw new RuntimeException( "IO-Object expects at least two arguments, the second one is the instance-number" );
 
-      m_instanceId = arguments[1];
+        m_instanceId = arguments[1];
+      }
 
       final HydPyModelInstance server = HydPyServerManager.instance().getOrCreateInstance( m_instanceId );
 

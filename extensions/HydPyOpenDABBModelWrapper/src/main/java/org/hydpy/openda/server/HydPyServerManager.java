@@ -11,10 +11,17 @@
  */
 package org.hydpy.openda.server;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 /**
  * Manages the life-cycle of the {@link HydPyServerInstance}s, allowing possibly several server processes at once.
@@ -33,14 +40,29 @@ public final class HydPyServerManager
 
   private static HydPyServerManager INSTANCE = null;
 
-  public static void create( final Path workingDir, final Properties args )
+  public static Properties create( final File workingDir, final String filename )
   {
     if( INSTANCE != null )
       throw new IllegalStateException( "create wa called more than once" );
 
-    final HydPyServerConfiguration hydPyConfig = new HydPyServerConfiguration( workingDir, args );
+    final Properties args = new Properties();
+    final Path properiesFile = workingDir.toPath().resolve( filename );
+    try( BufferedReader propertiesReader = Files.newBufferedReader( properiesFile ) )
+    {
+      args.load( propertiesReader );
+    }
+    catch( final IOException e )
+    {
+      e.printStackTrace();
+      final String message = String.format( "Failed to read HydPy server configuration file: %s", properiesFile );
+      throw new RuntimeException( message, e );
+    }
+
+    final HydPyServerConfiguration hydPyConfig = new HydPyServerConfiguration( workingDir.toPath(), args );
 
     INSTANCE = new HydPyServerManager( hydPyConfig );
+
+    return args;
   }
 
   public synchronized static HydPyServerManager instance( )
@@ -65,6 +87,10 @@ public final class HydPyServerManager
     @Override
     public void run( )
     {
+      /* try to finish gracefully */
+      m_manager.finish();
+
+      /* but still kill all processes if that fails */
       m_manager.killAllServers();
     }
   }
@@ -152,15 +178,28 @@ public final class HydPyServerManager
     }
   }
 
-  public synchronized void killAllServers( )
+  synchronized void killAllServers( )
   {
     for( final HydPyServerStarter starter : m_starters.values() )
       starter.kill();
   }
 
-  public synchronized void finish( )
+  synchronized void finish( )
   {
-    for( final HydPyServerStarter starter : m_starters.values() )
-      starter.shutdown();
+    /* start shutdown for all instances */
+    final List<Future<Void>> futures = m_starters.values().stream().map( HydPyServerStarter::shutdown ).collect( Collectors.toList() );
+
+    /* and wait here for shutdown termination (which has a timeout) */
+    for( final Future<Void> future : futures )
+    {
+      try
+      {
+        future.get();
+      }
+      catch( final Exception e )
+      {
+        e.printStackTrace();
+      }
+    }
   }
 }

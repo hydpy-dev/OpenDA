@@ -32,7 +32,7 @@ import org.openda.utils.Time;
  *
  * @author Gernot Belger
  */
-final class HydPyUtils
+public final class HydPyUtils
 {
   private static final double daysToSeconds = (60 * 60 * 24);
 

@@ -48,12 +48,7 @@ Please see to the [HydPy-OpenDA example projects](../../demos).
 
 OpenDA must be configured and run as usual via its main _.oda_ file.
 
-HydPy is integrated as an OpenDA "BlackBoxModel" but changes it in some subtle
-ways.
-
-So the _stochModelFactory_ entry of the _.oda_ file needs to select the HydPy 
-specific `org.hydpy.openda.HydPyStochModelFactory` class (instead of the usual 
-`org.openda.blackbox.wrapper.BBStochModelFactory`).
+HydPy is integrated as an OpenDA "BlackBoxModel", so the _stochModelFactory_ entry of the _.oda_ file needs to select the usual `org.openda.blackbox.wrapper.BBStochModelFactory` class.
 
 For example:
 ```xml
@@ -63,10 +58,8 @@ For example:
 	</stochModelFactory> 
 ```
 
-The `org.hydpy.openda.HydPyStochModelFactory` uses the same XML file format as 
-`org.openda.blackbox.wrapper.BBStochModelFactory`, as the model configuration 
-(here `main.xml`). However, we need to use the HydPy specific 
-`org.hydpy.openda.HydPyModelFactory`  instead of the usual 
+The `org.openda.blackbox.wrapper.BBStochModelFactory` uses the _model.xml_ file as its configuration. 
+However, we need to use the HydPy specific `org.hydpy.openda.HydPyModelFactory` instead of the usual 
 `org.openda.blackbox.wrapper.BBModelFactory`.
 
 Usually, the _model.xml_ file refers to two additional configuration files, the
@@ -78,21 +71,26 @@ The rest of the _model.xml_ file (e.g. the `vectorSpecification`) is configured 
 Use the id's from the _hydpy.xml_ configuration file (see below) as parameters id's here.
 
 Example:
+For example:
 ```xml
-	<modelFactory className="org.hydpy.openda.HydPyModelFactory" workingDirectory=".">
-		<arg>serverPort:8080</arg>
-		<arg>serverInstances:60</arg>
-		<arg>serverParallelStartup:true</arg>
-		<arg>initializeWaitSeconds:5</arg>
-		<arg>projectPath:../../hydpy_projects</arg>
-		<arg>projectName:LahnH</arg>
-		<arg>configFile:hydpy.xml</arg>
-		<arg>logMode:file</arg>
-		<arg>logDirectory:results/logs</arg>
-	</modelFactory>
+<blackBoxStochModel xmlns="http://www.openda.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/blackBoxStochModelConfig.xsd">
+  <modelFactory className="org.hydpy.openda.HydPyModelFactory" workingDirectory=".">
+    <arg>configFile:hydpy.properties</arg>
+  </modelFactory>
+  ...
+</blackBoxStochModel>
 ```
 
-The model factory requires the following arguments
+The model factory requires the following arguments:
+
+* configFile (string, required): The configuration file for the model instances.
+* templateDir (string, optional): The template directory for model instances.  
+* instanceDir (string, optional): The instance directory for model instances. The actual directories are post-fixed with the instance number. 
+
+The wrapper resolves the _configFile_ relative to the working directory of the factory.
+
+The required configuration file for the model instances contains all information required to start the HydPy-Server instances and is in the [Java Properties file format](https://en.wikipedia.org/wiki/.properties).
+The following properties are supported: 
 
 * serverPort (integer): The web port on which to start the HydPy server. Use any free port on your machine. 
 * serverInstances (integer, optional): The number of HydPy server processes that will be started (maximal). Defaults to 1. If greater 1 and the chosen algorithm allows multiple instances, _HydPyOpenDABBModelWrapper_ will automatically start several server instances and run simulations in parallel. Server instances will run on web ports starting with _serverPort_ up-to _serverPort+serverInstances-1_.
@@ -107,8 +105,6 @@ The model factory requires the following arguments
   * HydPy\_Client\_\<instanceId\>.log: the calls from the wrapper to the HydPy server instances.
   * HydPy\_Server\_\<instanceId\>.log: the process output stream of the HydPy server instance
   * HydPy\_Server\_\<instanceId\>.err: the process error stream of the HydPy server instance
-* templateDir (string, optional): The template directory for model instances.  
-* instanceDir (string, optional): The instance directory for model instances. The actual directories are post-fixed with the instance number. 
 
 The wrapper resolves all arguments denoting files or directories relative to 
 the working directory of the factory.

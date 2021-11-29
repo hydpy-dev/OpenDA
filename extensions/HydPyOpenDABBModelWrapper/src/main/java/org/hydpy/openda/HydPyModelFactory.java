@@ -47,6 +47,8 @@ import org.openda.interfaces.ITime;
  */
 public class HydPyModelFactory implements IModelFactory
 {
+  private static final String PROPERTY_CONFIG_FILE = "configFile"; //$NON-NLS-1$
+
   private static final String PROPERTY_TEMPLATE_DIR_PATH = "templateDir"; //$NON-NLS-1$
 
   private static final String PROPERTY_INSTANCE_DIR_PATH = "instanceDir"; //$NON-NLS-1$
@@ -55,7 +57,9 @@ public class HydPyModelFactory implements IModelFactory
 
   private BBModelFactory m_bbFactory = null;
 
-  private Properties m_args;
+  private String m_templateDirPath;
+
+  private String m_instanceDirPath;
 
   private File m_workingDir;
 
@@ -63,7 +67,15 @@ public class HydPyModelFactory implements IModelFactory
   public void initialize( final File workingDir, final String[] arguments )
   {
     m_workingDir = workingDir;
-    m_args = parseArguments( arguments );
+
+    final Properties properties = parseArguments( arguments );
+    final String filename = properties.getProperty( PROPERTY_CONFIG_FILE );
+
+    if( filename != null )
+      HydPyServerManager.create( workingDir, filename );
+
+    m_templateDirPath = properties.getProperty( PROPERTY_TEMPLATE_DIR_PATH );
+    m_instanceDirPath = properties.getProperty( PROPERTY_INSTANCE_DIR_PATH );
   }
 
   private Properties parseArguments( final String[] arguments )
@@ -94,15 +106,7 @@ public class HydPyModelFactory implements IModelFactory
 
   private BBModelFactory createFactory( )
   {
-    if( m_args == null )
-      throw new IllegalStateException( "initialize was never called" );
-
-    final String templateDirPath = m_args.getProperty( PROPERTY_TEMPLATE_DIR_PATH );
-    final String instanceDirPath = m_args.getProperty( PROPERTY_INSTANCE_DIR_PATH );
-
-    HydPyServerManager.create( m_workingDir.toPath(), m_args );
-
-    final BBWrapperConfig wrapperConfig = initializeWrapperConfig( m_workingDir, templateDirPath, instanceDirPath );
+    final BBWrapperConfig wrapperConfig = initializeWrapperConfig( m_workingDir, m_templateDirPath, m_instanceDirPath );
 
     final HydPyModelInstance server = HydPyServerManager.instance().getOrCreateInstance( HydPyServerManager.ANY_INSTANCE );
     final Collection<IServerItem> items = server.getItems();

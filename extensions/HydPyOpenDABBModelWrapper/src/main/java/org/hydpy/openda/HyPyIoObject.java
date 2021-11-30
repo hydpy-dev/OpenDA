@@ -41,11 +41,13 @@ public final class HyPyIoObject implements IDataObject
       final String filename = arguments[0];
       if( !StringUtils.isBlank( filename ) )
       {
+        /* this case should happen, if used in combination with org.openda.observers.IoObjectStochObserver */
         HydPyServerManager.create( workingDir, filename );
         m_instanceId = HydPyServerManager.ANY_INSTANCE;
       }
       else
       {
+        /* this case usually happens if called from the BlackBoxModel wrapper */
         if( arguments.length < 2 )
           throw new RuntimeException( "IO-Object expects at least two arguments, the second one is the instance-number" );
 

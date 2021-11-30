@@ -71,7 +71,6 @@ The rest of the _model.xml_ file (e.g. the `vectorSpecification`) is configured 
 Use the id's from the _hydpy.xml_ configuration file (see below) as parameters id's here.
 
 Example:
-For example:
 ```xml
 <blackBoxStochModel xmlns="http://www.openda.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/blackBoxStochModelConfig.xsd">
   <modelFactory className="org.hydpy.openda.HydPyModelFactory" workingDirectory=".">
@@ -83,7 +82,7 @@ For example:
 
 The model factory requires the following arguments:
 
-* configFile (string, required): The configuration file for the model instances.
+* configFile (string, partly required): The configuration file for the model instances. This option is not required if also a '`HyPyIoObject`' in used within the stoch observer (see below).
 * templateDir (string, optional): The template directory for model instances.  
 * instanceDir (string, optional): The instance directory for model instances. The actual directories are post-fixed with the instance number. 
 
@@ -113,6 +112,41 @@ The HyPy wrapper does not use the template and instance directories, but
 some algorithms write (debug) output to the instances directories if 
 existing. If this output is of interest, both directory arguments must
 be specified.
+
+#### Note on observations
+To access observed values, the usual mechanisms of OpenDA apply, and any existing _stochObserver_ can be used in the usual way.
+However, it is possible (and convenient) to access the observed values directly from the HydPy model, as these are often already contained within the model. This in turn avoids the 
+necessity to convert the observed values in any format known by the OpenDA implementation.
+
+In order to achieve this, the wrapper also supplies a `org.openda.interfaces.IDataObject` implementation (namely `org.hydpy.openda.HyPyIoObject`), 
+that can be used in combination with the `org.openda.observers.IoObjectStochObserver`.  
+
+The `HyPyIoObject` gets as argument the filename to the same type of configuration file as would get the `HydPyModelFactory`.
+The configuration file contains the same possible options as listed above.
+
+Example of a stoch observer configuration using `HyPyIoObject`
+
+In the .oda file:
+```xml
+  <stochObserver className="org.openda.observers.IoObjectStochObserver">
+    <workingDirectory></workingDirectory>
+    <configFile>observations.xml</configFile>
+  </stochObserver>
+```
+
+In the `observations.xml` file. 
+```xml
+<dataObjectStochObserver xmlns="http://www.openda.org">
+  <!--- usual OpenDA configuration of the uncertainty engine omitted -->
+
+  <dataObject workingDirectory="." className="org.hydpy.openda.HyPyIoObject">
+    <fileName>hydpy.properties</fileName>
+  </dataObject>
+
+</dataObjectStochObserver>
+```
+
+Note: If you use both the `HyPyIoObject` and the `HydPyModelFactory`, only the `HyPyIoObject` needs the `hydpy.properties` file as it is initialized first by OpenDA. 
 
 #### Note on parallelisation
 The HydPyOpenDABBModelWrapper may parallelize and hence run faster by distributing simulation runs onto multiple running HydPy Servers (see option 'serverInstances'). 

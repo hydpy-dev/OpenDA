@@ -152,7 +152,7 @@ final class HydPyServerStarter
 
           final File file = new File( logDir.toFile(), filename );
           // REMARK: default charset should be ok, this is for debugging only
-          m_debugOutToClose = new PrintStream( file, Charset.defaultCharset() );
+          m_debugOutToClose = new PrintStream( file, Charset.defaultCharset().name() );
           return m_debugOutToClose;
         }
         catch( final IOException e )

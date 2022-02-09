@@ -31,7 +31,7 @@ first, before being able to calculate the results on our own:
 >>> pub.options.reprdigits = 6
 >>> _ = run_subprocess('oda_run_batch main.oda', verbose=False)
 
-We now load the three simulation results into dictionary `ext_sim` and
+We now load the three simulation results into the dictionary `ext_sims` and
 show the first five values of each series:
 
 >>> import runpy
@@ -50,7 +50,7 @@ different ensemble members at the different simulation time steps.
 These are available in the member-specific subdirectories of folder
 *results*, which have been created automatically due to the *modelFactory*
 settings in file `model.xml`_.  We now read the three `Alpha`_ time
-series into dictionary *ext_alphas*:
+series into the dictionary *ext_alphas*:
 
 >>> import numpy
 >>> ext_alphas = {}
@@ -106,8 +106,7 @@ complete simulation period of 40 days:
 
 >>> for idx in range(1, 4):
 ...     print(f'sim {idx}:', end=' ')
-...     numpy.all(
-...         numpy.round(int_sims[idx], 6) == numpy.round(ext_sims[idx], 6))
+...     numpy.all(numpy.round(int_sims[idx] - ext_sims[idx], 6) == 0.0)
 sim 1: True
 sim 2: True
 sim 3: True

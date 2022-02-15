@@ -79,11 +79,11 @@ final class SpatialNoiseModelConfiguration
   private static ITime parseTimeHorizon( final ConfigTree conf, final ITime fallbackHorizon )
   {
     final String timespanString = conf.getContentString( "simulationTimespan" );
-    // FIXME: if timespanString is empty AND fallbackHorizon not fully defined, we get these arbitrary values....
-    // TODO: instead throw an exception at least
-    double startTime = 0.0;
-    double endTime = 100.0;
-    double incrementTime = 1.0;
+
+    double startTime = Double.NaN;
+    double endTime = Double.NaN;
+    double incrementTime = Double.NaN;
+
     if( timespanString != null )
     {
       Results.putMessage( "analysisTimes=" + timespanString );
@@ -122,6 +122,9 @@ final class SpatialNoiseModelConfiguration
     // config file. Then the difference between the first two times is used as the timeStep for the noise model.
     if( !Double.isNaN( time.getStepMJD() ) )
       incrementTime = time.getStepMJD();
+
+    if( !Double.isFinite( startTime ) || !Double.isFinite( endTime ) || !Double.isFinite( incrementTime ) )
+      throw new RuntimeException( "Failed to determine time span for spatial noise model. either the model must have a defined time span or the 'simulationTimespan' must be set." );
 
     return new Time( startTime, endTime, incrementTime );
   }

@@ -66,4 +66,9 @@ public final class HydPyModelInstance
   {
     return m_server.getItemNames( itemId );
   }
+
+  public void writeConditions( )
+  {
+    m_server.writeConditions( m_instanceId );
+  }
 }

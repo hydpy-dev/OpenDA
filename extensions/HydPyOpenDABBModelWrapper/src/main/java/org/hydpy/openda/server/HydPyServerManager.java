@@ -186,7 +186,10 @@ public final class HydPyServerManager
 
   synchronized void finish( )
   {
-    /* start shutdown for all instances */
+    /* let each instance write its conditions */
+    m_instances.forEach( ( id, instance ) -> instance.writeConditions() );
+
+    /* start shutdown for all servers */
     final List<Future<Void>> futures = m_starters.values().stream().map( HydPyServerStarter::shutdown ).collect( Collectors.toList() );
 
     /* and wait here for shutdown termination (which has a timeout) */

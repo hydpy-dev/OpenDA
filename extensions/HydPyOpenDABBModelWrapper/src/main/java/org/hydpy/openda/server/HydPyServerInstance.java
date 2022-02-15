@@ -120,4 +120,14 @@ final class HydPyServerInstance
   {
     HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().shutdown() );
   }
+
+  public void writeConditions( final String instanceId )
+  {
+    final Callable<Void> callable = ( ) -> {
+      getServer().writeConditions( instanceId );
+      return null;
+    };
+
+    HydPyUtils.submitAndLogExceptions( m_executor, callable );
+  }
 }

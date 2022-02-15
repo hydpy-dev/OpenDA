@@ -54,8 +54,12 @@ final class HydPyOpenDACaller
           "GET_query_itemvalues," + //
           "GET_query_simulationdates"; //
 
-  private static final String METHODS_INITIALIZE_INSTANCE_SERIESWRITERDIR = //
-      "POST_register_serieswriterdir"; //
+  private static final String METHODS_INITIALIZE_INSTANCE_DIRS = //
+      // FIXME: support?
+      // "POST_register_seriesreaderdir," + //
+      "POST_register_serieswriterdir," + //
+          "POST_register_inputconditiondir," + //
+          "POST_register_outputconditiondir"; //
 
   // IMPORTANT: register_simulationdates must be called before the rest,
   // as timeseries-items will be cut to exactly this time span.
@@ -84,7 +88,9 @@ final class HydPyOpenDACaller
           "GET_query_itemvalues," + //
           "GET_query_simulationdates"; //
 
-  private static final String METHODS_REQUEST_ITEMNAMES = "GET_query_itemsubnames";
+  private static final String METHODS_REQUEST_ITEMNAMES = "GET_query_itemsubnames"; //$NON-NLS-1$
+
+  private static final String METHODS_WRITE_CONDITIONS = "GET_save_conditions"; //$NON-NLS-1$
 
   private static final String ITEM_ID_FIRST_DATE_INIT = "firstdate_init"; //$NON-NLS-1$
 
@@ -93,6 +99,10 @@ final class HydPyOpenDACaller
   private static final String ITEM_ID_STEP_SIZE = "stepsize"; //$NON-NLS-1$
 
   private static final String ARGUMENT_SERIESWRITERDIR = "serieswriterdir"; //$NON-NLS-1$
+
+  private static final String ARGUMENT_OUTPUTCONDITIONDIR = "outputconditiondir"; //$NON-NLS-1$
+
+  private static final String ARGUMENT_INPUTCONDITIONDIR = "inputconditiondir"; //$NON-NLS-1$
 
   private Map<String, String[]> m_itemNames = null;
 
@@ -199,9 +209,23 @@ final class HydPyOpenDACaller
     if( instanceDir != null )
     {
       final StringBuffer body2 = new StringBuffer();
-      body2.append( ARGUMENT_SERIESWRITERDIR ).append( '=' ).append( instanceDir.toString() ).append( '\r' ).append( '\n' );
-      m_client.execute( instanceId, METHODS_INITIALIZE_INSTANCE_SERIESWRITERDIR, body2.toString() );
+
+      final File serieswriterDir = new File( instanceDir, "serieswriter" ); //$NON-NLS-1$
+      // - the instancedirs are deleted by openda beforehand; so this must be a separate input dir !
+      final File conditionsInDir = new File( instanceDir, "conditionsFIXME" ); //$NON-NLS-1$
+      final File conditionsOutDir = new File( instanceDir, "conditions" ); //$NON-NLS-1$
+      conditionsOutDir.mkdirs();
+
+      body2.append( ARGUMENT_SERIESWRITERDIR ).append( '=' ).append( serieswriterDir.toString() ).append( '\r' ).append( '\n' );
+      body2.append( ARGUMENT_INPUTCONDITIONDIR ).append( '=' ).append( conditionsInDir.toString() ).append( '\r' ).append( '\n' );
+      body2.append( ARGUMENT_OUTPUTCONDITIONDIR ).append( '=' ).append( conditionsOutDir.toString() ).append( '\r' ).append( '\n' );
+      m_client.execute( instanceId, METHODS_INITIALIZE_INSTANCE_DIRS, body2.toString() );
     }
+
+    // FIXME: let hydpy read initial conditions
+    // - there must be some conditions, else hydpy throws an error
+    // - the instancedirs are deleted by openda beforehand; so this must be a separate input dir anyways
+    // m_client.execute( instanceId, "GET_load_conditions" );
 
     /*
      * build post-body for setting simulation dates.
@@ -332,6 +356,11 @@ final class HydPyOpenDACaller
 
     final Properties props = m_client.execute( instanceId, METHODS_SIMULATE_AND_QUERY_ITEMVALUES );
     return parseItemValues( props );
+  }
+
+  public void writeConditions( final String instanceId ) throws HydPyServerException
+  {
+    m_client.execute( instanceId, METHODS_WRITE_CONDITIONS );
   }
 
   public void shutdown( )

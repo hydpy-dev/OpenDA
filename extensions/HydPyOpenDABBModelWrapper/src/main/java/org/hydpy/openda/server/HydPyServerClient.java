@@ -34,6 +34,32 @@ import org.apache.http.util.EntityUtils;
  */
 final class HydPyServerClient
 {
+  public final class Poster
+  {
+    private final StringBuffer m_body = new StringBuffer();
+
+    private final String m_instanceId;
+
+    private final String m_methods;
+
+    public Poster( final String instanceId, final String methods )
+    {
+      m_instanceId = instanceId;
+      m_methods = methods;
+    }
+
+    public Poster body( final String key, final String value )
+    {
+      m_body.append( key ).append( '=' ).append( value ).append( '\r' ).append( '\n' );
+      return this;
+    }
+
+    public Properties execute( ) throws HydPyServerException
+    {
+      return HydPyServerClient.this.callPost( m_instanceId, m_methods, m_body.toString() );
+    }
+  }
+
   private static final String PATH_STATUS = "status"; //$NON-NLS-1$
 
   private static final String PATH_VERSION = "version"; //$NON-NLS-1$
@@ -163,13 +189,13 @@ final class HydPyServerClient
   // Normally this should already happen via the server-side (using non-threaded HttpServer),
   // however we still get sometimes 'Connection Refused' errors if too many calls are made within a small timespan.
   // Enlarging the socket-queue-size does not really help.
-  public synchronized Properties execute( final String instanceId, final String methods ) throws HydPyServerException
+  public synchronized Properties callGet( final String instanceId, final String methods ) throws HydPyServerException
   {
     final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, methods );
     return callGetAndParse( endpoint, m_timeoutMillis );
   }
 
-  public synchronized Properties execute( final String instanceId, final String methods, final String postBody ) throws HydPyServerException
+  protected synchronized Properties callPost( final String instanceId, final String methods, final String postBody ) throws HydPyServerException
   {
     final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, methods );
     return callPostAndParse( endpoint, m_timeoutMillis, postBody );
@@ -184,11 +210,11 @@ final class HydPyServerClient
     return "ready".equalsIgnoreCase( status );
   }
 
-  public HydPyVersion getVersion( final int timeout ) throws HydPyServerException
+  public Version getVersion( final int timeout ) throws HydPyServerException
   {
     final URI endpoint = buildEndpoint( PATH_VERSION, null, null );
     final Properties response = callGetAndParse( endpoint, timeout );
-    return HydPyVersion.parse( response.getProperty( "version" ) );
+    return Version.parse( response.getProperty( "version" ) );
   }
 
   public void shutdown( )
@@ -210,5 +236,10 @@ final class HydPyServerClient
     m_debugOut.print( ": " ); //$NON-NLS-1$
     m_debugOut.format( message, arguments );
     m_debugOut.println();
+  }
+
+  public Poster callPost( final String instanceId, final String methods )
+  {
+    return new Poster( instanceId, methods );
   }
 }

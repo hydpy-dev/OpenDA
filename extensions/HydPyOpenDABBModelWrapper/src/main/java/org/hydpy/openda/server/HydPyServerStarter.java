@@ -33,8 +33,6 @@ import org.hydpy.openda.server.HydPyServerConfiguration.LogMode;
  */
 final class HydPyServerStarter
 {
-  private final static HydPyVersion VERSION_SUPPORTED = new HydPyVersion( 4, 1, 0, true );
-
   private final ExecutorService m_executor;
 
   private final HydPyServerConfiguration m_config;
@@ -285,12 +283,8 @@ final class HydPyServerStarter
         try
         {
           // Process is still living, continue
-          final HydPyVersion version = client.getVersion( timeoutMillis );
-
-          if( version.compareTo( VERSION_SUPPORTED ) < 0 )
-            System.err.format( "WARNING: HydPy Version of Server (%s) is LESS than the supported vrsion (%s) of this wrapper, do expect compatibility problems.%n", version, VERSION_SUPPORTED );
-          else if( version.compareTo( VERSION_SUPPORTED ) > 0 )
-            debugOut.format( "INFO: HydPy Version of Server (%s) is GREATER than the supported vrsion (%s) of this wrapper%n", version, VERSION_SUPPORTED );
+          final Version version = client.getVersion( timeoutMillis );
+          HydPyRequirements.checkHydPyVersion( version, debugOut );
           return;
         }
         catch( final HydPyServerException ex )

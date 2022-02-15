@@ -29,7 +29,23 @@
         </sequences>
       </reader>
     </readers>
-    <writers/>
+    <writers>
+      <writer>
+        <filetype>nc</filetype>
+        <mode>jit</mode>
+        <sequences>
+          <node>
+            <sim>
+            </sim>
+          </node> 
+          <hland_v1>
+            <states>
+              <lz></lz>
+            </states>
+          </hland_v1>       
+        </sequences>    
+      </writer>
+    </writers>
   </series_io>
   <exchange>
     <setitems>

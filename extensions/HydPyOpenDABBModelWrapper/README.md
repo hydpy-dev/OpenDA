@@ -7,14 +7,13 @@ This version of HydPyOpenDABBModelWrapper is currently compatible with OpenDA Ve
 
 ## Compilation
 
-Building the sources is done via [Gradle](https://gradle.org/). Usually,
-`gradle build` should be enough to create all artefacts.
+Building the sources is done via [Gradle](https://gradle.org/). Usually,`gradle build` should be enough to create all artifacts.
 
 The release will be distributed under 
 _HydPyOpenDABBModelWrapper\build\distributions\HydPyOpenDABBModelWrapper.zip_
 
 [Eclipse](https://www.eclipse.org/) is used as IDE for development, and all 
-required Eclipse artefacts are part of the sources. 
+required Eclipse artifacts are part of the sources. 
 You need the Eclipse Gradle integration, 
 [Eclipse Buildship](https://projects.eclipse.org/projects/tools.buildship), 
 as well.
@@ -25,14 +24,17 @@ Debugging OpenDA and the wrapper implementation from Eclipse works well,
 just create a _Java Application_ configuration with main class 
 `org.openda.application.OpenDaApplication`.
 
-Include all jars from an existing OpenDA installation _bin_ directory 
-into the launch configuration.
+Then add the following to the class path of the launch configuration:
+ * all jars (or all least the openda_core.jar) from an existing OpenDA installation _bin_ directory
+ * the _HydPyOpenDABBModelWrapper_  
 
 ## Installation
 
 To install the _HydPyOpenDABBModelWrapper_ into [OpenDA](http://openda.org/), 
 unzip the contents of _HydPyOpenDABBModelWrapper.zip_ into the _bin_ 
 directory of your OpenDA installation.
+
+If you update to another wrapper version, make sure to delete all files from the previous installation.
 
 ## Usage
 
@@ -62,13 +64,13 @@ The `org.openda.blackbox.wrapper.BBStochModelFactory` uses the _model.xml_ file 
 However, we need to use the HydPy specific `org.hydpy.openda.HydPyModelFactory` instead of the usual 
 `org.openda.blackbox.wrapper.BBModelFactory`.
 
-Usually, the _model.xml_ file refers to two additional configuration files, the
+Usually, the _model.xml_ file refers to two additional configuration files, typically called 
 _stochModel.xml_ and _wrapper.xml_. However, the HydPy wrapper generates 
 both files internally, as it retrieves all information from the HydPy 
 project configuration (see below). 
 
 The rest of the _model.xml_ file (e.g. the `vectorSpecification`) is configured in the usual way. 
-Use the id's from the _hydpy.xml_ configuration file (see below) as parameters id's here.
+Use the id's from the _hydpy.xml_ configuration file (see below) as parameters (exchange item) id's here.
 
 Example:
 ```xml
@@ -80,15 +82,25 @@ Example:
 </blackBoxStochModel>
 ```
 
-The model factory requires the following arguments:
+The model factory supports the following arguments:
 
-* configFile (string, partly required): The configuration file for the model instances. This option is not required if also a '`HyPyIoObject`' in used within the stoch observer (see below).
-* templateDir (string, optional): The template directory for model instances.  
-* instanceDir (string, optional): The instance directory for model instances. The actual directories are post-fixed with the instance number. 
+* configFile (string, partly required): The configuration file for the HydPy Server instances. This option is not required if also a '`HyPyIoObject`' is used within the stoch observer (see below).
+* templateDir (string, optional): The template directory path for model instances.  
+* instanceDir (string, optional): The instance directory path for model instances. The place holder %incanceNumber% within the path can (and should) be used for algorithms that start multiple model instances.
+* inputConditionsDir (string, optional): The directory path from where initial conditions will be read (per model instance). Supports additional placeholder tokens, see below. 
+* outputConditionsDir (string, optional): The directory path where the conditions at the end of the simulation will be written (per model instance). Supports additional placeholder tokens, see below.
+* seriesReaderDir (string, optional): The directory path from where time series will be read (per model instance) by HydPy. Supports additional placeholder tokens, see below.
+* seriesWriterDir (string, optional): The directory path where time series will be written to (per model instance). Supports additional placeholder tokens, see below.
 
-The wrapper resolves the _configFile_ relative to the working directory of the factory.
+If any of these paths is relative, it gets resolved against the working directory. 
 
-The required configuration file for the model instances contains all information required to start the HydPy-Server instances and is in the [Java Properties file format](https://en.wikipedia.org/wiki/.properties).
+The arguments _inputConditionsDir_, _outputConditionsDir_, _seriesReaderDir_ and _seriesWriterDir_ can contain the following placeholder tokens:
+ * INSTANCEID: the instance number, formatted as used in _instanceDir_ 
+ * INSTANCEDIR: the path to the _instanceDir_
+ * HYDPYMODELDIR: the HydPy project directory as specified in the _configFile_
+ * WORKINGDIR : the working directory (not required as pathes are resolved against the working dir, but can be used to make this more explicit)
+
+The required configuration file for the HydPy server instances contains all information required to start HydPy and is in the [Java Properties file format](https://en.wikipedia.org/wiki/.properties).
 The following properties are supported: 
 
 * serverPort (integer): The web port on which to start the HydPy server. Use any free port on your machine. 
@@ -105,8 +117,7 @@ The following properties are supported:
   * HydPy\_Server\_\<instanceId\>.log: the process output stream of the HydPy server instance
   * HydPy\_Server\_\<instanceId\>.err: the process error stream of the HydPy server instance
 
-The wrapper resolves all arguments denoting files or directories relative to 
-the working directory of the factory.
+The wrapper resolves all arguments denoting files or directories relative to the working directory of the factory.
 
 The HyPy wrapper does not use the template and instance directories, but 
 some algorithms write (debug) output to the instances directories if 
@@ -115,8 +126,8 @@ be specified.
 
 #### Note on observations
 To access observed values, the usual mechanisms of OpenDA apply, and any existing _stochObserver_ can be used in the usual way.
-However, it is possible (and convenient) to access the observed values directly from the HydPy model, as these are often already contained within the model. This in turn avoids the 
-necessity to convert the observed values in any format known by the OpenDA implementation.
+However, it is possible (and convenient) to access the observed values directly from the HydPy model, as these are often already contained within the model. 
+This especially avoids the necessity to convert the observed values in any format known by the OpenDA implementation.
 
 In order to achieve this, the wrapper also supplies a `org.openda.interfaces.IDataObject` implementation (namely `org.hydpy.openda.HyPyIoObject`), 
 that can be used in combination with the `org.openda.observers.IoObjectStochObserver`.  
@@ -150,7 +161,7 @@ Note: If you use both the `HyPyIoObject` and the `HydPyModelFactory`, only the `
 
 #### Note on parallelisation
 The HydPyOpenDABBModelWrapper may parallelize and hence run faster by distributing simulation runs onto multiple running HydPy Servers (see option 'serverInstances'). 
-This however depends strongly on the chosen stochastic model, which in turn determines the call order to the underlying model. 
+This however depends strongly on the chosen algorithm, which in turn determines the call order to the underlying model. 
 Especially for ensemble based algorithms (e.g. Ensemble Kalman Filter) this might result in a tremendous speed up. Advised number of server instances is the number of
 simulated ensemble members (note that e.g. in case of ENKF this is the configured number plus one extra 'mean' member), which is equal to the number of 
 model-instances created by OpenDA, or whole divisors of that number.
@@ -181,11 +192,10 @@ With proper configuration, start the main OpenDa batch file, usually via
 
 In turn, the HyPy wrapper starts the 
 [HydPy server](https://hydpy-dev.github.io/hydpy/master/servertools.html), which is 
-optimised for fast communication with OpenDA.
+optimized for fast communication with OpenDA.
 
 Depending on your HyPy and [Python](https://www.python.org/) installation two additional system environment variables can be set:
 * HYD_PY_PYTHON_EXE: Path to the python.exe (defaults to 'python.exe') 
 * HYD_PY_SCRIPT_PATH: Path to the hyd.py script. (defaults to 'hyd.py')
 
-With [Python](https://www.python.org/) already on your system path, you may 
-not need to configure these system variables.
+With [Python](https://www.python.org/) already on your system path, you may not need to configure these system variables.

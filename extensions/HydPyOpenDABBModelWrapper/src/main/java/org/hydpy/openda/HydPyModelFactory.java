@@ -47,15 +47,21 @@ import org.openda.interfaces.ITime;
  */
 public class HydPyModelFactory implements IModelFactory
 {
-  private static final String TOKEN_INSTANCE_DIR_INSTANCE_NUMBER = "%instanceDir%%instanceNumber%";
-
   private static final String TOKEN_INSTANCE_NUMBER = "%instanceNumber%";
 
   private static final String PROPERTY_CONFIG_FILE = "configFile"; //$NON-NLS-1$
 
-  private static final String PROPERTY_TEMPLATE_DIR_PATH = "templateDir"; //$NON-NLS-1$
+  private static final String PROPERTY_TEMPLATE_DIR = "templateDir"; //$NON-NLS-1$
 
-  private static final String PROPERTY_INSTANCE_DIR_PATH = "instanceDir"; //$NON-NLS-1$
+  private static final String PROPERTY_INSTANCE_DIR = "instanceDir"; //$NON-NLS-1$
+
+  private static final String PROPERTY_INPUTCONDITIONSDIR = "inputConditionsDir"; //$NON-NLS-1$
+
+  private static final String PROPERTY_OUTPUTCONDITIONSDIR = "outputConditionsDir"; //$NON-NLS-1$
+
+  private static final String PROPERTY_SERIESWRITERDIR = "seriesWriterDir"; //$NON-NLS-1$
+
+  private static final String PROPERTY_SERIESREADERDIR = "seriesReaderDir"; //$NON-NLS-1$
 
   private static final String IO_OBJECT_ID = "hydPyIo"; //$NON-NLS-1$
 
@@ -75,11 +81,22 @@ public class HydPyModelFactory implements IModelFactory
     final Properties properties = parseArguments( arguments );
     final String filename = properties.getProperty( PROPERTY_CONFIG_FILE );
 
+    // REMARK: the server may also have already been created via the observer, as they are initialized first.
     if( filename != null )
       HydPyServerManager.create( workingDir, filename );
 
-    m_templateDirPath = properties.getProperty( PROPERTY_TEMPLATE_DIR_PATH );
-    m_instanceDirPath = properties.getProperty( PROPERTY_INSTANCE_DIR_PATH );
+    m_templateDirPath = properties.getProperty( PROPERTY_TEMPLATE_DIR );
+    m_instanceDirPath = properties.getProperty( PROPERTY_INSTANCE_DIR );
+
+    final String inputConditionsPath = properties.getProperty( PROPERTY_INPUTCONDITIONSDIR );
+    final String outputConditionsPath = properties.getProperty( PROPERTY_OUTPUTCONDITIONSDIR );
+    final String seriesReaderPath = properties.getProperty( PROPERTY_SERIESREADERDIR );
+    final String seriesWriterPath = properties.getProperty( PROPERTY_SERIESWRITERDIR );
+    final HydPyInstanceConfiguration instanceDirs = new HydPyInstanceConfiguration( workingDir, inputConditionsPath, outputConditionsPath, seriesReaderPath, seriesWriterPath );
+
+    // REMARK: ugly post init, but hard to do otherwise.
+    // The server might not have been created here, so we also cant use the 'create' method.
+    HydPyServerManager.instance().init( instanceDirs );
   }
 
   private Properties parseArguments( final String[] arguments )
@@ -134,15 +151,6 @@ public class HydPyModelFactory implements IModelFactory
     aliasDefinitions.add( "currentTime", keyPrefix, keySuffix, "0.0", null );
     aliasDefinitions.add( "targetTime", keyPrefix, keySuffix, "0.0", null );
 
-    // REMARK: some algorithms (e.g. Sequential) need instance dirs in order to write some intermediate output
-    // like the armaNoiseModel-log.txt. This only works if we actually define the dirs.
-    if( templateDirPath != null )
-      aliasDefinitions.add( "templateDir", keyPrefix, keySuffix, templateDirPath, null );
-    if( instanceDirPath != null )
-      aliasDefinitions.add( "instanceDir", keyPrefix, keySuffix, instanceDirPath, null );
-    // aliasDefinitions.add( "inputFile", keyPrefix, keySuffix, "reactive_pollution_model.input", null );
-    // aliasDefinitions.add( "outputFile", keyPrefix, keySuffix, "reactive_pollution_model.output", null );
-
     final boolean hasDirs = templateDirPath != null && instanceDirPath != null;
     if( hasDirs )
     {
@@ -156,14 +164,14 @@ public class HydPyModelFactory implements IModelFactory
     }
     else
     {
-      final String message = String.format( "Either '%s' and '%s' must be both defined or none of them.", PROPERTY_TEMPLATE_DIR_PATH, PROPERTY_INSTANCE_DIR_PATH );
+      final String message = String.format( "Either '%s' and '%s' must be both defined or none of them.", PROPERTY_TEMPLATE_DIR, PROPERTY_INSTANCE_DIR );
       throw new RuntimeException( message );
     }
 
     /* initialize-actions: do we need to clone a template directory or such? */
     final CloneType cloneType = hasDirs ? BBWrapperConfig.CloneType.Directory : BBWrapperConfig.CloneType.None;
-    final String templateName = hasDirs ? "%templateDir%" : null;
-    final String instanceName = hasDirs ? TOKEN_INSTANCE_DIR_INSTANCE_NUMBER : null;
+    final String templateName = hasDirs ? templateDirPath : null;
+    final String instanceName = hasDirs ? instanceDirPath : null;
     final Collection<BBAction> initializeActions = Collections.emptyList();
 
     final BBAction computeAction = initializeComputeAction( workingDir, aliasDefinitions );
@@ -202,7 +210,7 @@ public class HydPyModelFactory implements IModelFactory
     final String inputFileame = null;
     final String[] arguments = new String[] { TOKEN_INSTANCE_NUMBER };
 
-    ioObjects.put( IO_OBJECT_ID, new DataObjectConfig( IO_OBJECT_ID, HyPyIoObject.class.getName(), inputFileame, aliasDefinitions, arguments ) );
+    ioObjects.put( IO_OBJECT_ID, new DataObjectConfig( IO_OBJECT_ID, HydPyIoObject.class.getName(), inputFileame, aliasDefinitions, arguments ) );
 
     return ioObjects;
   }
@@ -210,6 +218,7 @@ public class HydPyModelFactory implements IModelFactory
   private BBModelConfig initializeModelConfig( final File workingDir, final BBWrapperConfig wrapperConfig, final Collection<IServerItem> items )
   {
     final File configRootDir = workingDir;
+    // TODO: allow instancenumber format to be specified from outside?
     final String instanceNumberFormat = "0";
 
     final ITime startTime = null;
@@ -227,6 +236,7 @@ public class HydPyModelFactory implements IModelFactory
     final boolean doCleanUp = false;
 
     final String[] restartFileNames = new String[] {};
+    // TODO: support saved state
     final String savedStatesDirPrefix = null;
 
     return new BBModelConfig( configRootDir, wrapperConfig, instanceNumberFormat, startTime, endTime, timeStepMJD, startTimeExchangeItemIds, endTimeExchangeItemIds, timeStepExchangeItemIds, vectorConfigs, skipModelActionsIfInstanceDirExists, doCleanUp, restartFileNames, savedStatesDirPrefix );

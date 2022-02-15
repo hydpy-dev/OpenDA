@@ -23,6 +23,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.hydpy.openda.server.HydPyServerClient.Poster;
 import org.joda.time.Instant;
 import org.openda.interfaces.IExchangeItem;
 
@@ -54,8 +55,15 @@ final class HydPyOpenDACaller
           "GET_query_itemvalues," + //
           "GET_query_simulationdates"; //
 
-  private static final String METHODS_INITIALIZE_INSTANCE_SERIESWRITERDIR = //
-      "POST_register_serieswriterdir"; //
+  private static final String METHODS_REGISTER_SERIESREADERDIR = "POST_register_seriesreaderdir";
+
+  private static final String METHODS_REGISTER_SERIESWRITERDIR = "POST_register_serieswriterdir";
+
+  private static final String METHODS_REGISTER_OUTPUTCONDITIONDIR = "POST_register_outputconditiondir";
+
+  private static final String METHODS_SET_AND_LOAD_CONDITIONS = //
+      "POST_register_inputconditiondir," + //
+          "GET_load_conditions"; //
 
   // IMPORTANT: register_simulationdates must be called before the rest,
   // as timeseries-items will be cut to exactly this time span.
@@ -84,7 +92,9 @@ final class HydPyOpenDACaller
           "GET_query_itemvalues," + //
           "GET_query_simulationdates"; //
 
-  private static final String METHODS_REQUEST_ITEMNAMES = "GET_query_itemsubnames";
+  private static final String METHODS_REQUEST_ITEMNAMES = "GET_query_itemsubnames"; //$NON-NLS-1$
+
+  private static final String METHODS_WRITE_CONDITIONS = "GET_save_conditions"; //$NON-NLS-1$
 
   private static final String ITEM_ID_FIRST_DATE_INIT = "firstdate_init"; //$NON-NLS-1$
 
@@ -92,7 +102,13 @@ final class HydPyOpenDACaller
 
   private static final String ITEM_ID_STEP_SIZE = "stepsize"; //$NON-NLS-1$
 
+  private static final String ARGUMENT_SERIESREADERDIR = "seriesreaderdir"; //$NON-NLS-1$
+
   private static final String ARGUMENT_SERIESWRITERDIR = "serieswriterdir"; //$NON-NLS-1$
+
+  private static final String ARGUMENT_OUTPUTCONDITIONDIR = "outputconditiondir"; //$NON-NLS-1$
+
+  private static final String ARGUMENT_INPUTCONDITIONDIR = "inputconditiondir"; //$NON-NLS-1$
 
   private Map<String, String[]> m_itemNames = null;
 
@@ -118,7 +134,7 @@ final class HydPyOpenDACaller
     /* Retrieve initial state and also init-dates and stepsize */
     // REMARK: HydPy always need instanceId; we give fake one here
     m_client.debugOut( m_name, "requesting fixed item states and initial time-grid" );
-    final Properties props = m_client.execute( HydPyServerManager.ANY_INSTANCE, METHODS_REQUEST_INITIAL_STATE );
+    final Properties props = m_client.callGet( HydPyServerManager.ANY_INSTANCE, METHODS_REQUEST_INITIAL_STATE );
 
     m_firstDateValue = props.getProperty( ITEM_ID_FIRST_DATE_INIT );
     m_lastDateValue = props.getProperty( ITEM_ID_LAST_DATE_INIT );
@@ -138,7 +154,7 @@ final class HydPyOpenDACaller
     items.add( AbstractServerItem.newTimeItem( HydPyModelInstance.ITEM_ID_LAST_DATE ) );
     items.add( stepItem );
 
-    /* build item inded */
+    /* build item index */
     final Map<String, AbstractServerItem< ? >> itemIndex = new HashMap<>( items.size() );
     for( final IServerItem item : items )
       itemIndex.put( item.getId(), (AbstractServerItem< ? >)item );
@@ -165,7 +181,7 @@ final class HydPyOpenDACaller
 
   private List<IServerItem> requestItems( ) throws HydPyServerException
   {
-    final Properties props = m_client.execute( null, METHODS_REQUEST_ITEMTYPES );
+    final Properties props = m_client.callGet( null, METHODS_REQUEST_ITEMTYPES );
 
     final List<IServerItem> items = new ArrayList<>( props.size() );
 
@@ -188,34 +204,60 @@ final class HydPyOpenDACaller
   /**
    * Tells HydPy to initialize the state for instanceId with the defined start values. Should be called exactly once per unique instanceId.
    */
-  public List<IExchangeItem> initializeInstance( final String instanceId, final File instanceDir ) throws HydPyServerException
+  public List<IExchangeItem> initializeInstance( final String instanceId, final HydPyInstanceDirs instanceDirs ) throws HydPyServerException
   {
     m_client.debugOut( m_name, "initializing state for instanceId = '%s'", instanceId );
 
     // REMARK: special handling for the simulation-timegrid: we set the whole (aka init) timegrid as starting state for the simulation-timegrid
     // OpenDa will soon request all items and especially the start/stop time and expect the complete, yet unchanged, simulation-time
 
-    // FIXME...
-    if( instanceDir != null )
+    /* directly register outputConditionDir is present, will be used on writeConditions */
+    final File outputConditionsDir = instanceDirs.getOutputConditionsDir();
+    if( outputConditionsDir != null )
     {
-      final StringBuffer body2 = new StringBuffer();
-      body2.append( ARGUMENT_SERIESWRITERDIR ).append( '=' ).append( instanceDir.toString() ).append( '\r' ).append( '\n' );
-      m_client.execute( instanceId, METHODS_INITIALIZE_INSTANCE_SERIESWRITERDIR, body2.toString() );
+      m_client.callPost( instanceId, METHODS_REGISTER_OUTPUTCONDITIONDIR ) //
+          .body( ARGUMENT_OUTPUTCONDITIONDIR, outputConditionsDir.getAbsolutePath() ) //
+          .execute();
+    }
+
+    /* register seriesWriterDir; HydPy will automatically write series if configured in hydpy.xml */
+    final File seriesWriterDir = instanceDirs.getSeriesWriterDir();
+    if( seriesWriterDir != null )
+    {
+      m_client.callPost( instanceId, METHODS_REGISTER_SERIESWRITERDIR ) //
+          .body( ARGUMENT_SERIESWRITERDIR, seriesWriterDir.getAbsolutePath() ) //
+          .execute();
+    }
+
+    /* Load conditions but only if they exist */
+    final File inputConditionsDir = instanceDirs.getInputConditionsDir();
+    if( inputConditionsDir != null )
+    {
+      // REMARK: OpenDa will purge all old instance dirs, so we cannot reuse that structure
+      m_client.callPost( instanceId, METHODS_SET_AND_LOAD_CONDITIONS ) //
+          .body( ARGUMENT_INPUTCONDITIONDIR, inputConditionsDir.toString() ) //
+          .execute();
+    }
+
+    /* load series */
+    final File seriesReaderDir = instanceDirs.getSeriesReaderDir();
+    if( seriesReaderDir != null )
+    {
+      m_client.callPost( instanceId, METHODS_REGISTER_SERIESREADERDIR ) //
+          .body( ARGUMENT_SERIESREADERDIR, inputConditionsDir.toString() ) //
+          .execute();
     }
 
     /*
-     * build post-body for setting simulation dates.
+     * set simulation-dates
      * We always set the initial simulation dates to the init dates of HydPy, as OpenDa we request those to initialize their simulation-range
      */
-    final StringBuffer body = new StringBuffer();
-    body.append( HydPyModelInstance.ITEM_ID_FIRST_DATE ).append( '=' ).append( m_firstDateValue ).append( '\r' ).append( '\n' );
-    body.append( HydPyModelInstance.ITEM_ID_LAST_DATE ).append( '=' ).append( m_lastDateValue ).append( '\r' ).append( '\n' );
+    final Properties props = m_client.callPost( instanceId, METHODS_INITIALIZE_INSTANCE ) //
+        .body( HydPyModelInstance.ITEM_ID_FIRST_DATE, m_firstDateValue ) //
+        .body( HydPyModelInstance.ITEM_ID_LAST_DATE, m_lastDateValue ) //
+        .execute();
 
-    /* set simulation-dates */
-    final Properties props = m_client.execute( instanceId, METHODS_INITIALIZE_INSTANCE, body.toString() );
-    final List<IExchangeItem> parseItemValues = parseItemValues( props );
-
-    return parseItemValues;
+    return parseItemValues( props );
   }
 
   private List<IExchangeItem> parseItemValues( final Properties props ) throws HydPyServerException
@@ -280,7 +322,7 @@ final class HydPyOpenDACaller
     final Instant startTime = startItem.toValue( null, null, 0l, startExItem );
     final Instant endTime = endItem.toValue( null, null, 0l, endExItem );
 
-    final StringBuffer body = new StringBuffer();
+    final Poster caller = m_client.callPost( instanceId, METHODS_REGISTER_ITEMVALUES );
     for( final IExchangeItem exItem : sortedItems.values() )
     {
       final String id = exItem.getId();
@@ -290,14 +332,10 @@ final class HydPyOpenDACaller
       final Object value = item.toValue( startTime, endTime, m_stepSeconds, exItem );
       final String valueText = item.printValue( value );
 
-      body.append( id );
-      body.append( '=' );
-      body.append( valueText );
-      body.append( '\r' );
-      body.append( '\n' );
+      caller.body( id, valueText );
     }
 
-    m_client.execute( instanceId, METHODS_REGISTER_ITEMVALUES, body.toString() );
+    caller.execute();
   }
 
   public synchronized String[] getItemNames( final String itemId ) throws HydPyServerException
@@ -306,7 +344,7 @@ final class HydPyOpenDACaller
     {
       m_itemNames = new HashMap<>();
 
-      final Properties props = m_client.execute( null, METHODS_REQUEST_ITEMNAMES );
+      final Properties props = m_client.callGet( null, METHODS_REQUEST_ITEMNAMES );
 
       /* fetch and parse and the names */
       final Set<String> itemIds = props.stringPropertyNames();
@@ -330,8 +368,13 @@ final class HydPyOpenDACaller
   {
     m_client.debugOut( m_name, "running simulation for current state for instanceId = '%s'", instanceId );
 
-    final Properties props = m_client.execute( instanceId, METHODS_SIMULATE_AND_QUERY_ITEMVALUES );
+    final Properties props = m_client.callGet( instanceId, METHODS_SIMULATE_AND_QUERY_ITEMVALUES );
     return parseItemValues( props );
+  }
+
+  public void writeConditions( final String instanceId ) throws HydPyServerException
+  {
+    m_client.callGet( instanceId, METHODS_WRITE_CONDITIONS );
   }
 
   public void shutdown( )

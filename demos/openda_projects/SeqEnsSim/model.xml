@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <blackBoxStochModel xmlns="http://www.openda.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/blackBoxStochModelConfig.xsd">
   <modelFactory className="org.hydpy.openda.HydPyModelFactory" workingDirectory=".">
+    <!-- Reference to configuration file of HydPy Servers -->
     <arg>configFile:hydpy.properties</arg>
-    <!-- Only activate those if you want the armaNoiseModell-log.txt -->
+
+    <!-- Configure instance dir for black-box model -->
+    <!-- Especially activate those if you want the armaNoiseModell-log.txt for each model instance -->
     <arg>templateDir:results/template</arg>
-    <arg>instanceDir:results/instance</arg>
+    <arg>instanceDir:results/instance%instanceNumber%</arg>
+
+    <!-- configure output of conditions and series for HJydPy using instanceDir -->
+    <arg>outputConditionsDir:%INSTANCEDIR%/conditions</arg>
   </modelFactory>
   <vectorSpecification>
     <state>

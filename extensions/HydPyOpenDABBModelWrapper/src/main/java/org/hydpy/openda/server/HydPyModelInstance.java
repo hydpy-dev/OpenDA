@@ -11,7 +11,6 @@
  */
 package org.hydpy.openda.server;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
@@ -34,12 +33,12 @@ public final class HydPyModelInstance
 
   private final HydPyServerInstance m_server;
 
-  HydPyModelInstance( final String instanceId, final File instanceDir, final HydPyServerInstance server )
+  HydPyModelInstance( final String instanceId, final HydPyInstanceDirs instanceDirs, final HydPyServerInstance server )
   {
     m_instanceId = instanceId;
     m_server = server;
 
-    m_server.initializeInstance( instanceId, instanceDir );
+    m_server.initializeInstance( instanceId, instanceDirs );
   }
 
   public Collection<IServerItem> getItems( )
@@ -65,5 +64,10 @@ public final class HydPyModelInstance
   public String[] getItemNames( final String itemId ) throws HydPyServerException
   {
     return m_server.getItemNames( itemId );
+  }
+
+  public void writeConditions( )
+  {
+    m_server.writeConditions( m_instanceId );
   }
 }

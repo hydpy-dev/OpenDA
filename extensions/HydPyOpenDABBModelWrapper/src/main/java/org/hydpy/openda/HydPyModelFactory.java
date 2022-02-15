@@ -47,6 +47,10 @@ import org.openda.interfaces.ITime;
  */
 public class HydPyModelFactory implements IModelFactory
 {
+  private static final String TOKEN_INSTANCE_DIR_INSTANCE_NUMBER = "%instanceDir%%instanceNumber%";
+
+  private static final String TOKEN_INSTANCE_NUMBER = "%instanceNumber%";
+
   private static final String PROPERTY_CONFIG_FILE = "configFile"; //$NON-NLS-1$
 
   private static final String PROPERTY_TEMPLATE_DIR_PATH = "templateDir"; //$NON-NLS-1$
@@ -108,7 +112,7 @@ public class HydPyModelFactory implements IModelFactory
   {
     final BBWrapperConfig wrapperConfig = initializeWrapperConfig( m_workingDir, m_templateDirPath, m_instanceDirPath );
 
-    final HydPyModelInstance server = HydPyServerManager.instance().getOrCreateInstance( HydPyServerManager.ANY_INSTANCE );
+    final HydPyModelInstance server = HydPyServerManager.instance().getOrCreateInstance( HydPyServerManager.ANY_INSTANCE, null );
     final Collection<IServerItem> items = server.getItems();
     final BBModelConfig bbModelConfig = initializeModelConfig( m_workingDir, wrapperConfig, items );
 
@@ -159,7 +163,7 @@ public class HydPyModelFactory implements IModelFactory
     /* initialize-actions: do we need to clone a template directory or such? */
     final CloneType cloneType = hasDirs ? BBWrapperConfig.CloneType.Directory : BBWrapperConfig.CloneType.None;
     final String templateName = hasDirs ? "%templateDir%" : null;
-    final String instanceName = hasDirs ? "%instanceDir%%instanceNumber%" : null;
+    final String instanceName = hasDirs ? TOKEN_INSTANCE_DIR_INSTANCE_NUMBER : null;
     final Collection<BBAction> initializeActions = Collections.emptyList();
 
     final BBAction computeAction = initializeComputeAction( workingDir, aliasDefinitions );
@@ -179,7 +183,7 @@ public class HydPyModelFactory implements IModelFactory
     final File configDir = workingDir;
     final String exePath = null;
     final String className = HydPyComputeAction.class.getName();
-    final String[] arguments = new String[] { "%instanceNumber%" };
+    final String[] arguments = new String[] { TOKEN_INSTANCE_NUMBER };
 
     final String actualWorkingDirectory = null;
 
@@ -196,7 +200,8 @@ public class HydPyModelFactory implements IModelFactory
     final HashMap<String, DataObjectConfig> ioObjects = new HashMap<>();
 
     final String inputFileame = null;
-    final String[] arguments = new String[] { "%instanceNumber%" };
+    final String[] arguments = new String[] { TOKEN_INSTANCE_NUMBER };
+
     ioObjects.put( IO_OBJECT_ID, new DataObjectConfig( IO_OBJECT_ID, HyPyIoObject.class.getName(), inputFileame, aliasDefinitions, arguments ) );
 
     return ioObjects;

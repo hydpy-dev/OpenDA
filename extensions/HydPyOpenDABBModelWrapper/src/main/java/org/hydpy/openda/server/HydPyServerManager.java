@@ -132,21 +132,21 @@ public final class HydPyServerManager
    *          Several calls with the same instanceId are guaranteed to return the same {@link HydPyModelInstance} process.<br/>
    *          Depending on the configuration of this manager, multiple instanceId's may be mapped to the same HydPy server process.
    */
-  public synchronized HydPyModelInstance getOrCreateInstance( final String instanceId )
+  public synchronized HydPyModelInstance getOrCreateInstance( final String instanceId, final File instanceDir )
   {
     if( !m_instances.containsKey( instanceId ) )
-      m_instances.put( instanceId, createInstance( instanceId ) );
+      m_instances.put( instanceId, createInstance( instanceId, instanceDir ) );
 
     return m_instances.get( instanceId );
   }
 
-  private HydPyModelInstance createInstance( final String instanceId )
+  private HydPyModelInstance createInstance( final String instanceId, final File instanceDir )
   {
     final int processId = toServerId( instanceId );
 
     final HydPyServerInstance server = getOrCreateServer( processId );
 
-    return new HydPyModelInstance( instanceId, server );
+    return new HydPyModelInstance( instanceId, instanceDir, server );
   }
 
   private int toServerId( final String instanceId )

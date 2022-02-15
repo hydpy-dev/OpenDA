@@ -11,6 +11,7 @@
  */
 package org.hydpy.openda.server;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -67,9 +68,9 @@ final class HydPyServerInstance
     return items;
   }
 
-  public synchronized void initializeInstance( final String instanceId )
+  public synchronized void initializeInstance( final String instanceId, final File instanceDir )
   {
-    final Future<List<IExchangeItem>> future = HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().initializeInstance( instanceId ) );
+    final Future<List<IExchangeItem>> future = HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().initializeInstance( instanceId, instanceDir ) );
 
     m_currentSimulations.put( instanceId, future );
   }

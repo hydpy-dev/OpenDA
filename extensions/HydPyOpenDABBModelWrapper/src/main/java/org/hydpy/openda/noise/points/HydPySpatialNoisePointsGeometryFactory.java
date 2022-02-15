@@ -149,7 +149,7 @@ public final class HydPySpatialNoisePointsGeometryFactory implements ISpatialNoi
   {
     try
     {
-      final HydPyModelInstance hydPyInstance = HydPyServerManager.instance().getOrCreateInstance( HydPyServerManager.ANY_INSTANCE );
+      final HydPyModelInstance hydPyInstance = HydPyServerManager.instance().getOrCreateInstance( HydPyServerManager.ANY_INSTANCE, null );
       return hydPyInstance.getItemNames( itemId );
     }
     catch( final Exception e )

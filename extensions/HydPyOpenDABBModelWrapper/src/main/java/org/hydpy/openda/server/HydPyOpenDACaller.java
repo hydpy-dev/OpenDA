@@ -11,6 +11,7 @@
  */
 package org.hydpy.openda.server;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -53,6 +54,9 @@ final class HydPyOpenDACaller
           "GET_query_itemvalues," + //
           "GET_query_simulationdates"; //
 
+  private static final String METHODS_INITIALIZE_INSTANCE_SERIESWRITERDIR = //
+      "POST_register_serieswriterdir"; //
+
   // IMPORTANT: register_simulationdates must be called before the rest,
   // as timeseries-items will be cut to exactly this time span.
   private static final String METHODS_REGISTER_ITEMVALUES = //
@@ -87,6 +91,8 @@ final class HydPyOpenDACaller
   private static final String ITEM_ID_LAST_DATE_INIT = "lastdate_init"; //$NON-NLS-1$
 
   private static final String ITEM_ID_STEP_SIZE = "stepsize"; //$NON-NLS-1$
+
+  private static final String ARGUMENT_SERIESWRITERDIR = "serieswriterdir"; //$NON-NLS-1$
 
   private Map<String, String[]> m_itemNames = null;
 
@@ -182,12 +188,20 @@ final class HydPyOpenDACaller
   /**
    * Tells HydPy to initialize the state for instanceId with the defined start values. Should be called exactly once per unique instanceId.
    */
-  public List<IExchangeItem> initializeInstance( final String instanceId ) throws HydPyServerException
+  public List<IExchangeItem> initializeInstance( final String instanceId, final File instanceDir ) throws HydPyServerException
   {
     m_client.debugOut( m_name, "initializing state for instanceId = '%s'", instanceId );
 
     // REMARK: special handling for the simulation-timegrid: we set the whole (aka init) timegrid as starting state for the simulation-timegrid
     // OpenDa will soon request all items and especially the start/stop time and expect the complete, yet unchanged, simulation-time
+
+    // FIXME...
+    if( instanceDir != null )
+    {
+      final StringBuffer body2 = new StringBuffer();
+      body2.append( ARGUMENT_SERIESWRITERDIR ).append( '=' ).append( instanceDir.toString() ).append( '\r' ).append( '\n' );
+      m_client.execute( instanceId, METHODS_INITIALIZE_INSTANCE_SERIESWRITERDIR, body2.toString() );
+    }
 
     /*
      * build post-body for setting simulation dates.
@@ -199,7 +213,9 @@ final class HydPyOpenDACaller
 
     /* set simulation-dates */
     final Properties props = m_client.execute( instanceId, METHODS_INITIALIZE_INSTANCE, body.toString() );
-    return parseItemValues( props );
+    final List<IExchangeItem> parseItemValues = parseItemValues( props );
+
+    return parseItemValues;
   }
 
   private List<IExchangeItem> parseItemValues( final Properties props ) throws HydPyServerException

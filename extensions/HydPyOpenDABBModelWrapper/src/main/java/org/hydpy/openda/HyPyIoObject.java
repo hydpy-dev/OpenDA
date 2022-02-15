@@ -54,7 +54,7 @@ public final class HyPyIoObject implements IDataObject
         m_instanceId = arguments[1];
       }
 
-      final HydPyModelInstance server = HydPyServerManager.instance().getOrCreateInstance( m_instanceId );
+      final HydPyModelInstance server = HydPyServerManager.instance().getOrCreateInstance( m_instanceId, workingDir );
 
       final List<IExchangeItem> exchangeItems = server.getItemValues();
       for( final IExchangeItem item : exchangeItems )
@@ -93,7 +93,7 @@ public final class HyPyIoObject implements IDataObject
   @Override
   public void finish( )
   {
-    final HydPyModelInstance server = HydPyServerManager.instance().getOrCreateInstance( m_instanceId );
+    final HydPyModelInstance server = HydPyServerManager.instance().getOrCreateInstance( m_instanceId, null );
     server.setItemValues( m_exchangeItems.values() );
   }
 }

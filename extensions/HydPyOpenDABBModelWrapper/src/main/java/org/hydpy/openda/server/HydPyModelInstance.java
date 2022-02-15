@@ -11,6 +11,7 @@
  */
 package org.hydpy.openda.server;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
@@ -33,12 +34,12 @@ public final class HydPyModelInstance
 
   private final HydPyServerInstance m_server;
 
-  HydPyModelInstance( final String instanceId, final HydPyServerInstance server )
+  HydPyModelInstance( final String instanceId, final File instanceDir, final HydPyServerInstance server )
   {
     m_instanceId = instanceId;
     m_server = server;
 
-    m_server.initializeInstance( instanceId );
+    m_server.initializeInstance( instanceId, instanceDir );
   }
 
   public Collection<IServerItem> getItems( )

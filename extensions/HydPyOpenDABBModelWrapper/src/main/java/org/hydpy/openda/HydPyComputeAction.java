@@ -31,7 +31,7 @@ public class HydPyComputeAction implements IConfigurable
   {
     final String instanceId = arguments[0];
 
-    final HydPyModelInstance server = HydPyServerManager.instance().getOrCreateInstance( instanceId );
+    final HydPyModelInstance server = HydPyServerManager.instance().getOrCreateInstance( instanceId, workingDir );
     server.simulate();
   }
 }

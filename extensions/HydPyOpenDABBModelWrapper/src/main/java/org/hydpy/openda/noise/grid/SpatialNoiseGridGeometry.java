@@ -52,7 +52,6 @@ public class SpatialNoiseGridGeometry extends AbstractSpatialNoiseGridGeometry
     final double[] x = getX();
     final double[] y = getY();
 
-    // FIXME: unnecessary allocation of a potentially very large grid: instead do it all in one go....
     final double x2[] = new double[x.length * y.length];
     final double y2[] = new double[x.length * y.length];
     expandGrid( x, y, x2, y2 );

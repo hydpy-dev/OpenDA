@@ -210,10 +210,6 @@ final class HydPyOpenDACaller
     preValues.put( ITEM_ID_STEP_SIZE, m_stepSeconds );
 
     /* fetch fixed items value necessary to parse timeseries */
-//    FIXME globale simulationszeiten hier!
-    // FIXME: check
-//    final Instant startTime = (Instant)preValues.get( HydPyModelInstance.ITEM_ID_FIRST_DATE );
-//    final Instant endTime = (Instant)preValues.get( HydPyModelInstance.ITEM_ID_LAST_DATE );
     final Instant startTime = new Instant( m_firstDateValue );
     final Instant endTime = new Instant( m_lastDateValue );
 

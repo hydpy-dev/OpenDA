@@ -9,7 +9,7 @@
     <arg>templateDir:results/template</arg>
     <arg>instanceDir:results/instance%instanceNumber%</arg>
 
-    <!-- configure output of conditions and series for HJydPy using instanceDir -->
+    <!-- configure output of conditions and series for HydPy using instanceDir -->
     <arg>outputConditionsDir:%INSTANCEDIR%/conditions</arg>
   </modelFactory>
   <vectorSpecification>

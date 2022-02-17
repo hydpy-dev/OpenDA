@@ -27,7 +27,7 @@ import org.openda.interfaces.IExchangeItem.Role;
 /**
  * @author Gernot Belger
  */
-public final class HyPyIoObject implements IDataObject
+public final class HydPyIoObject implements IDataObject
 {
   private final Map<String, IExchangeItem> m_exchangeItems = new HashMap<>();
 

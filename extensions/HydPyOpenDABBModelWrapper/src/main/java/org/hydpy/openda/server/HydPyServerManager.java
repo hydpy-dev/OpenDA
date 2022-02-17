@@ -23,6 +23,8 @@ import java.util.Properties;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+import org.hydpy.openda.HydPyInstanceConfiguration;
+
 /**
  * Manages the life-cycle of the {@link HydPyServerInstance}s, allowing possibly several server processes at once.
  * Model runs will the same instanceId are guaranteed to always get the same server process.
@@ -43,7 +45,9 @@ public final class HydPyServerManager
   public static Properties create( final File workingDir, final String filename )
   {
     if( INSTANCE != null )
-      throw new IllegalStateException( "create wa called more than once" );
+      throw new IllegalStateException( "create was called more than once" );
+
+    HydPyRequirements.checkOpenDaVersion( System.out );
 
     final Properties args = new Properties();
     final Path properiesFile = workingDir.toPath().resolve( filename );
@@ -103,6 +107,8 @@ public final class HydPyServerManager
 
   private int m_nextProcessId = 0;
 
+  private HydPyInstanceConfiguration m_instanceDirs;
+
   public HydPyServerManager( final HydPyServerConfiguration config )
   {
     m_config = config;
@@ -126,6 +132,14 @@ public final class HydPyServerManager
   }
 
   /**
+   * somehow ugly post construction, see comment on where it is called.
+   */
+  public void init( final HydPyInstanceConfiguration instanceDirs )
+  {
+    m_instanceDirs = instanceDirs;
+  }
+
+  /**
    * @param instanceId
    *          Used to fetch a server instance for the given simulation instance id. <br/>
    *          If {@link #ANY_INSTANCE} is given, any available instance is returned (useful for initialization).<br/>
@@ -135,7 +149,10 @@ public final class HydPyServerManager
   public synchronized HydPyModelInstance getOrCreateInstance( final String instanceId, final File instanceDir )
   {
     if( !m_instances.containsKey( instanceId ) )
-      m_instances.put( instanceId, createInstance( instanceId, instanceDir ) );
+    {
+      final HydPyModelInstance instance = createInstance( instanceId, instanceDir );
+      m_instances.put( instanceId, instance );
+    }
 
     return m_instances.get( instanceId );
   }
@@ -146,7 +163,10 @@ public final class HydPyServerManager
 
     final HydPyServerInstance server = getOrCreateServer( processId );
 
-    return new HydPyModelInstance( instanceId, instanceDir, server );
+    final File hydpyModelDir = m_config.modelDir.toFile();
+    final HydPyInstanceDirs instanceDirs = m_instanceDirs.resolve( instanceId, instanceDir, hydpyModelDir );
+
+    return new HydPyModelInstance( instanceId, instanceDirs, server );
   }
 
   private int toServerId( final String instanceId )

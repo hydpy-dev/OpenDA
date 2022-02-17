@@ -23,6 +23,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.commons.lang3.Validate;
 import org.hydpy.openda.server.HydPyServerClient.Poster;
 import org.joda.time.Instant;
 import org.openda.interfaces.IExchangeItem;
@@ -59,8 +60,6 @@ final class HydPyOpenDACaller
 
   private static final String METHODS_REGISTER_SERIESWRITERDIR = "POST_register_serieswriterdir";
 
-  private static final String METHODS_REGISTER_OUTPUTCONDITIONDIR = "POST_register_outputconditiondir";
-
   private static final String METHODS_SET_AND_LOAD_CONDITIONS = //
       "POST_register_inputconditiondir," + //
           "GET_load_conditions"; //
@@ -94,7 +93,9 @@ final class HydPyOpenDACaller
 
   private static final String METHODS_REQUEST_ITEMNAMES = "GET_query_itemsubnames"; //$NON-NLS-1$
 
-  private static final String METHODS_WRITE_CONDITIONS = "GET_save_conditions"; //$NON-NLS-1$
+  private static final String METHODS_WRITE_CONDITIONS = //
+      "POST_register_outputconditiondir," + //$NON-NLS-1$
+          "GET_save_conditions"; //$NON-NLS-1$
 
   private static final String ITEM_ID_FIRST_DATE_INIT = "firstdate_init"; //$NON-NLS-1$
 
@@ -211,16 +212,9 @@ final class HydPyOpenDACaller
     // REMARK: special handling for the simulation-timegrid: we set the whole (aka init) timegrid as starting state for the simulation-timegrid
     // OpenDa will soon request all items and especially the start/stop time and expect the complete, yet unchanged, simulation-time
 
-    /* directly register outputConditionDir is present, will be used on writeConditions */
-    final File outputConditionsDir = instanceDirs.getOutputConditionsDir();
-    if( outputConditionsDir != null )
-    {
-      m_client.callPost( instanceId, METHODS_REGISTER_OUTPUTCONDITIONDIR ) //
-          .body( ARGUMENT_OUTPUTCONDITIONDIR, outputConditionsDir.getAbsolutePath() ) //
-          .execute();
-    }
-
     /* register seriesWriterDir; HydPy will automatically write series if configured in hydpy.xml */
+
+    // TODO: too much knowledge here
     final File seriesWriterDir = instanceDirs.getSeriesWriterDir();
     if( seriesWriterDir != null )
     {
@@ -372,9 +366,13 @@ final class HydPyOpenDACaller
     return parseItemValues( props );
   }
 
-  public void writeConditions( final String instanceId ) throws HydPyServerException
+  public void writeConditions( final String instanceId, final File outputConditionsDir ) throws HydPyServerException
   {
-    m_client.callGet( instanceId, METHODS_WRITE_CONDITIONS );
+    Validate.notNull( outputConditionsDir );
+
+    m_client.callPost( instanceId, METHODS_WRITE_CONDITIONS ) //
+        .body( ARGUMENT_OUTPUTCONDITIONDIR, outputConditionsDir.getAbsolutePath() ) //
+        .execute();
   }
 
   public void shutdown( )

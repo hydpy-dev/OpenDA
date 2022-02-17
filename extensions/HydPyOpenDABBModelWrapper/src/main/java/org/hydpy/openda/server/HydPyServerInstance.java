@@ -11,6 +11,7 @@
  */
 package org.hydpy.openda.server;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -120,10 +121,10 @@ final class HydPyServerInstance
     HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().shutdown() );
   }
 
-  public void writeConditions( final String instanceId )
+  public void writeConditions( final String instanceId, final File outputConditionsDir )
   {
     final Callable<Void> callable = ( ) -> {
-      getServer().writeConditions( instanceId );
+      getServer().writeConditions( instanceId, outputConditionsDir );
       return null;
     };
 

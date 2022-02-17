@@ -11,6 +11,7 @@
  */
 package org.hydpy.openda.server;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
@@ -33,12 +34,20 @@ public final class HydPyModelInstance
 
   private final HydPyServerInstance m_server;
 
+  private HydPyExchangeCache m_itemCache;
+
+  private final HydPyInstanceDirs m_instanceDirs;
+
   HydPyModelInstance( final String instanceId, final HydPyInstanceDirs instanceDirs, final HydPyServerInstance server )
   {
     m_instanceId = instanceId;
+    m_instanceDirs = instanceDirs;
     m_server = server;
 
     m_server.initializeInstance( instanceId, instanceDirs );
+
+    // FIXME: move some code...
+    // TODO actively call series reader and input conditions here?
   }
 
   public Collection<IServerItem> getItems( )
@@ -46,14 +55,26 @@ public final class HydPyModelInstance
     return m_server.getItems();
   }
 
-  public List<IExchangeItem> getItemValues( ) throws HydPyServerException
+  public synchronized List<IExchangeItem> getItemValues( ) throws HydPyServerException
   {
-    return m_server.getItemValues( m_instanceId );
+    final List<IExchangeItem> itemValues = m_server.getItemValues( m_instanceId );
+
+    // FIXME: apply partial hydpy state to complete cache state here
+
+    if( m_itemCache == null )
+      m_itemCache = new HydPyExchangeCache( itemValues );
+
+    return m_itemCache.getItemValues( itemValues );
   }
 
-  public void setItemValues( final Collection<IExchangeItem> values )
+  public synchronized void setItemValues( final Collection<IExchangeItem> values )
   {
-    m_server.setItemValues( m_instanceId, values );
+    /**
+     * Update the cache with the current time-slice of the given values, and then set the
+     * values covering only the time-slice to hydpy
+     */
+    final Collection<IExchangeItem> itemValues = m_itemCache.updateItemValues( values );
+    m_server.setItemValues( m_instanceId, itemValues );
   }
 
   public void simulate( )
@@ -68,6 +89,8 @@ public final class HydPyModelInstance
 
   public void writeConditions( )
   {
-    m_server.writeConditions( m_instanceId );
+    final File outputConditionsDir = m_instanceDirs.getOutputConditionsDir();
+    if( outputConditionsDir != null )
+      m_server.writeConditions( m_instanceId, outputConditionsDir );
   }
 }

@@ -27,19 +27,19 @@ final class Double0DItem extends AbstractServerItem<Double>
   }
 
   @Override
-  public Double parseValue( final String valueText )
+  public Double parseValue( final Instant startTime, final Instant endTime, final long stepSeconds, final String valueText )
   {
     return Double.parseDouble( valueText );
   }
 
   @Override
-  public IExchangeItem toExchangeItem( final Instant startTime, final Instant endTime, final long stepSeconds, final Double value )
+  public IExchangeItem toExchangeItem( final Double value )
   {
     return new DoubleExchangeItem( getId(), getRole(), value );
   }
 
   @Override
-  public Double toValue( final Instant startTime, final Instant endTime, final long stepSeconds, final IExchangeItem exItem )
+  public Double toValue( final IExchangeItem exItem )
   {
     final DoubleExchangeItem dblItem = (DoubleExchangeItem)exItem;
     return dblItem.getValue();
@@ -49,5 +49,19 @@ final class Double0DItem extends AbstractServerItem<Double>
   public String printValue( final Double value )
   {
     return Double.toString( value );
+  }
+
+  @Override
+  public Double mergeToModelRange( final Double initialRangeValue, final Double currentRangeValue )
+  {
+    /* not time dependent */
+    return currentRangeValue;
+  }
+
+  @Override
+  public Double restrictToCurrentRange( final Double modelRangeValue, final Instant currentStartTime, final Instant currentEndTime )
+  {
+    /* not time dependent */
+    return modelRangeValue;
   }
 }

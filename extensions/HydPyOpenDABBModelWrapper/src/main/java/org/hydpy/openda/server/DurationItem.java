@@ -28,13 +28,13 @@ final class DurationItem extends AbstractServerItem<Long>
   }
 
   @Override
-  public Long parseValue( final String valueText ) throws HydPyServerException
+  public Long parseValue( final Instant startTime, final Instant endTime, final long stepSeconds, final String valueText ) throws HydPyServerException
   {
     return parseDuration( valueText );
   }
 
   @Override
-  public IExchangeItem toExchangeItem( final Instant startTime, final Instant endTime, final long stepSeconds, final Long value )
+  public IExchangeItem toExchangeItem( final Long value )
   {
     final double mjd = HydPyUtils.durationToMjd( value );
 
@@ -42,7 +42,7 @@ final class DurationItem extends AbstractServerItem<Long>
   }
 
   @Override
-  public Long toValue( final Instant startTime, final Instant endTime, final long stepSeconds, final IExchangeItem exItem )
+  public Long toValue( final IExchangeItem exItem )
   {
     final DoubleExchangeItem dblItem = (DoubleExchangeItem)exItem;
     final double value = dblItem.getValue();
@@ -97,5 +97,19 @@ final class DurationItem extends AbstractServerItem<Long>
       return String.format( "%dm", standardMinutes );
 
     return String.format( "%ds", seconds.getStandardSeconds() );
+  }
+
+  @Override
+  public Long mergeToModelRange( final Long initialRangeValue, final Long currentRangeValue )
+  {
+    /* not time dependent */
+    return currentRangeValue;
+  }
+
+  @Override
+  public Long restrictToCurrentRange( final Long modelRangeValue, final Instant currentStartTime, final Instant currentEndTime )
+  {
+    /* not time dependent */
+    return modelRangeValue;
   }
 }

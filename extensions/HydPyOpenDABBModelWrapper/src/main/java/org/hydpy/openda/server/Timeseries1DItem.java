@@ -11,8 +11,7 @@
  */
 package org.hydpy.openda.server;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
 
 import org.joda.time.Instant;
 import org.openda.exchange.ArrayExchangeItem;
@@ -26,7 +25,7 @@ import org.openda.utils.Array;
 /**
  * @author Gernot Belger
  */
-public class Timeseries1DItem extends AbstractServerItem<IArray>
+public class Timeseries1DItem extends AbstractServerItem<Timeseries1D>
 {
   public Timeseries1DItem( final String id, final Role role )
   {
@@ -34,7 +33,7 @@ public class Timeseries1DItem extends AbstractServerItem<IArray>
   }
 
   @Override
-  public IArray parseValue( final String valueText )
+  public Timeseries1D parseValue( final Instant startTime, final Instant endTime, final long stepSeconds, final String valueText )
   {
     // [ [timeseris1] [timeseries2] [timeseries3] ... ] i.e. one ts per element
     final String arrayText = valueText//
@@ -48,20 +47,17 @@ public class Timeseries1DItem extends AbstractServerItem<IArray>
     final IArray swappedArray = HydPyUtils.swapArray2D( array );
 
     final int[] dimensions = array.getDimensions();
-    if( dimensions.length != 2 )
-      throw new IllegalStateException( "Values of a Timeseries1D must be a 2-dimensional arrays" );
 
-    return swappedArray;
+    final double[] times = HydPyUtils.buildTimes( dimensions[0], startTime, stepSeconds, endTime );
+
+    return new Timeseries1D( times, swappedArray );
   }
 
   @Override
-  public IExchangeItem toExchangeItem( final Instant startTime, final Instant endTime, final long stepSeconds, final IArray array )
+  public IExchangeItem toExchangeItem( final Timeseries1D timeseries )
   {
-    final int[] dimensions = array.getDimensions();
-    if( dimensions.length != 2 )
-      throw new IllegalStateException();
-
-    final double[] times = HydPyUtils.buildTimes( dimensions[0], startTime, stepSeconds, endTime );
+    final IArray array = timeseries.getValues();
+    final double[] times = timeseries.getTimes();
 
     final IArrayTimeInfo timeInfo = new ArrayTimeInfo( times, 0 );
 
@@ -73,58 +69,63 @@ public class Timeseries1DItem extends AbstractServerItem<IArray>
   }
 
   @Override
-  public IArray toValue( final Instant startTime, final Instant endTime, final long stepSeconds, final IExchangeItem exItem )
+  public Timeseries1D toValue( final IExchangeItem exItem )
   {
     final ArrayExchangeItem timeSeries = (ArrayExchangeItem)exItem;
 
-//    final Instant[] targetTimes = HydPyUtils.buildTimes( startTime, endTime, stepSeconds );
-
-//    final ITimeInfo timeInfo = timeSeries.getTimeInfo();
-//    final double[] times = timeInfo.getTimes();
-//    final Instant[] instants = HydPyUtils.mjdToInstant( times );
-
-//    final int[] timeIndices = findTimeIndices( instants, targetTimes );
-//    final int startIndex = timeIndices[0];
-//    final int endIndex = timeIndices[timeIndices.length - 1];
-
+    final double[] times = timeSeries.getTimes();
     final IArray values = timeSeries.getArray();
 
-//    final IArray slice = values.getSlice( 0, startIndex, endIndex );
-
-//    return slice;
-
-    return values;
-  }
-
-  private int[] findTimeIndices( final Instant[] times, final Instant[] targetTimes )
-  {
-    final Map<Instant, Integer> index = new HashMap<>();
-    for( int i = 0; i < times.length; i++ )
-      index.put( times[i], i );
-
-    final int[] indices = new int[targetTimes.length];
-    for( int i = 0; i < indices.length; i++ )
-    {
-      final Integer pos = index.get( targetTimes[i] );
-      if( pos == null )
-        throw new IllegalStateException();
-
-      indices[i] = pos;
-
-      if( i > 0 && pos != indices[i - 1] + 1 )
-        throw new IllegalStateException( "times not correctly ordered" );
-    }
-
-    return indices;
+    return new Timeseries1D( times, values );
   }
 
   @Override
-  public String printValue( final IArray array )
+  public String printValue( final Timeseries1D timeseries )
   {
+    final IArray array = timeseries.getValues();
+
     final IArray swappedArray = HydPyUtils.swapArray2D( array );
 
     return swappedArray.toString()//
         .replace( '{', '[' ) //
         .replace( '}', ']' );
+  }
+
+  @Override
+  public Timeseries1D mergeToModelRange( final Timeseries1D initialRangeValue, final Timeseries1D currentRangeValue )
+  {
+    final double[] initialTimes = initialRangeValue.getTimes();
+    final IArray initialValues = initialRangeValue.getValues();
+
+    final double[] currentTimes = currentRangeValue.getTimes();
+    final IArray currentValues = currentRangeValue.getValues();
+
+    /* copy and merge arrays */
+    final double[] modelTimes = Arrays.copyOf( initialTimes, initialTimes.length );
+
+    final IArray modelValues = new Array( initialValues );
+
+    final int startIndex = HydPyUtils.indexOfMdj( initialTimes, currentTimes[0] );
+    final int endIndex = HydPyUtils.indexOfMdj( initialTimes, currentTimes[currentTimes.length - 1] );
+    modelValues.setSlice( currentValues, 0, startIndex, endIndex );
+
+    return new Timeseries1D( modelTimes, modelValues );
+  }
+
+  @Override
+  public Timeseries1D restrictToCurrentRange( final Timeseries1D modelRangeValue, final Instant currentStartTime, final Instant currentEndTime )
+  {
+    final double[] modelTimes = modelRangeValue.getTimes();
+    final IArray modelValues = modelRangeValue.getValues();
+    final Instant[] modelInstants = HydPyUtils.mjdToInstant( modelTimes );
+
+    final int startIndex = HydPyUtils.indexOfInstant( modelInstants, currentStartTime );
+    final int endIndex = HydPyUtils.indexOfInstant( modelInstants, currentEndTime );
+
+    final double[] currentTimes = Arrays.copyOfRange( modelTimes, startIndex, endIndex );
+
+    final IArray slice = modelValues.getSlice( 0, startIndex, endIndex );
+
+    return new Timeseries1D( currentTimes, slice );
   }
 }

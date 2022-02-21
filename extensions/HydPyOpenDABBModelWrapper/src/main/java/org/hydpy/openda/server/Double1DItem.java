@@ -27,19 +27,19 @@ final class Double1DItem extends AbstractServerItem<double[]>
   }
 
   @Override
-  public double[] parseValue( final String valueText )
+  public double[] parseValue( final Instant startTime, final Instant endTime, final long stepSeconds, final String valueText )
   {
     return HydPyUtils.parseDoubleArray( valueText );
   }
 
   @Override
-  public IExchangeItem toExchangeItem( final Instant startTime, final Instant endTime, final long stepSeconds, final double[] value )
+  public IExchangeItem toExchangeItem( final double[] value )
   {
     return new DoublesExchangeItem( getId(), getRole(), value );
   }
 
   @Override
-  public double[] toValue( final Instant startTime, final Instant endTime, final long stepSeconds, final IExchangeItem exItem )
+  public double[] toValue( final IExchangeItem exItem )
   {
     final DoublesExchangeItem dblItem = (DoublesExchangeItem)exItem;
     return dblItem.getValuesAsDoubles();
@@ -49,5 +49,19 @@ final class Double1DItem extends AbstractServerItem<double[]>
   public String printValue( final double[] value )
   {
     return HydPyUtils.printDoubleArray( value );
+  }
+
+  @Override
+  public double[] mergeToModelRange( final double[] initialRangeValue, final double[] currentRangeValue )
+  {
+    /* not time dependent */
+    return currentRangeValue;
+  }
+
+  @Override
+  public double[] restrictToCurrentRange( final double[] modelRangeValue, final Instant currentStartTime, final Instant currentEndTime )
+  {
+    /* not time dependent */
+    return modelRangeValue;
   }
 }

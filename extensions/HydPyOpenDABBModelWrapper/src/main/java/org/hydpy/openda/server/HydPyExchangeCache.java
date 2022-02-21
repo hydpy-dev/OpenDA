@@ -11,38 +11,70 @@
  */
 package org.hydpy.openda.server;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.joda.time.Instant;
 import org.openda.interfaces.IExchangeItem;
 
 /**
  * Bridges the gap between HydPy and OpenDA concerning the contents of an exchange item:
- * - OpenDA assumes the exchange items to cover the whole model time
- * - HydPy Server only exchanges data within the current simulation time
+ * - OpenDA algorithm assume (more or less) the exchange items to cover the whole model time
+ * - HydPy Server only exchanges data within the current simulation time span
  * The cache hence holds the complete exchange items in memory (and uses these for OpenDA)
  *
  * @author Gernot Belger
  */
 class HydPyExchangeCache
 {
-  private final List<IExchangeItem> m_initialValues;
+  private final Map<String, Object> m_firstValues;
 
-  public HydPyExchangeCache( final List<IExchangeItem> initialValues )
+  private final Map<String, AbstractServerItem< ? >> m_itemIndex;
+
+  public HydPyExchangeCache( final Map<String, AbstractServerItem< ? >> itemIndex, final Map<String, Object> firstValues )
   {
-    // ITEM_ID_FIRST_DATE
-    m_initialValues = initialValues;
+    m_itemIndex = itemIndex;
+    m_firstValues = new HashMap<>( firstValues );
   }
 
-  public List<IExchangeItem> getItemValues( final List<IExchangeItem> itemValues )
+  public IExchangeItem parseItemValue( final String id, final Object currentRangeValue )
   {
-    // TODO Auto-generated method stub
-    return itemValues;
+    final AbstractServerItem<Object> item = getItem( id );
+
+    /**
+     * currentRange value is the value within the current range, as received from HydPy
+     * To OpenDa we communicate a value that covers the full (aka model) range.
+     */
+    final Object initalRangeValue = m_firstValues.get( id );
+    final Object modelRangeValue = item.mergeToModelRange( initalRangeValue, currentRangeValue );
+
+    return item.toExchangeItem( modelRangeValue );
   }
 
-  public Collection<IExchangeItem> updateItemValues( final Collection<IExchangeItem> values )
+  private <TYPE> AbstractServerItem<TYPE> getItem( final String id )
   {
-    // TODO Auto-generated method stub
-    return values;
+    @SuppressWarnings( "unchecked" ) final AbstractServerItem<TYPE> item = (AbstractServerItem<TYPE>)m_itemIndex.get( id );
+
+    if( item == null )
+      throw new IllegalArgumentException( String.format( "Invalid item id: %s", id ) );
+
+    return item;
+  }
+
+  public String printItemValue( final IExchangeItem exItem, final Instant currentStartTime, final Instant currentEndTime )
+  {
+    final String id = exItem.getId();
+
+    final AbstractServerItem<Object> item = getItem( id );
+
+    final Object modelRangeValue = item.toValue( exItem );
+
+    /**
+     * The value within the exchange item covers the full model range.
+     * We want to restrict this to the current simulation range and only communicate this to HydPy
+     */
+    final Object currentRangeValue = item.restrictToCurrentRange( modelRangeValue, currentStartTime, currentEndTime );
+
+    return item.printValue( currentRangeValue );
   }
 }

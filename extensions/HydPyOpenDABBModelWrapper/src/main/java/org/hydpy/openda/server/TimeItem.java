@@ -32,13 +32,13 @@ final class TimeItem extends AbstractServerItem<Instant>
   }
 
   @Override
-  public Instant parseValue( final String valueText )
+  public Instant parseValue( final Instant startTime, final Instant endTime, final long stepSeconds, final String valueText )
   {
     return Instant.parse( valueText, HYD_PY_DATE_TIME_PARSER );
   }
 
   @Override
-  public IExchangeItem toExchangeItem( final Instant startTime, final Instant endTime, final long stepSeconds, final Instant value )
+  public IExchangeItem toExchangeItem( final Instant value )
   {
     final Instant date = value;
 
@@ -48,7 +48,7 @@ final class TimeItem extends AbstractServerItem<Instant>
   }
 
   @Override
-  public Instant toValue( final Instant startTime, final Instant endTime, final long stepSeconds, final IExchangeItem exItem )
+  public Instant toValue( final IExchangeItem exItem )
   {
     final DoubleExchangeItem dblItem = (DoubleExchangeItem)exItem;
     final double value = dblItem.getValue();
@@ -61,5 +61,19 @@ final class TimeItem extends AbstractServerItem<Instant>
   public String printValue( final Instant value )
   {
     return HYD_PY_DATE_TIME_PARSER.print( value );
+  }
+
+  @Override
+  public Instant mergeToModelRange( final Instant initialRangeValue, final Instant currentRangeValue )
+  {
+    /* not time dependent */
+    return currentRangeValue;
+  }
+
+  @Override
+  public Instant restrictToCurrentRange( final Instant modelRangeValue, final Instant currentStartTime, final Instant currentEndTime )
+  {
+    /* not time dependent */
+    return modelRangeValue;
   }
 }

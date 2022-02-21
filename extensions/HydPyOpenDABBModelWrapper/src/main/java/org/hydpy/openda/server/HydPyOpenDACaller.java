@@ -82,7 +82,7 @@ final class HydPyOpenDACaller
           /* apply hydpy state to instance-state */
           "GET_save_internalconditions," + //
 
-          // TODO: check, warum gibts hier keine combi methode?
+          // TODO: check, why is there no GET_update_itemvalues as with e.g. with query?
           "GET_update_conditionitemvalues," + //
           "GET_update_getitemvalues," + //
           "GET_update_inputitemvalues," + //
@@ -110,6 +110,8 @@ final class HydPyOpenDACaller
   private static final String ARGUMENT_OUTPUTCONDITIONDIR = "outputconditiondir"; //$NON-NLS-1$
 
   private static final String ARGUMENT_INPUTCONDITIONDIR = "inputconditiondir"; //$NON-NLS-1$
+
+  private final Map<String, HydPyExchangeCache> m_instanceCaches = new HashMap<>();
 
   private Map<String, String[]> m_itemNames = null;
 
@@ -148,7 +150,7 @@ final class HydPyOpenDACaller
 
     /* add fixed grid items and determine step seconds */
     final AbstractServerItem<Long> stepItem = AbstractServerItem.newDurationItem( HydPyModelInstance.ITEM_ID_STEP_SIZE );
-    m_stepSeconds = stepItem.parseValue( stepValue );
+    m_stepSeconds = stepItem.parseValue( null, null, 0l, stepValue );
 
     /* REMARK: HydPy thinks in time interval, but OpenDA does not. We always adjust by one timestep when reading/writing to/from HydPy */
     items.add( AbstractServerItem.newTimeItem( HydPyModelInstance.ITEM_ID_FIRST_DATE ) );
@@ -169,9 +171,6 @@ final class HydPyOpenDACaller
 
   private <TYPE> AbstractServerItem<TYPE> getItem( final String id )
   {
-    if( m_itemIndex == null )
-      throw new IllegalStateException();
-
     @SuppressWarnings( "unchecked" ) final AbstractServerItem<TYPE> item = (AbstractServerItem<TYPE>)m_itemIndex.get( id );
 
     if( item == null )
@@ -214,7 +213,6 @@ final class HydPyOpenDACaller
 
     /* register seriesWriterDir; HydPy will automatically write series if configured in hydpy.xml */
 
-    // TODO: too much knowledge here
     final File seriesWriterDir = instanceDirs.getSeriesWriterDir();
     if( seriesWriterDir != null )
     {
@@ -251,19 +249,18 @@ final class HydPyOpenDACaller
         .body( HydPyModelInstance.ITEM_ID_LAST_DATE, m_lastDateValue ) //
         .execute();
 
-    return parseItemValues( props );
-  }
-
-  private List<IExchangeItem> parseItemValues( final Properties props ) throws HydPyServerException
-  {
     /* pre-parse items */
     final Map<String, Object> preValues = preParseValues( props );
+
+    final HydPyExchangeCache instanceCache = new HydPyExchangeCache( m_itemIndex, preValues );
+    m_instanceCaches.put( instanceId, instanceCache );
+    return parseItemValues( instanceCache, preValues );
+  }
+
+  private List<IExchangeItem> parseItemValues( final HydPyExchangeCache instanceCache, final Map<String, Object> preValues )
+  {
     // REMARK: set 'stepSeconds' as fixed item, as these are not returned from HydPy from any state
     preValues.put( ITEM_ID_STEP_SIZE, m_stepSeconds );
-
-    /* fetch fixed items value necessary to parse timeseries */
-    final Instant startTime = new Instant( m_firstDateValue );
-    final Instant endTime = new Instant( m_lastDateValue );
 
     /* parse item values */
     final List<IExchangeItem> values = new ArrayList<>( preValues.size() );
@@ -272,11 +269,9 @@ final class HydPyOpenDACaller
     for( final Entry<String, Object> entry : entrySet )
     {
       final String id = entry.getKey();
-      final AbstractServerItem<Object> item = getItem( id );
-
       final Object preValue = entry.getValue();
 
-      final IExchangeItem value = item.toExchangeItem( startTime, endTime, m_stepSeconds, preValue );
+      final IExchangeItem value = instanceCache.parseItemValue( id, preValue );
       values.add( value );
     }
 
@@ -285,6 +280,9 @@ final class HydPyOpenDACaller
 
   private Map<String, Object> preParseValues( final Properties props ) throws HydPyServerException
   {
+    final Instant startTime = new Instant( props.get( HydPyModelInstance.ITEM_ID_FIRST_DATE ) );
+    final Instant endTime = new Instant( props.get( HydPyModelInstance.ITEM_ID_LAST_DATE ) );
+
     final Map<String, Object> preValues = new TreeMap<>();
 
     for( final String property : props.stringPropertyNames() )
@@ -293,7 +291,7 @@ final class HydPyOpenDACaller
 
       final String valueText = props.getProperty( property );
 
-      final Object value = item.parseValue( valueText );
+      final Object value = item.parseValue( startTime, endTime, m_stepSeconds, valueText );
       preValues.put( property, value );
     }
 
@@ -309,27 +307,26 @@ final class HydPyOpenDACaller
       sortedItems.put( item.getId(), item );
 
     /* fetch current time range */
-    final IExchangeItem startExItem = sortedItems.get( HydPyModelInstance.ITEM_ID_FIRST_DATE );
-    final IExchangeItem endExItem = sortedItems.get( HydPyModelInstance.ITEM_ID_LAST_DATE );
-    final AbstractServerItem<Instant> startItem = getItem( HydPyModelInstance.ITEM_ID_FIRST_DATE );
-    final AbstractServerItem<Instant> endItem = getItem( HydPyModelInstance.ITEM_ID_LAST_DATE );
-    final Instant startTime = startItem.toValue( null, null, 0l, startExItem );
-    final Instant endTime = endItem.toValue( null, null, 0l, endExItem );
+    final Instant currentStartTime = toTime( sortedItems, HydPyModelInstance.ITEM_ID_FIRST_DATE );
+    final Instant currentEndTime = toTime( sortedItems, HydPyModelInstance.ITEM_ID_LAST_DATE );
+
+    final HydPyExchangeCache instanceCache = m_instanceCaches.get( instanceId );
 
     final Poster caller = m_client.callPost( instanceId, METHODS_REGISTER_ITEMVALUES );
     for( final IExchangeItem exItem : sortedItems.values() )
     {
-      final String id = exItem.getId();
-
-      final AbstractServerItem<Object> item = getItem( id );
-
-      final Object value = item.toValue( startTime, endTime, m_stepSeconds, exItem );
-      final String valueText = item.printValue( value );
-
-      caller.body( id, valueText );
+      final String valueText = instanceCache.printItemValue( exItem, currentStartTime, currentEndTime );
+      caller.body( exItem.getId(), valueText );
     }
 
     caller.execute();
+  }
+
+  private Instant toTime( final Map<String, IExchangeItem> sortedItems, final String itemId )
+  {
+    final IExchangeItem exItem = sortedItems.get( itemId );
+    final AbstractServerItem<Instant> serverItem = getItem( HydPyModelInstance.ITEM_ID_FIRST_DATE );
+    return serverItem.toValue( exItem );
   }
 
   public synchronized String[] getItemNames( final String itemId ) throws HydPyServerException
@@ -363,7 +360,12 @@ final class HydPyOpenDACaller
     m_client.debugOut( m_name, "running simulation for current state for instanceId = '%s'", instanceId );
 
     final Properties props = m_client.callGet( instanceId, METHODS_SIMULATE_AND_QUERY_ITEMVALUES );
-    return parseItemValues( props );
+
+    /* pre-parse items */
+    final Map<String, Object> preValues = preParseValues( props );
+
+    final HydPyExchangeCache instanceCache = m_instanceCaches.get( instanceId );
+    return parseItemValues( instanceCache, preValues );
   }
 
   public void writeConditions( final String instanceId, final File outputConditionsDir ) throws HydPyServerException

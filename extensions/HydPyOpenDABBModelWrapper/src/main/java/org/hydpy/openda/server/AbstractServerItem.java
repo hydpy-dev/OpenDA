@@ -96,11 +96,15 @@ abstract class AbstractServerItem<TYPE> implements IServerItem
     return m_role;
   }
 
-  public abstract TYPE parseValue( final String valueText ) throws HydPyServerException;
+  public abstract TYPE parseValue( Instant startTime, Instant endTime, long stepSeconds, String valueText ) throws HydPyServerException;
 
-  public abstract IExchangeItem toExchangeItem( Instant startTime, Instant endTime, long stepSeconds, final TYPE value );
+  public abstract IExchangeItem toExchangeItem( final TYPE value );
 
-  public abstract TYPE toValue( Instant startTime, Instant endTime, long stepSeconds, IExchangeItem exItem );
+  public abstract TYPE toValue( IExchangeItem exItem );
 
   public abstract String printValue( TYPE value );
+
+  public abstract TYPE mergeToModelRange( TYPE initialRangeValue, TYPE currentRangeValue );
+
+  public abstract TYPE restrictToCurrentRange( TYPE modelRangeValue, Instant currentStartTime, Instant currentEndTime );
 }

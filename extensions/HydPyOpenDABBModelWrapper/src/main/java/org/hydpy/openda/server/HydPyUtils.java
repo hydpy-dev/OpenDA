@@ -12,7 +12,9 @@
 package org.hydpy.openda.server;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.concurrent.Callable;
@@ -266,6 +268,16 @@ public final class HydPyUtils
     return instants;
   }
 
+  public static double[] instantToMjd( final Instant[] instants )
+  {
+    final double[] mjd = new double[instants.length];
+
+    for( int i = 0; i < instants.length; i++ )
+      mjd[i] = instantToMjd( instants[i] );
+
+    return mjd;
+  }
+
   public static double instantToMjd( final Instant instant )
   {
     return TimeUtils.date2Mjd( instant.toDate() );
@@ -298,7 +310,7 @@ public final class HydPyUtils
   }
 
   /**
-   * Submits a callable to the given executor.
+   * Submits a {@link Callable} to the given executor.
    * Wraps the callable, so any exception will be logged.
    * This is necessary, as exceptions will typically only propagated once Future#get is called, which we sometimes don't do.
    */
@@ -320,5 +332,23 @@ public final class HydPyUtils
         }
       }
     } );
+  }
+
+  public static int indexOfInstant( final Instant[] instants, final Instant searchInstant )
+  {
+    final int index = Arrays.binarySearch( instants, searchInstant );
+    if( index < 0 )
+      throw new NoSuchElementException();
+
+    return index;
+  }
+
+  public static int indexOfMdj( final double[] times, final double searchTime )
+  {
+    final int index = Arrays.binarySearch( times, searchTime );
+    if( index < 0 )
+      throw new NoSuchElementException();
+
+    return index;
   }
 }

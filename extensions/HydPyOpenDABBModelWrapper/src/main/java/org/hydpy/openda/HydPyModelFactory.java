@@ -55,6 +55,8 @@ public class HydPyModelFactory implements IModelFactory
 
   private static final String PROPERTY_INSTANCE_DIR = "instanceDir"; //$NON-NLS-1$
 
+  private static final String PROPERTY_INSTANCE_NUMBERFORMAT = "instanceNumberFormat"; //$NON-NLS-1$
+
   private static final String PROPERTY_INPUTCONDITIONSDIR = "inputConditionsDir"; //$NON-NLS-1$
 
   private static final String PROPERTY_OUTPUTCONDITIONSDIR = "outputConditionsDir"; //$NON-NLS-1$
@@ -73,6 +75,8 @@ public class HydPyModelFactory implements IModelFactory
 
   private File m_workingDir;
 
+  private String m_instanceNumberFormat;
+
   @Override
   public void initialize( final File workingDir, final String[] arguments )
   {
@@ -87,6 +91,7 @@ public class HydPyModelFactory implements IModelFactory
 
     m_templateDirPath = properties.getProperty( PROPERTY_TEMPLATE_DIR );
     m_instanceDirPath = properties.getProperty( PROPERTY_INSTANCE_DIR );
+    m_instanceNumberFormat = parseInstanceNumberFormat( properties );
 
     final String inputConditionsPath = properties.getProperty( PROPERTY_INPUTCONDITIONSDIR );
     final String outputConditionsPath = properties.getProperty( PROPERTY_OUTPUTCONDITIONSDIR );
@@ -97,6 +102,26 @@ public class HydPyModelFactory implements IModelFactory
     // REMARK: ugly post init, but hard to do otherwise.
     // The server might not have been created here, so we also cant use the 'create' method.
     HydPyServerManager.instance().init( instanceDirs );
+  }
+
+  public String parseInstanceNumberFormat( final Properties properties )
+  {
+    final String value = properties.getProperty( PROPERTY_INSTANCE_NUMBERFORMAT, "0" );
+    switch( value )
+    {
+      case "0":
+        // REMARK: BBModelInstance checks explicetly for the following three, and
+        // everything else will lead to String.valueOf(instanceNumber)
+        // We want to give a feed-back however if the entered value makes no sense/is not supported
+      case "00":
+      case "000":
+      case "0000":
+        return value;
+
+      default:
+        final String message = String.format( "Property '%s' may only have the values '0', '00', '000' or '0000' but is: %s", PROPERTY_INSTANCE_NUMBERFORMAT, value );
+        throw new RuntimeException( message );
+    }
   }
 
   private Properties parseArguments( final String[] arguments )
@@ -218,8 +243,6 @@ public class HydPyModelFactory implements IModelFactory
   private BBModelConfig initializeModelConfig( final File workingDir, final BBWrapperConfig wrapperConfig, final Collection<IServerItem> items )
   {
     final File configRootDir = workingDir;
-    // TODO: allow instancenumber format to be specified from outside?
-    final String instanceNumberFormat = "0";
 
     final ITime startTime = null;
     final ITime endTime = null;
@@ -239,7 +262,7 @@ public class HydPyModelFactory implements IModelFactory
     // TODO: support saved state
     final String savedStatesDirPrefix = null;
 
-    return new BBModelConfig( configRootDir, wrapperConfig, instanceNumberFormat, startTime, endTime, timeStepMJD, startTimeExchangeItemIds, endTimeExchangeItemIds, timeStepExchangeItemIds, vectorConfigs, skipModelActionsIfInstanceDirExists, doCleanUp, restartFileNames, savedStatesDirPrefix );
+    return new BBModelConfig( configRootDir, wrapperConfig, m_instanceNumberFormat, startTime, endTime, timeStepMJD, startTimeExchangeItemIds, endTimeExchangeItemIds, timeStepExchangeItemIds, vectorConfigs, skipModelActionsIfInstanceDirExists, doCleanUp, restartFileNames, savedStatesDirPrefix );
   }
 
   private Collection<BBModelVectorConfig> initializeVectorConfigs( final BBWrapperConfig wrapperConfig, final Collection<IServerItem> items )

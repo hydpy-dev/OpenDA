@@ -87,6 +87,7 @@ The model factory supports the following arguments:
 * configFile (string, partly required): The configuration file for the HydPy Server instances. This option is not required if also a '`HyPyIoObject`' is used within the stoch observer (see below).
 * templateDir (string, optional): The template directory path for model instances.  
 * instanceDir (string, optional): The instance directory path for model instances. The place holder %incanceNumber% within the path can (and should) be used for algorithms that start multiple model instances.
+* instanceNumberFormat (fixed values, optional): How instance number gets formatted into the instance directories (original option from BBStochModel). Allowed values are '0', '00', '000' and '0000', determining on how many digits the instance number will be left-padded with '0's. E.g. for '000', instance 1 will be printed as '001', instance 17 as '017' and instance 999 as '999'.    
 * inputConditionsDir (string, optional): The directory path from where initial conditions will be read (per model instance). Supports additional placeholder tokens, see below. 
 * outputConditionsDir (string, optional): The directory path where the conditions at the end of the simulation will be written (per model instance). Supports additional placeholder tokens, see below.
 * seriesReaderDir (string, optional): The directory path from where time series will be read (per model instance) by HydPy. Supports additional placeholder tokens, see below.

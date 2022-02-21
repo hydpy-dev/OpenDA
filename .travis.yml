@@ -28,8 +28,10 @@ deploy:
   provider: releases
   api_key:
     secure: proYCof2xk11EDgj7wl863EHpd7U8UNLVHh/Dl0c8MCbqjICdicKxpdRLAkGolLGmkif4H1Yb2Kbc0obctBRN2FFEOTOHVrZV4wVHRv06mEErPqGUBjhPSiUPNtVTZDnR43Yuak6gMp+rptz3oHZPHGTlEOpFV7jEAx5kff8FVxssN+AeRz61HR2FoUYTlWiNPjnqFn1ZU2CIxhkk5IpEVrPCrmQYgsGSJqbahvfp+KHpWeI7nVp5+LHDvs3ZgLBpHpfS7UArIdypKtCXWgHUDpk04OsqLhxkoAQsY5t0jcKSeBWkjeRxq8MxTmscOha8MGIDl8/246r7o+YiMVddGylQyGl3ykZ2NQ7lgUKjrfzFmJIv1OE9+zUx8fANkcRtBuUwIS1bLtUBWs+d9iyYTrDef/7TIfiAWziWmhcrN4qf8Yyx6Q2wlTBQ8PJ57c6JESPxB+guB0FmibYRcAHK1bkiKEeVdsWhrWSPaTGuBL3927/+JipTBRlgxdLlpyJN9F7ox9i7lt8syeGUTs3WusXENy8QJocYBxgg13+OuVduSR80S8Ltvs0lP7F+Hy6/Xg+watHoeOzKNBSI7mjm1gRl1UsQLZgyslQDAW+rQ6qgmcdumR9fdGyNtXshGUxmSPkm88v8Dad+FVXnM62yB4iuYQA2EQ48H53eU+GjkA=
-  file: $TRAVIS_BUILD_DIR/extensions/HydPyOpenDABBModelWrapper/build/distributions/HydPyOpenDABBModelWrapper-$BUILD_VERSION.zip
+  file: $TRAVIS_BUILD_DIR/extensions/HydPyOpenDABBModelWrapper/build/distributions/*.zip
   skip_cleanup: true
+  prerelease: true
+  release_notes_file: $TRAVIS_BUILD_DIR/extensions/HydPyOpenDABBModelWrapper/ChangeLog.md
   on:
     repo: hydpy-dev/OpenDA
     tags: true

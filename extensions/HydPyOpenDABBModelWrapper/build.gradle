@@ -94,10 +94,22 @@ task printVersionName {
     }
 }
 
+
 // Distribute compilation and non-OpenDA libs into one single zip file
 task buildZip(type: Zip) {
     from jar
     from configurations.runtimeClasspath
 }
+build.dependsOn buildZip	
 
-build.dependsOn buildZip
+// Distribute demos into a separater 'HydPyOpenDABBModelWrapper-Demos-major.minor.bugfix.zip
+tasks.register('demosDistribution', Zip) {
+    archiveAppendix = "Demos"
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+
+    from ("../../demos"){
+    	include "**/*"
+    	exclude "**/.*"
+    }
+}
+build.dependsOn demosDistribution

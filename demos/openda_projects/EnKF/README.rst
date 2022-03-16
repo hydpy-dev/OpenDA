@@ -21,13 +21,13 @@ Adjust model states with the Ensemble Kalman Filter
 ---------------------------------------------------
 
 This example extends the `multiple sequential runs`_ example.  Now `OpenDA`_
-does not only perturb some model properties randomly but does so to improve
-simulations.  There is also a similarity to the `calibration example`_, in so
-far that both are artificial data experiments. In the `calibration example`_,
-we checked the `DUD`_ algorithm being able to find the `Alpha`_ value we knew
-to be the "true" one.  In this example, we instead distort the model state
-`LZ`_ during a simulation run and check the Ensemble Kalman Filter to adjust
-another simulation run to this distortion.
+not only perturbs some model properties randomly but also improves simulations.
+There is also a similarity to the `calibration example`_, in so far that both
+are artificial data experiments. In the `calibration example`_, we checked the
+`DUD`_ algorithm being able to find the `Alpha`_ value we knew to be the "true"
+one.  In this example, we instead distort the model state `LZ`_ during a
+simulation run and check the Ensemble Kalman Filter to adjust another
+simulation run to this distortion.
 
 Prepare the artificial data
 ...........................
@@ -130,6 +130,23 @@ closely than the uncorrected discharge:
 3.163455, 3.059748, 2.919573, 2.782616, 2.674682, 2.560758, 2.446207
 >>> print_values(sim_true[-7:])
 3.092645, 2.964919, 2.842468, 2.725074, 2.612528, 2.504631, 2.40119
+
+Besides extracting the corrected discharge from the `OpenDA`_ result file, we
+can read it from HydPy's ensemble member-specific output files.  `hydpy.xml`_
+configures writing simulated discharge and lower zone storage values into
+NetCDF files.  `model.xml`_ defines the names of the respective instance
+directories for these NetCDF files.  For example, we find the simulated
+discharge for the best-guess ensemble member in the following file:
+
+>>> ncfilepath = "results/instance_00/series/node_sim_q.nc"
+
+The contained data is (nearly) identical to the one extracted from the
+`OpenDA`_ result file:
+
+>>> from netCDF4 import Dataset
+>>> with Dataset(ncfilepath) as ncfile:
+...     print_values(ncfile["sim_q"][-7:, 0])
+3.163454, 3.059747, 2.919572, 2.782614, 2.674681, 2.560757, 2.446206
 
 The following figure shows the results for the entire simulation period
 and includes uncertainty bounds for the estimated value of `LZ`_:

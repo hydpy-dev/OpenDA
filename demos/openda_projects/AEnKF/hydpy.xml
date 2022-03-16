@@ -30,19 +30,19 @@
     </readers>
     <writers>
       <writer>
-        <filetype>nc</filetype>
-        <mode>jit</mode>
         <sequences>
           <node>
             <sim>
             </sim>
-          </node> 
+          </node>
           <hland_v1>
             <states>
-              <lz></lz>
+              <lz/>
             </states>
-          </hland_v1>       
-        </sequences>    
+          </hland_v1>
+        </sequences>
+        <filetype>nc</filetype>
+        <mode>jit</mode>
       </writer>
     </writers>
   </series_io>

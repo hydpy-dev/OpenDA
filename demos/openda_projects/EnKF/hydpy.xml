@@ -22,10 +22,11 @@
   </selections>
   <conditions_io>
     <inputdir>init_1996_01_01_00_00_00</inputdir>
-    <outputdir>init_1997-01-01_00_00_00</outputdir>
     <zip>false</zip>
   </conditions_io>
   <series_io>
+    <filetype>nc</filetype>
+    <mode>jit</mode>
     <readers>
       <reader info="all input data">
         <sequences>
@@ -40,7 +41,20 @@
         </sequences>
       </reader>
     </readers>
-    <writers/>
+    <writers>
+      <writer>
+        <sequences>
+          <node>
+            <sim/>
+          </node>
+          <hland_v1>
+            <states>
+              <lz/>
+            </states>
+          </hland_v1>
+        </sequences>
+      </writer>
+    </writers>
   </series_io>
   <exchange>
     <setitems>
@@ -48,7 +62,7 @@
         <states>
           <lz>
             <name>lz</name>
-            <level>subunit</level>
+            <level>device</level>
             <init>8.18711</init>
           </lz>
         </states>

@@ -12,6 +12,7 @@
 package org.hydpy.openda;
 
 import java.io.File;
+import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hydpy.openda.server.HydPyInstanceDirs;
@@ -24,6 +25,14 @@ import org.hydpy.openda.server.HydPyServerManager;
  */
 public final class HydPyInstanceConfiguration
 {
+  private static final String PROPERTY_INPUTCONDITIONSDIR = "inputConditionsDir"; //$NON-NLS-1$
+
+  private static final String PROPERTY_OUTPUTCONDITIONSDIR = "outputConditionsDir"; //$NON-NLS-1$
+
+  private static final String PROPERTY_SERIESWRITERDIR = "seriesWriterDir"; //$NON-NLS-1$
+
+  private static final String PROPERTY_SERIESREADERDIR = "seriesReaderDir"; //$NON-NLS-1$
+
   private final File m_workingDir;
 
   private final String m_inputConditionsPath;
@@ -34,7 +43,16 @@ public final class HydPyInstanceConfiguration
 
   private final String m_seriesWriterPath;
 
-  public HydPyInstanceConfiguration( final File workingDir, final String inputConditionsPath, final String outputConditionsPath, final String seriesReaderPath, final String seriesWriterPath )
+  public static HydPyInstanceConfiguration read( final File workingDir, final Properties properties )
+  {
+    final String inputConditionsPath = properties.getProperty( PROPERTY_INPUTCONDITIONSDIR );
+    final String outputConditionsPath = properties.getProperty( PROPERTY_OUTPUTCONDITIONSDIR );
+    final String seriesReaderPath = properties.getProperty( PROPERTY_SERIESREADERDIR );
+    final String seriesWriterPath = properties.getProperty( PROPERTY_SERIESWRITERDIR );
+    return new HydPyInstanceConfiguration( workingDir, inputConditionsPath, outputConditionsPath, seriesReaderPath, seriesWriterPath );
+  }
+
+  private HydPyInstanceConfiguration( final File workingDir, final String inputConditionsPath, final String outputConditionsPath, final String seriesReaderPath, final String seriesWriterPath )
   {
     m_workingDir = workingDir;
     m_inputConditionsPath = inputConditionsPath;

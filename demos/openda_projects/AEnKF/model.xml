@@ -8,9 +8,6 @@
     <arg>templateDir:results/template</arg>
     <arg>instanceNumberFormat:00</arg>
     <arg>instanceDir:results/instance_%instanceNumber%</arg>
-    <!-- configure output of conditions and series for HydPy using instanceDir -->
-    <arg>outputConditionsDir:%INSTANCEDIR%/conditions</arg>
-    <arg>seriesWriterDir:%INSTANCEDIR%/series</arg>
   </modelFactory>
   <vectorSpecification>
     <state>

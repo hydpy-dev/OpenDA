@@ -3,7 +3,9 @@
 Allows running a [HydPy](https://github.com/hydpy-dev/hydpy) model as a 
 BlackBoxModel in [OpenDA](http://openda.org/).
 
-This version of HydPyOpenDABBModelWrapper is currently compatible with OpenDA Version 2.4.5. 
+This version of _HydPyOpenDABBModelWrapper_ is currently compatible with OpenDA Version 3.0.x. 
+
+You can download the pre-compiled version of the wrapper [here](https://github.com/hydpy-dev/OpenDA/releases) at GitHub and directly skip to [installation](#installation). 
 
 ## Compilation
 
@@ -88,20 +90,18 @@ The model factory supports the following arguments:
 * templateDir (string, optional): The template directory path for model instances.  
 * instanceDir (string, optional): The instance directory path for model instances. The place holder %incanceNumber% within the path can (and should) be used for algorithms that start multiple model instances.
 * instanceNumberFormat (fixed values, optional): How instance number gets formatted into the instance directories (original option from BBStochModel). Allowed values are '0', '00', '000' and '0000', determining on how many digits the instance number will be left-padded with '0's. E.g. for '000', instance 1 will be printed as '001', instance 17 as '017' and instance 999 as '999'.    
-* inputConditionsDir (string, optional): The directory path from where initial conditions will be read (per model instance). Supports additional placeholder tokens, see below. 
-* outputConditionsDir (string, optional): The directory path where the conditions at the end of the simulation will be written (per model instance). Supports additional placeholder tokens, see below.
-* seriesReaderDir (string, optional): The directory path from where time series will be read (per model instance) by HydPy. Supports additional placeholder tokens, see below.
-* seriesWriterDir (string, optional): The directory path where time series will be written to (per model instance). Supports additional placeholder tokens, see below.
 
 If any of these paths is relative, it gets resolved against the working directory. 
 
-The arguments _inputConditionsDir_, _outputConditionsDir_, _seriesReaderDir_ and _seriesWriterDir_ can contain the following placeholder tokens:
- * INSTANCEID: the instance number, formatted as used in _instanceDir_ 
- * INSTANCEDIR: the path to the _instanceDir_
- * HYDPYMODELDIR: the HydPy project directory as specified in the _configFile_
- * WORKINGDIR : the working directory (not required as pathes are resolved against the working dir, but can be used to make this more explicit)
+The HyPy wrapper does not use the template and instance directories, but 
+some algorithms write (debug) output to the instances directories if 
+existing. If this output is of interest, both directory arguments must
+be specified.
+
+#### HydPy Configuration File
 
 The required configuration file for the HydPy server instances contains all information required to start HydPy and is in the [Java Properties file format](https://en.wikipedia.org/wiki/.properties).
+It also allows to configure model-instance specific input and output directories. 
 The following properties are supported: 
 
 * serverPort (integer): The web port on which to start the HydPy server. Use any free port on your machine. 
@@ -117,13 +117,18 @@ The following properties are supported:
   * HydPy\_Client\_\<instanceId\>.log: the calls from the wrapper to the HydPy server instances.
   * HydPy\_Server\_\<instanceId\>.log: the process output stream of the HydPy server instance
   * HydPy\_Server\_\<instanceId\>.err: the process error stream of the HydPy server instance
+* inputConditionsDir (string, optional): The directory path from where initial conditions will be read (per model instance). Supports additional placeholder tokens, see below. 
+* outputConditionsDir (string, optional): The directory path where the conditions at the end of the simulation will be written (per model instance). Supports additional placeholder tokens, see below.
+* seriesReaderDir (string, optional): The directory path from where time series will be read (per model instance) by HydPy. Supports additional placeholder tokens, see below.
+* seriesWriterDir (string, optional): The directory path where time series will be written to (per model instance). Supports additional placeholder tokens, see below.
 
 The wrapper resolves all arguments denoting files or directories relative to the working directory of the factory.
 
-The HyPy wrapper does not use the template and instance directories, but 
-some algorithms write (debug) output to the instances directories if 
-existing. If this output is of interest, both directory arguments must
-be specified.
+The arguments _inputConditionsDir_, _outputConditionsDir_, _seriesReaderDir_ and _seriesWriterDir_ can contain the following placeholder tokens:
+ * INSTANCEID: the instance number, formatted as used in _instanceDir_ 
+ * INSTANCEDIR: the path to the _instanceDir_
+ * HYDPYMODELDIR: the HydPy project directory as specified in the _configFile_
+ * WORKINGDIR : the working directory (not required as pathes are resolved against the working dir, but can be used to make this more explicit)
 
 #### Note on observations
 To access observed values, the usual mechanisms of OpenDA apply, and any existing _stochObserver_ can be used in the usual way.

@@ -64,7 +64,9 @@ public final class HydPyServerManager
 
     final HydPyServerConfiguration hydPyConfig = new HydPyServerConfiguration( workingDir.toPath(), args );
 
-    INSTANCE = new HydPyServerManager( hydPyConfig );
+    final HydPyInstanceConfiguration instanceDirs = HydPyInstanceConfiguration.read( workingDir, args );
+
+    INSTANCE = new HydPyServerManager( hydPyConfig, instanceDirs );
 
     return args;
   }
@@ -105,13 +107,14 @@ public final class HydPyServerManager
 
   private final HydPyServerConfiguration m_config;
 
+  private final HydPyInstanceConfiguration m_instanceDirs;
+
   private int m_nextProcessId = 0;
 
-  private HydPyInstanceConfiguration m_instanceDirs;
-
-  public HydPyServerManager( final HydPyServerConfiguration config )
+  public HydPyServerManager( final HydPyServerConfiguration config, final HydPyInstanceConfiguration instanceDirs )
   {
     m_config = config;
+    m_instanceDirs = instanceDirs;
 
     // REMARK: always try to shutdown the running HydPy servers.
     Runtime.getRuntime().addShutdownHook( new ShutdownThread( this ) );
@@ -129,14 +132,6 @@ public final class HydPyServerManager
       m_starters.put( processId, new HydPyServerStarter( m_config, processId ) );
 
     return m_starters.get( processId );
-  }
-
-  /**
-   * somehow ugly post construction, see comment on where it is called.
-   */
-  public void init( final HydPyInstanceConfiguration instanceDirs )
-  {
-    m_instanceDirs = instanceDirs;
   }
 
   /**

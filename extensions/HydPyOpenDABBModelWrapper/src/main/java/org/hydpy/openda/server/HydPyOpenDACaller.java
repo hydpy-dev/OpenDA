@@ -212,7 +212,6 @@ final class HydPyOpenDACaller
     // OpenDa will soon request all items and especially the start/stop time and expect the complete, yet unchanged, simulation-time
 
     /* register seriesWriterDir; HydPy will automatically write series if configured in hydpy.xml */
-
     final File seriesWriterDir = instanceDirs.getSeriesWriterDir();
     if( seriesWriterDir != null )
     {

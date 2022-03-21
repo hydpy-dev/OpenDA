@@ -57,14 +57,6 @@ public class HydPyModelFactory implements IModelFactory
 
   private static final String PROPERTY_INSTANCE_NUMBERFORMAT = "instanceNumberFormat"; //$NON-NLS-1$
 
-  private static final String PROPERTY_INPUTCONDITIONSDIR = "inputConditionsDir"; //$NON-NLS-1$
-
-  private static final String PROPERTY_OUTPUTCONDITIONSDIR = "outputConditionsDir"; //$NON-NLS-1$
-
-  private static final String PROPERTY_SERIESWRITERDIR = "seriesWriterDir"; //$NON-NLS-1$
-
-  private static final String PROPERTY_SERIESREADERDIR = "seriesReaderDir"; //$NON-NLS-1$
-
   private static final String IO_OBJECT_ID = "hydPyIo"; //$NON-NLS-1$
 
   private BBModelFactory m_bbFactory = null;
@@ -92,16 +84,6 @@ public class HydPyModelFactory implements IModelFactory
     m_templateDirPath = properties.getProperty( PROPERTY_TEMPLATE_DIR );
     m_instanceDirPath = properties.getProperty( PROPERTY_INSTANCE_DIR );
     m_instanceNumberFormat = parseInstanceNumberFormat( properties );
-
-    final String inputConditionsPath = properties.getProperty( PROPERTY_INPUTCONDITIONSDIR );
-    final String outputConditionsPath = properties.getProperty( PROPERTY_OUTPUTCONDITIONSDIR );
-    final String seriesReaderPath = properties.getProperty( PROPERTY_SERIESREADERDIR );
-    final String seriesWriterPath = properties.getProperty( PROPERTY_SERIESWRITERDIR );
-    final HydPyInstanceConfiguration instanceDirs = new HydPyInstanceConfiguration( workingDir, inputConditionsPath, outputConditionsPath, seriesReaderPath, seriesWriterPath );
-
-    // REMARK: ugly post init, but hard to do otherwise.
-    // The server might not have been created here, so we also cant use the 'create' method.
-    HydPyServerManager.instance().init( instanceDirs );
   }
 
   public String parseInstanceNumberFormat( final Properties properties )

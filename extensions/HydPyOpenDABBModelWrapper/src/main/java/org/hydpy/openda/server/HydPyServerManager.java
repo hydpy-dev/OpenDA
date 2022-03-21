@@ -36,7 +36,7 @@ public final class HydPyServerManager
   /**
    * Constant for any server instance.
    *
-   * @see #getOrCreateInstance(String)
+   * @see #getOrCreateInstance(String, File)
    */
   public static final String ANY_INSTANCE = "ANY_INSTANCE"; //$NON-NLS-1$
 

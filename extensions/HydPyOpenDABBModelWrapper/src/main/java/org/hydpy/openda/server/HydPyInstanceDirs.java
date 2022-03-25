@@ -26,12 +26,15 @@ public final class HydPyInstanceDirs
 
   private final File m_seriesWriterDir;
 
-  public HydPyInstanceDirs( final File inputConditionsDir, final File outputConditionsDir, final File seriesReaderDir, final File seriesWriterDir )
+  private final File m_outputControlDir;
+
+  public HydPyInstanceDirs( final File inputConditionsDir, final File outputConditionsDir, final File seriesReaderDir, final File seriesWriterDir, final File outputControlDir )
   {
     m_inputConditionsDir = inputConditionsDir;
     m_outputConditionsDir = outputConditionsDir;
     m_seriesReaderDir = seriesReaderDir;
     m_seriesWriterDir = seriesWriterDir;
+    m_outputControlDir = outputControlDir;
   }
 
   public File getInputConditionsDir( )
@@ -52,5 +55,10 @@ public final class HydPyInstanceDirs
   public File getSeriesWriterDir( )
   {
     return m_seriesWriterDir;
+  }
+
+  public File getOutputControlDir( )
+  {
+    return m_outputControlDir;
   }
 }

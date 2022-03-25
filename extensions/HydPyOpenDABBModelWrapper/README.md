@@ -121,10 +121,11 @@ The following properties are supported:
 * outputConditionsDir (string, optional): The directory path where the conditions at the end of the simulation will be written (per model instance). Supports additional placeholder tokens, see below.
 * seriesReaderDir (string, optional): The directory path from where time series will be read (per model instance) by HydPy. Supports additional placeholder tokens, see below.
 * seriesWriterDir (string, optional): The directory path where time series will be written to (per model instance). Supports additional placeholder tokens, see below.
+* outputControlDir (string, optional): The directory path where the control parameters will be written for each model run.
 
 The wrapper resolves all arguments denoting files or directories relative to the working directory of the factory.
 
-The arguments _inputConditionsDir_, _outputConditionsDir_, _seriesReaderDir_ and _seriesWriterDir_ can contain the following placeholder tokens:
+The arguments _inputConditionsDir_, _outputConditionsDir_, _seriesReaderDir_, _seriesWriterDir_ and _outputControlDir_ can contain the following placeholder tokens:
  * INSTANCEID: the instance number, formatted as used in _instanceDir_ 
  * INSTANCEDIR: the path to the _instanceDir_
  * HYDPYMODELDIR: the HydPy project directory as specified in the _configFile_

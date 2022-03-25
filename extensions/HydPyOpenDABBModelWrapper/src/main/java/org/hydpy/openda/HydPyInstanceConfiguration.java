@@ -33,6 +33,8 @@ public final class HydPyInstanceConfiguration
 
   private static final String PROPERTY_SERIESREADERDIR = "seriesReaderDir"; //$NON-NLS-1$
 
+  private static final String PROPERTY_OUTPUTCONTROLDIR = "outputControlDir"; //$NON-NLS-1$
+
   private final File m_workingDir;
 
   private final String m_inputConditionsPath;
@@ -43,22 +45,26 @@ public final class HydPyInstanceConfiguration
 
   private final String m_seriesWriterPath;
 
+  private final String m_outputControlPath;
+
   public static HydPyInstanceConfiguration read( final File workingDir, final Properties properties )
   {
     final String inputConditionsPath = properties.getProperty( PROPERTY_INPUTCONDITIONSDIR );
     final String outputConditionsPath = properties.getProperty( PROPERTY_OUTPUTCONDITIONSDIR );
     final String seriesReaderPath = properties.getProperty( PROPERTY_SERIESREADERDIR );
     final String seriesWriterPath = properties.getProperty( PROPERTY_SERIESWRITERDIR );
-    return new HydPyInstanceConfiguration( workingDir, inputConditionsPath, outputConditionsPath, seriesReaderPath, seriesWriterPath );
+    final String outputControlPath = properties.getProperty( PROPERTY_OUTPUTCONTROLDIR );
+    return new HydPyInstanceConfiguration( workingDir, inputConditionsPath, outputConditionsPath, seriesReaderPath, seriesWriterPath, outputControlPath );
   }
 
-  private HydPyInstanceConfiguration( final File workingDir, final String inputConditionsPath, final String outputConditionsPath, final String seriesReaderPath, final String seriesWriterPath )
+  private HydPyInstanceConfiguration( final File workingDir, final String inputConditionsPath, final String outputConditionsPath, final String seriesReaderPath, final String seriesWriterPath, final String outputControlPath )
   {
     m_workingDir = workingDir;
     m_inputConditionsPath = inputConditionsPath;
     m_outputConditionsPath = outputConditionsPath;
     m_seriesReaderPath = seriesReaderPath;
     m_seriesWriterPath = seriesWriterPath;
+    m_outputControlPath = outputControlPath;
   }
 
   public HydPyInstanceDirs resolve( final String instanceId, final File instanceDir, final File hydpyModelDir )
@@ -67,8 +73,9 @@ public final class HydPyInstanceConfiguration
     final File outputConditionsDir = resolveDirectory( instanceId, instanceDir, m_outputConditionsPath, hydpyModelDir, false );
     final File seriesReaderDir = resolveDirectory( instanceId, instanceDir, m_seriesReaderPath, hydpyModelDir, true );
     final File seriesWriterDir = resolveDirectory( instanceId, instanceDir, m_seriesWriterPath, hydpyModelDir, false );
+    final File outputControlDir = resolveDirectory( instanceId, instanceDir, m_outputControlPath, hydpyModelDir, false );
 
-    return new HydPyInstanceDirs( inputConditionsDir, outputConditionsDir, seriesReaderDir, seriesWriterDir );
+    return new HydPyInstanceDirs( inputConditionsDir, outputConditionsDir, seriesReaderDir, seriesWriterDir, outputControlDir );
   }
 
   private File resolveDirectory( final String instanceId, final File instanceDir, final String path, final File hydpyModelDir, final boolean checkExists )
@@ -82,9 +89,12 @@ public final class HydPyInstanceConfiguration
     String resolved = path;
 
     resolved = StringUtils.replace( resolved, "%INSTANCEID%", instanceId );
-    resolved = StringUtils.replace( resolved, "%INSTANCEDIR%", instanceDir.getAbsolutePath() );
-    resolved = StringUtils.replace( resolved, "%HYDPYMODELDIR%", hydpyModelDir.getAbsolutePath() );
-    resolved = StringUtils.replace( resolved, "%WORKINGDIR%", m_workingDir.getAbsolutePath() );
+    if( instanceDir != null )
+      resolved = StringUtils.replace( resolved, "%INSTANCEDIR%", instanceDir.getAbsolutePath() );
+    if( hydpyModelDir != null )
+      resolved = StringUtils.replace( resolved, "%HYDPYMODELDIR%", hydpyModelDir.getAbsolutePath() );
+    if( m_workingDir != null )
+      resolved = StringUtils.replace( resolved, "%WORKINGDIR%", m_workingDir.getAbsolutePath() );
 
     final File resolvedDir = resolveAbsoluteOrRelativeDir( resolved );
     final File normalizedDir = resolvedDir.toPath().normalize().toFile();

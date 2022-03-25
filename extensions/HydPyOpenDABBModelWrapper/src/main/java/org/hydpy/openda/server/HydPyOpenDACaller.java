@@ -91,6 +91,10 @@ final class HydPyOpenDACaller
           "GET_query_itemvalues," + //
           "GET_query_simulationdates"; //
 
+  private static final String METHODS_SAVE_CONTROLPARAMETERS = //
+      "POST_register_outputcontroldir," + //
+          "GET_save_controls";
+
   private static final String METHODS_REQUEST_ITEMNAMES = "GET_query_itemsubnames"; //$NON-NLS-1$
 
   private static final String METHODS_WRITE_CONDITIONS = //
@@ -110,6 +114,8 @@ final class HydPyOpenDACaller
   private static final String ARGUMENT_OUTPUTCONDITIONDIR = "outputconditiondir"; //$NON-NLS-1$
 
   private static final String ARGUMENT_INPUTCONDITIONDIR = "inputconditiondir"; //$NON-NLS-1$
+
+  private static final String ARGUMENT_OUTPUTCONTROLDIR = "outputcontroldir"; //$NON-NLS-1$
 
   private final Map<String, HydPyExchangeCache> m_instanceCaches = new HashMap<>();
 
@@ -354,7 +360,7 @@ final class HydPyOpenDACaller
     return itemNames;
   }
 
-  public List<IExchangeItem> simulate( final String instanceId ) throws HydPyServerException
+  public List<IExchangeItem> simulate( final String instanceId, final File outputControlDir ) throws HydPyServerException
   {
     m_client.debugOut( m_name, "running simulation for current state for instanceId = '%s'", instanceId );
 
@@ -364,7 +370,16 @@ final class HydPyOpenDACaller
     final Map<String, Object> preValues = preParseValues( props );
 
     final HydPyExchangeCache instanceCache = m_instanceCaches.get( instanceId );
-    return parseItemValues( instanceCache, preValues );
+    final List<IExchangeItem> simulationResult = parseItemValues( instanceCache, preValues );
+
+    if( outputControlDir != null )
+    {
+      m_client.callPost( instanceId, METHODS_SAVE_CONTROLPARAMETERS ) //
+          .body( ARGUMENT_OUTPUTCONTROLDIR, outputControlDir.getAbsolutePath() ) //
+          .execute();
+    }
+
+    return simulationResult;
   }
 
   public void writeConditions( final String instanceId, final File outputConditionsDir ) throws HydPyServerException

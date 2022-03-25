@@ -34,12 +34,12 @@ public final class HydPyModelInstance
 
   private final HydPyServerInstance m_server;
 
-  private final File m_outputConditionsDir;
+  private final HydPyInstanceDirs m_instanceDirs;
 
   HydPyModelInstance( final String instanceId, final HydPyInstanceDirs instanceDirs, final HydPyServerInstance server )
   {
     m_instanceId = instanceId;
-    m_outputConditionsDir = instanceDirs.getOutputConditionsDir();
+    m_instanceDirs = instanceDirs;
     m_server = server;
 
     m_server.initializeInstance( instanceId, instanceDirs );
@@ -62,7 +62,8 @@ public final class HydPyModelInstance
 
   public void simulate( )
   {
-    m_server.simulate( m_instanceId );
+    final File outputControlDir = m_instanceDirs.getOutputControlDir();
+    m_server.simulate( m_instanceId, outputControlDir );
   }
 
   public String[] getItemNames( final String itemId ) throws HydPyServerException
@@ -72,7 +73,8 @@ public final class HydPyModelInstance
 
   public void writeConditions( )
   {
-    if( m_outputConditionsDir != null )
-      m_server.writeConditions( m_instanceId, m_outputConditionsDir );
+    final File outputConditionsDir = m_instanceDirs.getOutputConditionsDir();
+    if( outputConditionsDir != null )
+      m_server.writeConditions( m_instanceId, outputConditionsDir );
   }
 }

@@ -109,10 +109,10 @@ final class HydPyServerInstance
     return getServer().getItemNames( itemId );
   }
 
-  public synchronized void simulate( final String instanceId )
+  public synchronized void simulate( final String instanceId, final File outputControlDir )
   {
     // REMARK: we always directly simulate and fetch the results in one call
-    final Future<List<IExchangeItem>> future = HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().simulate( instanceId ) );
+    final Future<List<IExchangeItem>> future = HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().simulate( instanceId, outputControlDir ) );
     m_currentSimulations.put( instanceId, future );
   }
 

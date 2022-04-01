@@ -27,7 +27,7 @@ final class Timeseries1D
   {
     final int[] dimensions = values.getDimensions();
     Validate.isTrue( dimensions.length == 2 );
-    Validate.isTrue( dimensions[0] == times.length );
+    Validate.isTrue( dimensions[0] == times.length, "First dimension of array must be same as the number of timesteps" );
 
     m_times = times;
     m_values = values;

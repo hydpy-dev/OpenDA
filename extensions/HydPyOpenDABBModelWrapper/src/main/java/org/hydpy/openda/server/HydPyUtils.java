@@ -200,7 +200,13 @@ public final class HydPyUtils
     }
 
     if( !time.equals( expectedEndTime ) )
-      throw new IllegalStateException();
+    {
+      final long expectedSpan = expectedEndTime.getMillis() - startTime.getMillis();
+      final long expectedNumSteps = expectedSpan / stepMillis;
+
+      final String message = String.format( "Expected %d timesteps from HydPy, but got %d", expectedNumSteps, numSteps );
+      throw new RuntimeException( message );
+    }
 
     return times;
   }
@@ -332,15 +338,6 @@ public final class HydPyUtils
         }
       }
     } );
-  }
-
-  public static int indexOfInstant( final Instant[] instants, final Instant searchInstant )
-  {
-    final int index = Arrays.binarySearch( instants, searchInstant );
-    if( index < 0 )
-      throw new NoSuchElementException();
-
-    return index;
   }
 
   public static int indexOfMdj( final double[] times, final double searchTime )

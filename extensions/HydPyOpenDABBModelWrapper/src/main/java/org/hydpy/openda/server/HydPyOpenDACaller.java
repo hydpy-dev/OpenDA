@@ -313,6 +313,8 @@ final class HydPyOpenDACaller
 
     /* fetch current time range */
     final Instant currentStartTime = toTime( sortedItems, HydPyModelInstance.ITEM_ID_FIRST_DATE );
+    // REMARK: adjust by one step, as HydPy thinks in intervals
+    final Instant currentStartTimeNextStep = currentStartTime.plus( m_stepSeconds * 1000 );
     final Instant currentEndTime = toTime( sortedItems, HydPyModelInstance.ITEM_ID_LAST_DATE );
 
     final HydPyExchangeCache instanceCache = m_instanceCaches.get( instanceId );
@@ -320,7 +322,7 @@ final class HydPyOpenDACaller
     final Poster caller = m_client.callPost( instanceId, METHODS_REGISTER_ITEMVALUES );
     for( final IExchangeItem exItem : sortedItems.values() )
     {
-      final String valueText = instanceCache.printItemValue( exItem, currentStartTime, currentEndTime );
+      final String valueText = instanceCache.printItemValue( exItem, currentStartTimeNextStep, currentEndTime );
       caller.body( exItem.getId(), valueText );
     }
 

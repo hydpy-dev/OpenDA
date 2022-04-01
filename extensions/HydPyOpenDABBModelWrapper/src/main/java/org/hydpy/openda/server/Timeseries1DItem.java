@@ -12,6 +12,7 @@
 package org.hydpy.openda.server;
 
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 
 import org.joda.time.Instant;
 import org.openda.exchange.ArrayExchangeItem;
@@ -46,7 +47,7 @@ public class Timeseries1DItem extends AbstractServerItem<Timeseries1D>
     /* swap array dimensions */
     final IArray swappedArray = HydPyUtils.swapArray2D( array );
 
-    final int[] dimensions = array.getDimensions();
+    final int[] dimensions = swappedArray.getDimensions();
 
     final double[] times = HydPyUtils.buildTimes( dimensions[0], startTime, stepSeconds, endTime );
 
@@ -119,13 +120,27 @@ public class Timeseries1DItem extends AbstractServerItem<Timeseries1D>
     final IArray modelValues = modelRangeValue.getValues();
     final Instant[] modelInstants = HydPyUtils.mjdToInstant( modelTimes );
 
-    final int startIndex = HydPyUtils.indexOfInstant( modelInstants, currentStartTime );
-    final int endIndex = HydPyUtils.indexOfInstant( modelInstants, currentEndTime );
+    final int startIndex = indexOfInstant( modelInstants, currentStartTime );
+    final int endIndex = indexOfInstant( modelInstants, currentEndTime );
 
-    final double[] currentTimes = Arrays.copyOfRange( modelTimes, startIndex, endIndex );
+    final double[] currentTimes = Arrays.copyOfRange( modelTimes, startIndex, endIndex + 1 );
 
     final IArray slice = modelValues.getSlice( 0, startIndex, endIndex );
 
     return new Timeseries1D( currentTimes, slice );
   }
+
+  // REMRK: leaving this utility here, as we get a very specific error message
+  private static int indexOfInstant( final Instant[] instants, final Instant searchInstant )
+  {
+    final int index = Arrays.binarySearch( instants, searchInstant );
+    if( index < 0 )
+    {
+      final String message = String.format( "Start or end time (%s) of current calculation range outside initial range provided by HydPy. Please check your aggregation times and/or time step.", searchInstant );
+      throw new NoSuchElementException( message );
+    }
+
+    return index;
+  }
+
 }

@@ -29,13 +29,21 @@ final class Timeseries0DItem extends AbstractServerItem<Timeseries0D>
   }
 
   @Override
-  public Timeseries0D parseValue( final Instant startTime, final Instant endTime, final long stepSeconds, final String valueText )
+  public Timeseries0D parseValue( final Instant startTime, final Instant endTime, final long stepSeconds, final String valueText ) throws HydPyServerException
   {
-    final double[] value = HydPyUtils.parseDoubleArray( valueText );
+    try
+    {
+      final double[] value = HydPyUtils.parseDoubleArray( valueText );
 
-    final double[] times = HydPyUtils.buildTimes( value.length, startTime, stepSeconds, endTime );
+      final double[] times = HydPyUtils.buildTimes( value.length, startTime, stepSeconds, endTime );
 
-    return new Timeseries0D( times, value );
+      return new Timeseries0D( times, value );
+    }
+    catch( final Exception e )
+    {
+      final String message = String.format( "Exchange item '%s': failed to parse response of HydPy", getId() );
+      throw new HydPyServerException( message, e );
+    }
   }
 
   @Override

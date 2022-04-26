@@ -148,7 +148,12 @@ final class SpatialNoiseModelInstance extends Instance implements IStochModelIns
   @Override
   public IExchangeItem getExchangeItem( final String exchangeItemID )
   {
-    return m_items.get( exchangeItemID ).getOutputSeries();
+    final SpatialNoiseModelItem item = m_items.get( exchangeItemID );
+
+    if( item == null )
+      return null;
+
+    return item.getOutputSeries();
   }
 
   @Override

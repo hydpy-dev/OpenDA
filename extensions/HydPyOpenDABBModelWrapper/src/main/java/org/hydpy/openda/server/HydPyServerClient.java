@@ -74,6 +74,7 @@ final class HydPyServerClient
 
   private final URI m_address;
 
+  // FIXME: configure??
   private final int m_timeoutMillis = 60000;
 
   private final PrintStream m_debugOut;
@@ -164,7 +165,12 @@ final class HydPyServerClient
   {
     try
     {
-      final HttpResponse response = request.connectTimeout( timeout ).execute().returnResponse();
+      final HttpResponse response = request //
+          .connectTimeout( timeout ) //
+          .socketTimeout( timeout ) //
+          .execute()//
+          .returnResponse();
+
       final StatusLine statusLine = response.getStatusLine();
       final int statusCode = statusLine.getStatusCode();
       if( statusCode != HttpStatus.SC_OK )

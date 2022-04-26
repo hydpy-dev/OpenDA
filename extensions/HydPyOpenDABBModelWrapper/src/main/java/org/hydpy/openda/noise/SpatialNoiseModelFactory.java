@@ -35,7 +35,7 @@ public final class SpatialNoiseModelFactory implements IStochModelFactory, ITime
   // Counter for keeping track of instances
   private static int NEXT_INSTANCE_NUMBER = 1;
 
-  private static SpatialNoiseModelConfiguration m_configuration;
+  private SpatialNoiseModelConfiguration m_configuration;
 
   private File m_workingDir = null;
 

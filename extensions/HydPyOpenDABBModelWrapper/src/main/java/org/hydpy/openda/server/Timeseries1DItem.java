@@ -38,13 +38,14 @@ public class Timeseries1DItem extends AbstractServerItem<Timeseries1D>
   {
     // [ [timeseris1] [timeseries2] [timeseries3] ... ] i.e. one ts per element
     final String arrayText = valueText//
-        .replace( '[', '{' ) //
-        .replace( ']', '}' ) //
+        // TODO: should be handled in parser to avoid string copy
+        .replace( "nan", "NaN" ) //
         .replace( " ", "" );
 
-    final Array array = new Array( arrayText );
+    final IArray array = HydPyUtils.parseArrayFromJson( arrayText );
 
     /* swap array dimensions */
+    // FIXME: maybe directly handle by parser?
     final IArray swappedArray = HydPyUtils.swapArray2D( array );
 
     final int[] dimensions = swappedArray.getDimensions();
@@ -89,7 +90,8 @@ public class Timeseries1DItem extends AbstractServerItem<Timeseries1D>
 
     return swappedArray.toString()//
         .replace( '{', '[' ) //
-        .replace( '}', ']' );
+        .replace( '}', ']' ) //
+        .replace( "NaN", "nan" );
   }
 
   @Override
@@ -142,5 +144,4 @@ public class Timeseries1DItem extends AbstractServerItem<Timeseries1D>
 
     return index;
   }
-
 }

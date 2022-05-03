@@ -22,12 +22,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.collections.api.list.primitive.MutableDoubleList;
+import org.eclipse.collections.impl.factory.primitive.DoubleLists;
 import org.joda.time.Instant;
 import org.json.JSONArray;
 import org.openda.exchange.timeseries.TimeUtils;
 import org.openda.interfaces.IArray;
 import org.openda.utils.Array;
 import org.openda.utils.Time;
+
+import ch.randelshofer.fastdoubleparser.FastDoubleParser;
 
 /**
  * Some static utils.
@@ -347,5 +351,87 @@ public final class HydPyUtils
       throw new NoSuchElementException();
 
     return index;
+  }
+
+  // REMARK: copy of the original parsing code of org.openda.utils.Array(String),
+  // using a faster double parser and not using an ArrayList<Double>
+  // Also uses Json syntax instead.
+  public static IArray parseArrayFromJson( final String json )
+  {
+    int stringIndex = 0;
+
+    // REMARK: rough estimate of initial size; HydPy often prints values with 20 places
+    final MutableDoubleList valuesList = DoubleLists.mutable.withInitialCapacity( json.length() / 20 );
+
+    final int[] counter = new int[20];
+    final int[] dims = new int[20];
+
+    int curDim = -1; // current dimension
+    int rank = 0;
+
+    while( stringIndex < json.length() )
+    {
+      final char charAt = json.charAt( stringIndex );
+      if( charAt == '[' )
+      {
+        curDim++;
+        if( curDim == rank )
+          rank = curDim + 1;
+        stringIndex++;
+      }
+      else if( charAt == ']' )
+      {
+        if( counter[curDim] > dims[curDim] )
+          dims[curDim] = counter[curDim];
+        counter[curDim] = 0;
+        curDim--;
+        if( curDim < -1 )
+        {
+          throw new RuntimeException( "Too many closing brackets in array at position=" + stringIndex + " in string=" + json );
+        }
+        stringIndex++;
+      }
+      else if( charAt == ',' )
+      {
+        counter[curDim]++;
+        stringIndex++;
+      }
+      else
+      {
+        // try to find a number
+        int indexEnd = json.indexOf( ']', stringIndex );
+        // if a comma comes first
+        final int indexComma = json.indexOf( ',', stringIndex );
+        if( (indexComma >= 0) & (indexComma < indexEnd) )
+        {
+          indexEnd = indexComma;
+        }
+
+        final String numberString = json.substring( stringIndex, indexEnd );
+        try
+        {
+          // final double value = Double.parseDouble( numberString );
+          // REMARK: using this specialized double parser that if way faster than vanilla java
+          // TODO: consider making a fork, that does not require to build substrings
+          final double value = FastDoubleParser.parseDouble( numberString );
+          valuesList.add( value );
+          stringIndex = indexEnd;
+        }
+        catch( final NumberFormatException e )
+        {
+          throw new RuntimeException( "Problems parsing array at position=" + stringIndex + "while processing number " + numberString );
+        }
+      }
+    }
+
+    // store values
+    final double[] values = valuesList.toArray();
+
+    // store dimensions
+    final int[] dimensions = new int[rank];
+    for( int i = 0; i < rank; i++ )
+      dimensions[i] = dims[i] + 1;
+
+    return new Array( values, dimensions, false );
   }
 }

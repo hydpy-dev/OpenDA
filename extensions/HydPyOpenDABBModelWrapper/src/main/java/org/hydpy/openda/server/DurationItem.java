@@ -22,9 +22,9 @@ import org.openda.interfaces.IExchangeItem.Role;
  */
 final class DurationItem extends AbstractSingleServerItem<Long>
 {
-  public DurationItem( final String id, final Role role )
+  public DurationItem( final String id, final Role role, final boolean isInitialStateShared )
   {
-    super( id, role );
+    super( id, role, isInitialStateShared );
   }
 
   @Override
@@ -111,5 +111,12 @@ final class DurationItem extends AbstractSingleServerItem<Long>
   {
     /* not time dependent */
     return modelRangeValue;
+  }
+
+  @Override
+  public Long copy( final Long value )
+  {
+    /* Long is immutable, can return same reference */
+    return value;
   }
 }

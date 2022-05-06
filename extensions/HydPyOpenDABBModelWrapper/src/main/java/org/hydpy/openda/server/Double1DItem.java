@@ -11,6 +11,8 @@
  */
 package org.hydpy.openda.server;
 
+import java.util.Arrays;
+
 import org.joda.time.Instant;
 import org.openda.exchange.DoublesExchangeItem;
 import org.openda.interfaces.IExchangeItem;
@@ -21,9 +23,9 @@ import org.openda.interfaces.IExchangeItem.Role;
  */
 final class Double1DItem extends AbstractSingleServerItem<double[]>
 {
-  public Double1DItem( final String id, final Role role )
+  public Double1DItem( final String id, final Role role, final boolean isInitialStateShared )
   {
-    super( id, role );
+    super( id, role, isInitialStateShared );
   }
 
   @Override
@@ -63,5 +65,11 @@ final class Double1DItem extends AbstractSingleServerItem<double[]>
   {
     /* not time dependent */
     return modelRangeValue;
+  }
+
+  @Override
+  public double[] copy( final double[] value )
+  {
+    return Arrays.copyOf( value, value.length );
   }
 }

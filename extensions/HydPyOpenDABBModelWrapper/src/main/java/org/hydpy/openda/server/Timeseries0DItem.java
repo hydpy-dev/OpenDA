@@ -23,9 +23,9 @@ import org.openda.interfaces.IExchangeItem.Role;
  */
 final class Timeseries0DItem extends AbstractSingleServerItem<Timeseries0D>
 {
-  public Timeseries0DItem( final String id, final Role role )
+  public Timeseries0DItem( final String id, final Role role, final boolean isInitialStateShared )
   {
-    super( id, role );
+    super( id, role, isInitialStateShared );
   }
 
   @Override
@@ -37,7 +37,7 @@ final class Timeseries0DItem extends AbstractSingleServerItem<Timeseries0D>
 
       final double[] times = HydPyUtils.buildTimes( value.length, startTime, stepSeconds, endTime );
 
-      return new Timeseries0D( times, value );
+      return new Timeseries0D( times, value, false );
     }
     catch( final Exception e )
     {
@@ -47,7 +47,7 @@ final class Timeseries0DItem extends AbstractSingleServerItem<Timeseries0D>
   }
 
   @Override
-  protected IExchangeItem toExchangeItem( String id, Role role, final Timeseries0D value )
+  protected IExchangeItem toExchangeItem( final String id, final Role role, final Timeseries0D value )
   {
     final TimeSeries timeSeries = new TimeSeries( value.getTimes(), value.getValues() );
     timeSeries.setId( getId() );
@@ -60,7 +60,7 @@ final class Timeseries0DItem extends AbstractSingleServerItem<Timeseries0D>
     final TimeSeries timeSeries = (TimeSeries)exItem;
     final double[] times = timeSeries.getTimes();
     final double[] values = timeSeries.getValuesAsDoubles();
-    return new Timeseries0D( times, values );
+    return new Timeseries0D( times, values, false );
   }
 
   @Override
@@ -85,7 +85,7 @@ final class Timeseries0DItem extends AbstractSingleServerItem<Timeseries0D>
     final int startIndex = HydPyUtils.indexOfMdj( initialTimes, currentTimes[0] );
     System.arraycopy( currentValues, 0, modelValues, startIndex, currentValues.length );
 
-    return new Timeseries0D( modelTimes, modelValues );
+    return new Timeseries0D( modelTimes, modelValues, false );
   }
 
   @Override
@@ -96,5 +96,11 @@ final class Timeseries0DItem extends AbstractSingleServerItem<Timeseries0D>
     final TimeSeries subset = timeSeries.selectTimeSubset( HydPyUtils.instantToMjd( currentStartTime ), HydPyUtils.instantToMjd( currentEndTime ) );
 
     return toValue( subset );
+  }
+
+  @Override
+  public Timeseries0D copy( final Timeseries0D value )
+  {
+    return value.copy();
   }
 }

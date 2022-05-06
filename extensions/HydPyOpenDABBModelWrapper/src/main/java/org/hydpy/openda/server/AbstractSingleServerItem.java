@@ -27,11 +27,14 @@ abstract class AbstractSingleServerItem<TYPE> extends AbstractServerItem<TYPE>
 {
   private final HydPyExchangeItemDescription m_description;
 
-  public AbstractSingleServerItem( final String id, final Role role )
+  public AbstractSingleServerItem( final String id, final Role role, final boolean isInitialStateShared )
   {
+    super( isInitialStateShared );
+
     m_description = new HydPyExchangeItemDescription( id, role );
   }
 
+  @Override
   public final String getId( )
   {
     return m_description.getId();

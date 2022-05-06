@@ -121,6 +121,12 @@ final class HydPyOpenDACaller
 
   private static final String ARGUMENT_OUTPUTCONTROLDIR = "outputcontroldir"; //$NON-NLS-1$
 
+  /**
+   * For items where we know that all hydpy instances will report the same initial state, we only parse those once and reuse them for other instances.
+   * This improves performance a lot for long model runs.
+   */
+  private static final Map<String, Object> SHARED_INITIAL_STATE = new HashMap<>();
+
   private final Map<String, HydPyExchangeCache> m_instanceCaches = new HashMap<>();
 
   private Map<String, String[]> m_itemNames = null;
@@ -278,7 +284,7 @@ final class HydPyOpenDACaller
         .execute();
 
     /* pre-parse items */
-    final Map<String, Object> preValues = preParseValues( props );
+    final Map<String, Object> preValues = preParseValuesOrGetShared( props, SHARED_INITIAL_STATE );
 
     final HydPyExchangeCache instanceCache = new HydPyExchangeCache( preValues );
     m_instanceCaches.put( instanceId, instanceCache );
@@ -308,7 +314,7 @@ final class HydPyOpenDACaller
     return values;
   }
 
-  private Map<String, Object> preParseValues( final Properties props ) throws HydPyServerException
+  private Map<String, Object> preParseValuesOrGetShared( final Properties props, final Map<String, Object> sharedState ) throws HydPyServerException
   {
     final Instant startTime = new Instant( props.get( HydPyModelInstance.ITEM_ID_FIRST_DATE ) );
     final Instant endTime = new Instant( props.get( HydPyModelInstance.ITEM_ID_LAST_DATE ) );
@@ -317,15 +323,35 @@ final class HydPyOpenDACaller
 
     for( final String property : props.stringPropertyNames() )
     {
-      final AbstractServerItem< ? > item = getItem( property );
-
       final String valueText = props.getProperty( property );
 
-      final Object value = item.parseValue( startTime, endTime, m_stepSeconds, valueText );
+      final Object value = preParseValueOrGetShared( property, valueText, sharedState, startTime, endTime );
       preValues.put( property, value );
     }
 
     return preValues;
+  }
+
+  private Object preParseValueOrGetShared( final String property, final String valueText, final Map<String, Object> sharedState, final Instant startTime, final Instant endTime ) throws HydPyServerException
+  {
+    final AbstractServerItem<Object> item = getItem( property );
+
+    /* clone from shared state (only during initialization) if it is shared */
+    final String id = item.getId();
+    if( item.isInitialStateShared() && sharedState != null && sharedState.containsKey( id ) )
+    {
+      final Object sharedValue = sharedState.get( id );
+      return item.copy( sharedValue );
+    }
+
+    /* really parse the value */
+    final Object value = item.parseValue( startTime, endTime, m_stepSeconds, valueText );
+
+    /* remember in shared state if it is the first time */
+    if( item.isInitialStateShared() && sharedState != null )
+      sharedState.put( id, value );
+
+    return value;
   }
 
   public void setItemValues( final String instanceId, final Collection<IExchangeItem> values ) throws HydPyServerException
@@ -428,7 +454,7 @@ final class HydPyOpenDACaller
     final Properties props = m_client.callGet( instanceId, METHODS_SIMULATE_AND_QUERY_ITEMVALUES );
 
     /* pre-parse items */
-    final Map<String, Object> preValues = preParseValues( props );
+    final Map<String, Object> preValues = preParseValuesOrGetShared( props, null );
 
     final HydPyExchangeCache instanceCache = m_instanceCaches.get( instanceId );
     final List<IExchangeItem> simulationResult = parseItemValues( instanceCache, preValues );

@@ -11,6 +11,8 @@
  */
 package org.hydpy.openda.server;
 
+import java.util.Arrays;
+
 import org.apache.commons.lang3.Validate;
 
 final class Timeseries0D
@@ -19,12 +21,20 @@ final class Timeseries0D
 
   private final double[] m_values;
 
-  public Timeseries0D( final double[] times, final double[] values )
+  public Timeseries0D( final double[] times, final double[] values, final boolean copyValues )
   {
     Validate.isTrue( times.length == values.length );
 
-    m_times = times;
-    m_values = values;
+    if( copyValues )
+    {
+      m_times = Arrays.copyOf( times, times.length );
+      m_values = Arrays.copyOf( values, values.length );
+    }
+    else
+    {
+      m_times = times;
+      m_values = values;
+    }
   }
 
   public double[] getTimes( )
@@ -35,5 +45,10 @@ final class Timeseries0D
   public double[] getValues( )
   {
     return m_values;
+  }
+
+  public Timeseries0D copy( )
+  {
+    return new Timeseries0D( m_times, m_values, true );
   }
 }

@@ -35,8 +35,10 @@ final class Timeseries1DMultiItem extends AbstractServerItem<Timeseries1D>
 
   private final String m_id;
 
-  public Timeseries1DMultiItem( final String id, final Role role, final String[] itemNames )
+  public Timeseries1DMultiItem( final String id, final Role role, final boolean isInitialStateShared, final String[] itemNames )
   {
+    super( isInitialStateShared );
+
     m_id = id;
 
     final List<HydPyExchangeItemDescription> descriptions = new ArrayList<>( itemNames.length );
@@ -122,7 +124,7 @@ final class Timeseries1DMultiItem extends AbstractServerItem<Timeseries1D>
       array.setSlice( currentArray, VALUE_DIMENSION_INDEX, column );
     }
 
-    return new Timeseries1D( globalTimes, array );
+    return new Timeseries1D( globalTimes, array, false );
   }
 
   @Override
@@ -141,5 +143,11 @@ final class Timeseries1DMultiItem extends AbstractServerItem<Timeseries1D>
   public Timeseries1D restrictToCurrentRange( final Timeseries1D modelRangeValue, final Instant currentStartTime, final Instant currentEndTime )
   {
     return modelRangeValue.restrictToRange( currentStartTime, currentEndTime );
+  }
+
+  @Override
+  public Timeseries1D copy( final Timeseries1D value )
+  {
+    return value.copy();
   }
 }

@@ -26,9 +26,9 @@ final class TimeItem extends AbstractSingleServerItem<Instant>
 {
   private static final DateTimeFormatter HYD_PY_DATE_TIME_PARSER = ISODateTimeFormat.dateTimeNoMillis();
 
-  public TimeItem( final String id, final Role role )
+  public TimeItem( final String id, final Role role, final boolean isInitialStateShared )
   {
-    super( id, role );
+    super( id, role, isInitialStateShared );
   }
 
   @Override
@@ -75,5 +75,12 @@ final class TimeItem extends AbstractSingleServerItem<Instant>
   {
     /* not time dependent */
     return modelRangeValue;
+  }
+
+  @Override
+  public Instant copy( final Instant value )
+  {
+    /* Instant is immutable, can return same reference */
+    return value;
   }
 }

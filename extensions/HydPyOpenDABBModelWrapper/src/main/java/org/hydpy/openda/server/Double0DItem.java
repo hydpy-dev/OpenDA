@@ -21,9 +21,9 @@ import org.openda.interfaces.IExchangeItem.Role;
  */
 final class Double0DItem extends AbstractSingleServerItem<Double>
 {
-  public Double0DItem( final String id, final Role role )
+  public Double0DItem( final String id, final Role role, final boolean isInitialStateShared )
   {
-    super( id, role );
+    super( id, role, isInitialStateShared );
   }
 
   @Override
@@ -63,5 +63,12 @@ final class Double0DItem extends AbstractSingleServerItem<Double>
   {
     /* not time dependent */
     return modelRangeValue;
+  }
+
+  @Override
+  public Double copy( final Double value )
+  {
+    /* Double is immutable, can return same reference */
+    return value;
   }
 }

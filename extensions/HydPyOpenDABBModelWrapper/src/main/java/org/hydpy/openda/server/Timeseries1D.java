@@ -28,14 +28,22 @@ final class Timeseries1D
 
   private final IArray m_values;
 
-  public Timeseries1D( final double[] times, final IArray values )
+  public Timeseries1D( final double[] times, final IArray values, final boolean copyValues )
   {
     final int[] dimensions = values.getDimensions();
     Validate.isTrue( dimensions.length == 2 );
     Validate.isTrue( dimensions[0] == times.length, "First dimension of array must be same as the number of timesteps" );
 
-    m_times = times;
-    m_values = values;
+    if( copyValues )
+    {
+      m_times = Arrays.copyOf( times, times.length );
+      m_values = new Array( values );
+    }
+    else
+    {
+      m_times = times;
+      m_values = values;
+    }
   }
 
   public double[] getTimes( )
@@ -66,7 +74,7 @@ final class Timeseries1D
 
     final double[] times = HydPyUtils.buildTimes( dimensions[0], startTime, stepSeconds, endTime );
 
-    return new Timeseries1D( times, swappedArray );
+    return new Timeseries1D( times, swappedArray, false );
   }
 
   public String printHydPy( )
@@ -93,7 +101,7 @@ final class Timeseries1D
     final int endIndex = HydPyUtils.indexOfMdj( m_times, currentTimes[currentTimes.length - 1] );
     mergedValues.setSlice( currentValues, 0, startIndex, endIndex );
 
-    return new Timeseries1D( mergedTimes, mergedValues );
+    return new Timeseries1D( mergedTimes, mergedValues, false );
   }
 
   public Timeseries1D restrictToRange( final Instant currentStartTime, final Instant currentEndTime )
@@ -109,7 +117,7 @@ final class Timeseries1D
 
     final IArray slice = modelValues.getSlice( 0, startIndex, endIndex );
 
-    return new Timeseries1D( currentTimes, slice );
+    return new Timeseries1D( currentTimes, slice, false );
   }
 
   // REMRK: leaving this utility here, as we get a very specific error message
@@ -123,5 +131,10 @@ final class Timeseries1D
     }
 
     return index;
+  }
+
+  public Timeseries1D copy( )
+  {
+    return new Timeseries1D( m_times, m_values, true );
   }
 }

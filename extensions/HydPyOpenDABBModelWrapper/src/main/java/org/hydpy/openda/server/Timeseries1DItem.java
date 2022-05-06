@@ -24,9 +24,9 @@ import org.openda.interfaces.IExchangeItem.Role;
  */
 public class Timeseries1DItem extends AbstractSingleServerItem<Timeseries1D>
 {
-  public Timeseries1DItem( final String id, final Role role )
+  public Timeseries1DItem( final String id, final Role role, final boolean isInitialStateShared )
   {
-    super( id, role );
+    super( id, role, isInitialStateShared );
   }
 
   @Override
@@ -58,7 +58,7 @@ public class Timeseries1DItem extends AbstractSingleServerItem<Timeseries1D>
     final double[] times = timeSeries.getTimes();
     final IArray values = timeSeries.getArray();
 
-    return new Timeseries1D( times, values );
+    return new Timeseries1D( times, values, true );
   }
 
   @Override
@@ -77,5 +77,11 @@ public class Timeseries1DItem extends AbstractSingleServerItem<Timeseries1D>
   public Timeseries1D restrictToCurrentRange( final Timeseries1D modelRangeValue, final Instant currentStartTime, final Instant currentEndTime )
   {
     return modelRangeValue.restrictToRange( currentStartTime, currentEndTime );
+  }
+
+  @Override
+  public Timeseries1D copy( final Timeseries1D value )
+  {
+    return value.copy();
   }
 }

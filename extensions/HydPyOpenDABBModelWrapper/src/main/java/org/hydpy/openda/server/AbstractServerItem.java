@@ -36,39 +36,52 @@ abstract class AbstractServerItem<TYPE>
 
   private static final String TYPE_DURATION = "DurationItem";
 
+  private final boolean m_isInitialStateShared;
+
+  public AbstractServerItem( final boolean isInitialStateShared )
+  {
+    m_isInitialStateShared = isInitialStateShared;
+  }
+
+  public boolean isInitialStateShared( )
+  {
+    return m_isInitialStateShared;
+  }
+
   public static AbstractServerItem< ? > fromHydPyType( final String id, final String hydPyType, final String[] itemNames )
   {
     final String split[] = StringUtils.split( hydPyType, "(" );
 
     // FIXME: we probably need this to avoid excessive server/client communication of simulation timeseries
     final Role role = Role.InOut;
-//    boolean isInitialStateShared = true;
+    // FIXME: get this information from elsewhere (either hydpy via its config or determine how items are used)
+    final boolean isInitialStateShared = true;
 
     switch( split[0].trim() )
     {
       case TYPE_DOUBLE_0D:
-        return new Double0DItem( id, role );
+        return new Double0DItem( id, role, isInitialStateShared );
 
       case TYPE_DOUBLE_1D:
-        return new Double1DItem( id, role );
+        return new Double1DItem( id, role, isInitialStateShared );
 
       case TYPE_TIMESERIES_0D:
-        return new Timeseries0DItem( id, role );
+        return new Timeseries0DItem( id, role, isInitialStateShared );
 
       case TYPE_TIMESERIES_1D:
       {
         // TODO: HACK: special handling of some items that we want to split into multiple exchange items
         if( id.endsWith( ".split" ) )
-          return new Timeseries1DMultiItem( id, role, itemNames );
+          return new Timeseries1DMultiItem( id, role, isInitialStateShared, itemNames );
 
-        return new Timeseries1DItem( id, role );
+        return new Timeseries1DItem( id, role, isInitialStateShared );
       }
 
       case TYPE_TIME:
-        return new TimeItem( id, role );
+        return new TimeItem( id, role, isInitialStateShared );
 
       case TYPE_DURATION:
-        return new DurationItem( id, role );
+        return new DurationItem( id, role, isInitialStateShared );
     }
 
     throw new IllegalArgumentException( String.format( "Invalid item type: %s", hydPyType ) );
@@ -76,12 +89,12 @@ abstract class AbstractServerItem<TYPE>
 
   public static AbstractServerItem<Instant> newTimeItem( final String id )
   {
-    return new TimeItem( id, Role.InOut );
+    return new TimeItem( id, Role.InOut, false );
   }
 
   public static AbstractServerItem<Long> newDurationItem( final String id )
   {
-    return new DurationItem( id, Role.InOut );
+    return new DurationItem( id, Role.InOut, false );
   }
 
   public abstract String getId( );
@@ -99,4 +112,6 @@ abstract class AbstractServerItem<TYPE>
   public abstract TYPE mergeToModelRange( TYPE initialRangeValue, TYPE currentRangeValue );
 
   public abstract TYPE restrictToCurrentRange( TYPE modelRangeValue, Instant currentStartTime, Instant currentEndTime );
+
+  public abstract TYPE copy( TYPE value );
 }

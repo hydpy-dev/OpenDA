@@ -12,6 +12,7 @@
 package org.hydpy.openda.server;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.joda.time.Instant;
@@ -29,52 +30,33 @@ class HydPyExchangeCache
 {
   private final Map<String, Object> m_firstValues;
 
-  private final Map<String, AbstractServerItem< ? >> m_itemIndex;
-
-  public HydPyExchangeCache( final Map<String, AbstractServerItem< ? >> itemIndex, final Map<String, Object> firstValues )
+  public HydPyExchangeCache( final Map<String, Object> firstValues )
   {
-    m_itemIndex = itemIndex;
     m_firstValues = new HashMap<>( firstValues );
   }
 
-  public IExchangeItem parseItemValue( final String id, final Object currentRangeValue )
+  public List<IExchangeItem> parseItemValue( final String id, final AbstractServerItem<Object> item, final Object currentRangeValue )
   {
-    final AbstractServerItem<Object> item = getItem( id );
-
     /**
      * currentRange value is the value within the current range, as received from HydPy
      * To OpenDa we communicate a value that covers the full (aka model) range.
      */
     final Object initalRangeValue = m_firstValues.get( id );
     final Object modelRangeValue = item.mergeToModelRange( initalRangeValue, currentRangeValue );
-
-    return item.toExchangeItem( modelRangeValue );
+// FIXME: should we not update the current state of the full object?
+    return item.toExchangeItems( modelRangeValue );
   }
 
-  private <TYPE> AbstractServerItem<TYPE> getItem( final String id )
+  public <T> String printItemValue( final AbstractServerItem<T> serverItem, final List<IExchangeItem> exItems, final Instant currentStartTime, final Instant currentEndTime )
   {
-    @SuppressWarnings( "unchecked" ) final AbstractServerItem<TYPE> item = (AbstractServerItem<TYPE>)m_itemIndex.get( id );
-
-    if( item == null )
-      throw new IllegalArgumentException( String.format( "Invalid item id: %s", id ) );
-
-    return item;
-  }
-
-  public String printItemValue( final IExchangeItem exItem, final Instant currentStartTime, final Instant currentEndTime )
-  {
-    final String id = exItem.getId();
-
-    final AbstractServerItem<Object> item = getItem( id );
-
-    final Object modelRangeValue = item.toValue( exItem );
+    final T modelRangeValue = serverItem.toValue( exItems );
 
     /**
      * The value within the exchange item covers the full model range.
      * We want to restrict this to the current simulation range and only communicate this to HydPy
      */
-    final Object currentRangeValue = item.restrictToCurrentRange( modelRangeValue, currentStartTime, currentEndTime );
+    final T currentRangeValue = serverItem.restrictToCurrentRange( modelRangeValue, currentStartTime, currentEndTime );
 
-    return item.printValue( currentRangeValue );
+    return serverItem.printValue( currentRangeValue );
   }
 }

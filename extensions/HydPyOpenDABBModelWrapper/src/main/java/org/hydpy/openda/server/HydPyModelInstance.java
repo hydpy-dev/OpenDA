@@ -45,7 +45,7 @@ public final class HydPyModelInstance
     m_server.initializeInstance( instanceId, instanceDirs );
   }
 
-  public Collection<IServerItem> getItems( )
+  public Collection<HydPyExchangeItemDescription> getItems( )
   {
     return m_server.getItems();
   }

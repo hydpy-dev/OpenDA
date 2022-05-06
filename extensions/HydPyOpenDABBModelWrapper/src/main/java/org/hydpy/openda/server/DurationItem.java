@@ -20,7 +20,7 @@ import org.openda.interfaces.IExchangeItem.Role;
 /**
  * @author Gernot Belger
  */
-final class DurationItem extends AbstractServerItem<Long>
+final class DurationItem extends AbstractSingleServerItem<Long>
 {
   public DurationItem( final String id, final Role role )
   {
@@ -34,15 +34,15 @@ final class DurationItem extends AbstractServerItem<Long>
   }
 
   @Override
-  public IExchangeItem toExchangeItem( final Long value )
+  protected IExchangeItem toExchangeItem( final String id, final Role role, final Long value )
   {
     final double mjd = HydPyUtils.durationToMjd( value );
 
-    return new DoubleExchangeItem( getId(), getRole(), mjd );
+    return new DoubleExchangeItem( id, role, mjd );
   }
 
   @Override
-  public Long toValue( final IExchangeItem exItem )
+  protected Long toValue( final IExchangeItem exItem )
   {
     final DoubleExchangeItem dblItem = (DoubleExchangeItem)exItem;
     final double value = dblItem.getValue();

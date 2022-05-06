@@ -11,6 +11,9 @@
  */
 package org.hydpy.openda.server;
 
+import java.util.Collection;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.Instant;
 import org.openda.interfaces.IExchangeItem;
@@ -19,7 +22,7 @@ import org.openda.interfaces.IExchangeItem.Role;
 /**
  * @author Gernot Belger
  */
-abstract class AbstractServerItem<TYPE> implements IServerItem
+abstract class AbstractServerItem<TYPE>
 {
   private static final String TYPE_DOUBLE_0D = "Double0D";
 
@@ -33,12 +36,13 @@ abstract class AbstractServerItem<TYPE> implements IServerItem
 
   private static final String TYPE_DURATION = "DurationItem";
 
-  public static AbstractServerItem< ? > fromHydPyType( final String id, final String hydPyType )
+  public static AbstractServerItem< ? > fromHydPyType( final String id, final String hydPyType, final String[] itemNames )
   {
     final String split[] = StringUtils.split( hydPyType, "(" );
 
     // FIXME: we probably need this to avoid excessive server/client communication of simulation timeseries
     final Role role = Role.InOut;
+//    boolean isInitialStateShared = true;
 
     switch( split[0].trim() )
     {
@@ -52,7 +56,13 @@ abstract class AbstractServerItem<TYPE> implements IServerItem
         return new Timeseries0DItem( id, role );
 
       case TYPE_TIMESERIES_1D:
+      {
+        // TODO: HACK: special handling of some items that we want to split into multiple exchange items
+        if( id.endsWith( ".split" ) )
+          return new Timeseries1DMultiItem( id, role, itemNames );
+
         return new Timeseries1DItem( id, role );
+      }
 
       case TYPE_TIME:
         return new TimeItem( id, role );
@@ -74,33 +84,15 @@ abstract class AbstractServerItem<TYPE> implements IServerItem
     return new DurationItem( id, Role.InOut );
   }
 
-  private final String m_id;
+  public abstract String getId( );
 
-  private final Role m_role;
-
-  public AbstractServerItem( final String id, final Role role )
-  {
-    m_id = id;
-    m_role = role;
-  }
-
-  @Override
-  public String getId( )
-  {
-    return m_id;
-  }
-
-  @Override
-  public Role getRole( )
-  {
-    return m_role;
-  }
+  public abstract Collection<HydPyExchangeItemDescription> getExchangeItemDescriptions( );
 
   public abstract TYPE parseValue( Instant startTime, Instant endTime, long stepSeconds, String valueText ) throws HydPyServerException;
 
-  public abstract IExchangeItem toExchangeItem( final TYPE value );
+  public abstract List<IExchangeItem> toExchangeItems( final TYPE value );
 
-  public abstract TYPE toValue( IExchangeItem exItem );
+  public abstract TYPE toValue( List<IExchangeItem> exItems );
 
   public abstract String printValue( TYPE value );
 

@@ -21,7 +21,7 @@ import org.openda.interfaces.IExchangeItem.Role;
 /**
  * @author Gernot Belger
  */
-final class Timeseries0DItem extends AbstractServerItem<Timeseries0D>
+final class Timeseries0DItem extends AbstractSingleServerItem<Timeseries0D>
 {
   public Timeseries0DItem( final String id, final Role role )
   {
@@ -47,7 +47,7 @@ final class Timeseries0DItem extends AbstractServerItem<Timeseries0D>
   }
 
   @Override
-  public IExchangeItem toExchangeItem( final Timeseries0D value )
+  protected IExchangeItem toExchangeItem( String id, Role role, final Timeseries0D value )
   {
     final TimeSeries timeSeries = new TimeSeries( value.getTimes(), value.getValues() );
     timeSeries.setId( getId() );
@@ -55,7 +55,7 @@ final class Timeseries0DItem extends AbstractServerItem<Timeseries0D>
   }
 
   @Override
-  public Timeseries0D toValue( final IExchangeItem exItem )
+  protected Timeseries0D toValue( final IExchangeItem exItem )
   {
     final TimeSeries timeSeries = (TimeSeries)exItem;
     final double[] times = timeSeries.getTimes();

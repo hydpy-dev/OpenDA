@@ -19,9 +19,9 @@ import java.util.HashMap;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hydpy.openda.server.HydPyExchangeItemDescription;
 import org.hydpy.openda.server.HydPyModelInstance;
 import org.hydpy.openda.server.HydPyServerManager;
-import org.hydpy.openda.server.IServerItem;
 import org.openda.blackbox.config.AliasDefinitions;
 import org.openda.blackbox.config.BBAction;
 import org.openda.blackbox.config.BBCheckOutput;
@@ -137,7 +137,7 @@ public class HydPyModelFactory implements IModelFactory
     final BBWrapperConfig wrapperConfig = initializeWrapperConfig( m_workingDir, m_templateDirPath, m_instanceDirPath );
 
     final HydPyModelInstance server = HydPyServerManager.instance().getOrCreateInstance( HydPyServerManager.ANY_INSTANCE, null );
-    final Collection<IServerItem> items = server.getItems();
+    final Collection<HydPyExchangeItemDescription> items = server.getItems();
     final BBModelConfig bbModelConfig = initializeModelConfig( m_workingDir, wrapperConfig, items );
 
     return new BBModelFactory( bbModelConfig );
@@ -222,7 +222,7 @@ public class HydPyModelFactory implements IModelFactory
     return ioObjects;
   }
 
-  private BBModelConfig initializeModelConfig( final File workingDir, final BBWrapperConfig wrapperConfig, final Collection<IServerItem> items )
+  private BBModelConfig initializeModelConfig( final File workingDir, final BBWrapperConfig wrapperConfig, final Collection<HydPyExchangeItemDescription> items )
   {
     final File configRootDir = workingDir;
 
@@ -247,14 +247,15 @@ public class HydPyModelFactory implements IModelFactory
     return new BBModelConfig( configRootDir, wrapperConfig, m_instanceNumberFormat, startTime, endTime, timeStepMJD, startTimeExchangeItemIds, endTimeExchangeItemIds, timeStepExchangeItemIds, vectorConfigs, skipModelActionsIfInstanceDirExists, doCleanUp, restartFileNames, savedStatesDirPrefix );
   }
 
-  private Collection<BBModelVectorConfig> initializeVectorConfigs( final BBWrapperConfig wrapperConfig, final Collection<IServerItem> items )
+  private Collection<BBModelVectorConfig> initializeVectorConfigs( final BBWrapperConfig wrapperConfig, final Collection<HydPyExchangeItemDescription> items )
   {
     final Collection<BBModelVectorConfig> vectorConfigs = new ArrayList<>();
 
-    for( final IServerItem item : items )
+    for( final HydPyExchangeItemDescription item : items )
     {
       final String itemId = item.getId();
       final Role role = item.getRole();
+
       vectorConfigs.add( new BBModelVectorConfig( itemId, wrapperConfig.getIoObject( IO_OBJECT_ID ), itemId, null, null, role, null ) );
     }
 

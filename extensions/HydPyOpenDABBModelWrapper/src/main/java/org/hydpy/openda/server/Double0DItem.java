@@ -19,7 +19,7 @@ import org.openda.interfaces.IExchangeItem.Role;
 /**
  * @author Gernot Belger
  */
-final class Double0DItem extends AbstractServerItem<Double>
+final class Double0DItem extends AbstractSingleServerItem<Double>
 {
   public Double0DItem( final String id, final Role role )
   {
@@ -33,13 +33,13 @@ final class Double0DItem extends AbstractServerItem<Double>
   }
 
   @Override
-  public IExchangeItem toExchangeItem( final Double value )
+  protected IExchangeItem toExchangeItem( final String id, final Role role, final Double value )
   {
-    return new DoubleExchangeItem( getId(), getRole(), value );
+    return new DoubleExchangeItem( id, role, value );
   }
 
   @Override
-  public Double toValue( final IExchangeItem exItem )
+  protected Double toValue( final IExchangeItem exItem )
   {
     final DoubleExchangeItem dblItem = (DoubleExchangeItem)exItem;
     return dblItem.getValue();

@@ -1,4 +1,7 @@
-# Changes since v0.14.0
+# Changes since v0.18.0
 
-Introduced a new parameter 'outputControlDir'. If set, the wrapper will tell HydPy to write its current control parameters to this
-directory after each model instance run. The intentional use is to take over control parameters of calibration runs. 
+Introduced the (provisional) possibility to split up Timeseries1D items (delivered by HydPY) into multiple exchange items (communicated to OpenDA).
+This happens for Timeseries1D items with ending '.split'.
+The item will be split up into exchange items with id <itemId>.<itemname> where itemname is the name provided by HydPy via GET_itemnames.
+
+

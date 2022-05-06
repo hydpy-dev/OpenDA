@@ -61,11 +61,10 @@ final class HydPyServerInstance
     return new HydPyServerException( cause );
   }
 
-  public Collection<IServerItem> getItems( )
+  public Collection<HydPyExchangeItemDescription> getItems( )
   {
     /* not threaded, the items are always available after initialization */
-    @SuppressWarnings( "unchecked" ) final Collection<IServerItem> items = (Collection<IServerItem>)getServer().getItems();
-    return items;
+    return getServer().getItems();
   }
 
   public synchronized void initializeInstance( final String instanceId, final HydPyInstanceDirs instanceDirs )

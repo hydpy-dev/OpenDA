@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.Validate;
@@ -79,13 +80,16 @@ final class HydPyOpenDACaller
 
           /* run simulation */
           "GET_simulate," + //
+
           /* apply hydpy state to instance-state */
+          "GET_deregister_internalconditions," + // REMARK: we need to delete the old state, else we might get memory problems in HydPY
           "GET_save_internalconditions," + //
 
-          // TODO: check, why is there no GET_update_itemvalues as with e.g. with query?
+          // TODO: check, why is there no GET_update_itemvalues as e.q. with query?
           "GET_update_conditionitemvalues," + //
           "GET_update_getitemvalues," + //
           "GET_update_inputitemvalues," + //
+          "GET_update_outputitemvalues," + //
 
           /* and retrieve them directly */
           "GET_query_itemvalues," + //
@@ -138,7 +142,7 @@ final class HydPyOpenDACaller
     m_name = name;
     m_client = client;
 
-    final List<IServerItem> items = requestItems();
+    final List<AbstractServerItem< ? >> items = requestItems();
 
     /* Retrieve initial state and also init-dates and stepsize */
     // REMARK: HydPy always need instanceId; we give fake one here
@@ -164,10 +168,11 @@ final class HydPyOpenDACaller
     items.add( stepItem );
 
     /* build item index */
-    final Map<String, AbstractServerItem< ? >> itemIndex = new HashMap<>( items.size() );
-    for( final IServerItem item : items )
-      itemIndex.put( item.getId(), (AbstractServerItem< ? >)item );
-    m_itemIndex = Collections.unmodifiableMap( itemIndex );
+    // REMARK: using a tree map here, so item are later always written in same order.
+    final SortedMap<String, AbstractServerItem< ? >> itemIndex = new TreeMap<>();
+    for( final AbstractServerItem< ? > item : items )
+      itemIndex.put( item.getId(), item );
+    m_itemIndex = Collections.unmodifiableSortedMap( itemIndex );
   }
 
   public String getName( )
@@ -185,26 +190,36 @@ final class HydPyOpenDACaller
     return item;
   }
 
-  private List<IServerItem> requestItems( ) throws HydPyServerException
+  private List<AbstractServerItem< ? >> requestItems( ) throws HydPyServerException
   {
     final Properties props = m_client.callGet( null, METHODS_REQUEST_ITEMTYPES );
 
-    final List<IServerItem> items = new ArrayList<>( props.size() );
+    final List<AbstractServerItem< ? >> items = new ArrayList<>( props.size() );
 
-    for( final String property : props.stringPropertyNames() )
+    for( final String itemId : props.stringPropertyNames() )
     {
-      final String value = props.getProperty( property );
+      final String value = props.getProperty( itemId );
 
-      final AbstractServerItem< ? > item = AbstractServerItem.fromHydPyType( property, value );
+      final String[] itemNames = getItemNames( itemId );
+
+      final AbstractServerItem< ? > item = AbstractServerItem.fromHydPyType( itemId, value, itemNames );
       items.add( item );
     }
 
     return items;
   }
 
-  public Collection< ? extends IServerItem> getItems( )
+  public Collection<HydPyExchangeItemDescription> getItems( )
   {
-    return m_itemIndex.values();
+    final Collection<HydPyExchangeItemDescription> allDescriptions = new ArrayList<>();
+
+    for( final AbstractServerItem< ? > item : m_itemIndex.values() )
+    {
+      final Collection<HydPyExchangeItemDescription> itemDescriptions = item.getExchangeItemDescriptions();
+      allDescriptions.addAll( itemDescriptions );
+    }
+
+    return allDescriptions;
   }
 
   /**
@@ -245,6 +260,14 @@ final class HydPyOpenDACaller
           .execute();
     }
 
+    // FIXME: we fetch for every instance the full set of item-values and keep them as initial state.
+    // This can be quite costly for long model runs / models with many elements
+    // However in most cases, the initial state could be shared between all instances.
+    // So todo:
+    // - makr items (in hydpy xml?) which are initially the same for all instances
+    // - fetch those only once
+    // - share these between model instances
+
     /*
      * set simulation-dates
      * We always set the initial simulation dates to the init dates of HydPy, as OpenDa we request those to initialize their simulation-range
@@ -257,7 +280,7 @@ final class HydPyOpenDACaller
     /* pre-parse items */
     final Map<String, Object> preValues = preParseValues( props );
 
-    final HydPyExchangeCache instanceCache = new HydPyExchangeCache( m_itemIndex, preValues );
+    final HydPyExchangeCache instanceCache = new HydPyExchangeCache( preValues );
     m_instanceCaches.put( instanceId, instanceCache );
     return parseItemValues( instanceCache, preValues );
   }
@@ -276,8 +299,10 @@ final class HydPyOpenDACaller
       final String id = entry.getKey();
       final Object preValue = entry.getValue();
 
-      final IExchangeItem value = instanceCache.parseItemValue( id, preValue );
-      values.add( value );
+      final AbstractServerItem<Object> item = getItem( id );
+
+      final List<IExchangeItem> exItems = instanceCache.parseItemValue( id, item, preValue );
+      values.addAll( exItems );
     }
 
     return values;
@@ -307,33 +332,67 @@ final class HydPyOpenDACaller
   {
     m_client.debugOut( m_name, "setting state for instanceId = '%s'", instanceId );
 
-    final Map<String, IExchangeItem> sortedItems = new TreeMap<>();
+    final Map<String, IExchangeItem> allExItems = new HashMap<>();
     for( final IExchangeItem item : values )
-      sortedItems.put( item.getId(), item );
+      allExItems.put( item.getId(), item );
 
     /* fetch current time range */
-    final Instant currentStartTime = toTime( sortedItems, HydPyModelInstance.ITEM_ID_FIRST_DATE );
+    final Instant currentStartTime = toTime( allExItems, HydPyModelInstance.ITEM_ID_FIRST_DATE );
     // REMARK: adjust by one step, as HydPy thinks in intervals
     final Instant currentStartTimeNextStep = currentStartTime.plus( m_stepSeconds * 1000 );
-    final Instant currentEndTime = toTime( sortedItems, HydPyModelInstance.ITEM_ID_LAST_DATE );
+    final Instant currentEndTime = toTime( allExItems, HydPyModelInstance.ITEM_ID_LAST_DATE );
 
     final HydPyExchangeCache instanceCache = m_instanceCaches.get( instanceId );
 
     final Poster caller = m_client.callPost( instanceId, METHODS_REGISTER_ITEMVALUES );
-    for( final IExchangeItem exItem : sortedItems.values() )
+
+    for( final AbstractServerItem< ? > serverItem : m_itemIndex.values() )
     {
-      final String valueText = instanceCache.printItemValue( exItem, currentStartTimeNextStep, currentEndTime );
-      caller.body( exItem.getId(), valueText );
+      final List<IExchangeItem> exItems = getItemsFor( serverItem, allExItems );
+      if( exItems != null )
+      {
+        final String valueText = instanceCache.printItemValue( serverItem, exItems, currentStartTimeNextStep, currentEndTime );
+        caller.body( serverItem.getId(), valueText );
+      }
     }
 
     caller.execute();
+  }
+
+  private List<IExchangeItem> getItemsFor( final AbstractServerItem< ? > serverItem, final Map<String, IExchangeItem> exItems ) throws HydPyServerException
+  {
+    final Collection<HydPyExchangeItemDescription> descriptions = serverItem.getExchangeItemDescriptions();
+
+    final List<IExchangeItem> result = new ArrayList<>( descriptions.size() );
+
+    for( final HydPyExchangeItemDescription description : descriptions )
+    {
+      final IExchangeItem exItem = exItems.get( description.getId() );
+      if( exItem != null )
+        result.add( exItem );
+    }
+
+    if( result.size() == 0 )
+    {
+      /* this is ok; item is completely not written */
+      return null;
+    }
+
+    if( result.size() != descriptions.size() )
+    {
+      /* no ok: trying to write only part of a server item */
+      throw new HydPyServerException( "A composed server item must write either all parts or none. some exchange items are missing" );
+    }
+
+    /* ok, all expected exchange items are present */
+    return result;
   }
 
   private Instant toTime( final Map<String, IExchangeItem> sortedItems, final String itemId )
   {
     final IExchangeItem exItem = sortedItems.get( itemId );
     final AbstractServerItem<Instant> serverItem = getItem( HydPyModelInstance.ITEM_ID_FIRST_DATE );
-    return serverItem.toValue( exItem );
+    return serverItem.toValue( Collections.singletonList( exItem ) );
   }
 
   public synchronized String[] getItemNames( final String itemId ) throws HydPyServerException

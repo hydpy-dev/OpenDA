@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 by
+ * Copyright (c) 2021 by
  * - Bundesanstalt für Gewässerkunde
  * - Björnsen Beratende Ingenieure GmbH
  * All rights reserved.
@@ -16,9 +16,25 @@ import org.openda.interfaces.IExchangeItem.Role;
 /**
  * @author Gernot Belger
  */
-public interface IServerItem
+public final class HydPyExchangeItemDescription
 {
-  String getId( );
+  private final String m_id;
 
-  Role getRole( );
+  private final Role m_role;
+
+  public HydPyExchangeItemDescription( final String id, final Role role )
+  {
+    m_id = id;
+    m_role = role;
+  }
+
+  public String getId( )
+  {
+    return m_id;
+  }
+
+  public Role getRole( )
+  {
+    return m_role;
+  }
 }

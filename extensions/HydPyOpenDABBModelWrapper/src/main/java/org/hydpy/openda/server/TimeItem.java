@@ -22,7 +22,7 @@ import org.openda.utils.Time;
 /**
  * @author Gernot Belger
  */
-final class TimeItem extends AbstractServerItem<Instant>
+final class TimeItem extends AbstractSingleServerItem<Instant>
 {
   private static final DateTimeFormatter HYD_PY_DATE_TIME_PARSER = ISODateTimeFormat.dateTimeNoMillis();
 
@@ -38,17 +38,17 @@ final class TimeItem extends AbstractServerItem<Instant>
   }
 
   @Override
-  public IExchangeItem toExchangeItem( final Instant value )
+  protected IExchangeItem toExchangeItem( final String id, final Role role, final Instant value )
   {
     final Instant date = value;
 
     final double mjd = Time.milliesToMjd( date.getMillis() );
 
-    return new DoubleExchangeItem( getId(), getRole(), mjd );
+    return new DoubleExchangeItem( id, role, mjd );
   }
 
   @Override
-  public Instant toValue( final IExchangeItem exItem )
+  protected Instant toValue( final IExchangeItem exItem )
   {
     final DoubleExchangeItem dblItem = (DoubleExchangeItem)exItem;
     final double value = dblItem.getValue();

@@ -5,3 +5,6 @@ This happens for Timeseries1D items with ending '.split'.
 The item will be split up into exchange items with id <itemId>.<itemname> where itemname is the name provided by HydPy via GET_itemnames.
 
 Using the name HydPy server calls 'GET_deregister_internalconditions' and 'GET_update_outputitemvalues'.
+
+The initial state (all item values) fetched from HydPy is now shared between all ensemble instances, assuming HydPy provides always the same values.
+It is internally prepared, that later this might get configured per item.  

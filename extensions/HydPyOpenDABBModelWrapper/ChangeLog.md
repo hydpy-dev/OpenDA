@@ -4,4 +4,4 @@ Introduced the (provisional) possibility to split up Timeseries1D items (deliver
 This happens for Timeseries1D items with ending '.split'.
 The item will be split up into exchange items with id <itemId>.<itemname> where itemname is the name provided by HydPy via GET_itemnames.
 
-
+Using the name HydPy server calls 'GET_deregister_internalconditions' and 'GET_update_outputitemvalues'.

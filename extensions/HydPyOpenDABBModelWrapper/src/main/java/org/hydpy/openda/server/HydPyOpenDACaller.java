@@ -301,7 +301,7 @@ final class HydPyOpenDACaller
 
       final AbstractServerItem<Object> item = getItem( id );
 
-      final List<IExchangeItem> exItems = instanceCache.parseItemValue( id, item, preValue );
+      final List<IExchangeItem> exItems = instanceCache.parseItemValue( item, preValue );
       values.addAll( exItems );
     }
 

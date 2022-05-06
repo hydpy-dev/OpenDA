@@ -28,28 +28,41 @@ import org.openda.interfaces.IExchangeItem;
  */
 class HydPyExchangeCache
 {
-  private final Map<String, Object> m_firstValues;
+  /*
+   * Current (full) state of the model values
+   * They will be initialized by the first call to HydPy while the simulation range is stil the original range.
+   * After each change by HydPy or OpenDA, they will be updated for the current simulation range.
+   */
+  private final Map<String, Object> m_modelRangeValues;
 
   public HydPyExchangeCache( final Map<String, Object> firstValues )
   {
-    m_firstValues = new HashMap<>( firstValues );
+    m_modelRangeValues = new HashMap<>( firstValues );
   }
 
-  public List<IExchangeItem> parseItemValue( final String id, final AbstractServerItem<Object> item, final Object currentRangeValue )
+  public List<IExchangeItem> parseItemValue( final AbstractServerItem<Object> item, final Object currentRangeValue )
   {
+    final String id = item.getId();
+
     /**
      * currentRange value is the value within the current range, as received from HydPy
      * To OpenDa we communicate a value that covers the full (aka model) range.
      */
-    final Object initalRangeValue = m_firstValues.get( id );
-    final Object modelRangeValue = item.mergeToModelRange( initalRangeValue, currentRangeValue );
-// FIXME: should we not update the current state of the full object?
-    return item.toExchangeItems( modelRangeValue );
+    final Object oldModelRangeValue = m_modelRangeValues.get( id );
+    final Object newModelRangeValue = item.mergeToModelRange( oldModelRangeValue, currentRangeValue );
+
+    /* update the current state */
+    m_modelRangeValues.put( id, newModelRangeValue );
+
+    return item.toExchangeItems( newModelRangeValue );
   }
 
   public <T> String printItemValue( final AbstractServerItem<T> serverItem, final List<IExchangeItem> exItems, final Instant currentStartTime, final Instant currentEndTime )
   {
     final T modelRangeValue = serverItem.toValue( exItems );
+
+    /* update the cached state */
+    m_modelRangeValues.put( serverItem.getId(), modelRangeValue );
 
     /**
      * The value within the exchange item covers the full model range.

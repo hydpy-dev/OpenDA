@@ -83,7 +83,14 @@ final class Timeseries1DMultiItem extends AbstractServerItem<Timeseries1D>
       final double[] values = slice.getValuesAsDoubles();
 
       // TODO: set role via constructor...
-      final TimeSeries timeSeries = new TimeSeries( times, values );
+      final String source = "HydPy";
+      final String quantity = "unknown";
+      final String unit = "unknown";
+      final String location = description.getId(); // rather itemname
+      final Role role = description.getRole();
+      final double x = Double.NaN;
+      final double y = Double.NaN;
+      final TimeSeries timeSeries = new TimeSeries( times, values, x, y, source, quantity, unit, location, role );
       timeSeries.setId( description.getId() );
       exItems.add( timeSeries );
     }
@@ -98,8 +105,8 @@ final class Timeseries1DMultiItem extends AbstractServerItem<Timeseries1D>
     final double[] globalTimes = firstItem.getTimes();
     final double[] globalValues = firstItem.getValuesAsDoubles();
 
-    final int[] dimensions = new int[] { globalTimes.length, globalValues.length };
-    final Array array = new Array( dimensions );
+    final int[] dimensions = new int[] { globalTimes.length, exItems.size() };
+    final IArray array = new Array( dimensions );
 
     for( int column = 0; column < exItems.size(); column++ )
     {

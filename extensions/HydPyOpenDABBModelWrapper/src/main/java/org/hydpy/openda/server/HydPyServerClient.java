@@ -74,15 +74,15 @@ final class HydPyServerClient
 
   private final URI m_address;
 
-  // FIXME: configure??
-  private final int m_timeoutMillis = 60000;
+  private final int m_timeoutMillis;
 
   private final PrintStream m_debugOut;
 
-  public HydPyServerClient( final URI address, final PrintStream debugOut )
+  public HydPyServerClient( final URI address, final PrintStream debugOut, final int timeoutMillis )
   {
     m_address = address;
     m_debugOut = debugOut;
+    m_timeoutMillis = timeoutMillis;
   }
 
   private HttpEntity callGet( final URI endpoint, final int timeout ) throws HydPyServerException

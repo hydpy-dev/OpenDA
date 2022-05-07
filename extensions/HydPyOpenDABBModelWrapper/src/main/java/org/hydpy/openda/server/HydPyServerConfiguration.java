@@ -55,6 +55,8 @@ final class HydPyServerConfiguration
 
   private static final String HYD_PY_SCRIPT_PATH_DEFAULT = "hy.py"; //$NON-NLS-1$
 
+  private static final String PROPERTY_TIMEOUT_SECONDS = "timeoutSeconds"; //$NON-NLS-1$
+
   public final Path workingDir;
 
   // REAMRK: we open a local process, so this is always localhost (for now)
@@ -83,6 +85,8 @@ final class HydPyServerConfiguration
   public LogMode logMode;
 
   public final Path logDirectory;
+
+  public final int timeout;
 
   public HydPyServerConfiguration( final Path workDir, final Properties args )
   {
@@ -126,5 +130,7 @@ final class HydPyServerConfiguration
 
     if( logMode == LogMode.file && logDirectoryArgument == null )
       throw new RuntimeException( String.format( "Argument '%s': set to '%s', but '%s' not set", PROPERTY_LOG_DIRECTORY, LogMode.file, PROPERTY_LOG_DIRECTORY ) );
+
+    timeout = 1000 * HydPyUtils.getOptionalPropertyAsInt( args, PROPERTY_TIMEOUT_SECONDS, 60 );
   }
 }

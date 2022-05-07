@@ -100,7 +100,7 @@ final class HydPyServerStarter
 
     m_process = startProcess( m_debugOut );
 
-    final HydPyServerClient client = new HydPyServerClient( address, m_debugOut );
+    final HydPyServerClient client = new HydPyServerClient( address, m_debugOut, m_config.timeout );
 
     try
     {

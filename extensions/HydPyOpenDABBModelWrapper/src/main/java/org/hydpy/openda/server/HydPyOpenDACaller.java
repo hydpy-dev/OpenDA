@@ -262,7 +262,7 @@ final class HydPyOpenDACaller
     if( seriesReaderDir != null )
     {
       m_client.callPost( instanceId, METHODS_REGISTER_SERIESREADERDIR ) //
-          .body( ARGUMENT_SERIESREADERDIR, inputConditionsDir.toString() ) //
+          .body( ARGUMENT_SERIESREADERDIR, seriesReaderDir.toString() ) //
           .execute();
     }
 
@@ -270,7 +270,7 @@ final class HydPyOpenDACaller
     // This can be quite costly for long model runs / models with many elements
     // However in most cases, the initial state could be shared between all instances.
     // So todo:
-    // - makr items (in hydpy xml?) which are initially the same for all instances
+    // - make items (in hydpy xml?) which are initially the same for all instances
     // - fetch those only once
     // - share these between model instances
 

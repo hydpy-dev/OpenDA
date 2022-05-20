@@ -3,7 +3,6 @@
   <modelFactory className="org.hydpy.openda.HydPyModelFactory" workingDirectory=".">
     <!-- Reference to configuration file of HydPy Servers -->
     <arg>configFile:hydpy.properties</arg>
-
     <!-- Configure instance dir for black-box model -->
     <arg>templateDir:results/template</arg>
     <arg>instanceNumberFormat:00</arg>

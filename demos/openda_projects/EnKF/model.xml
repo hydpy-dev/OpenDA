@@ -1,19 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<blackBoxStochModel xmlns="http://www.openda.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/blackBoxStochModelConfig.xsd">
-  <modelFactory className="org.hydpy.openda.HydPyModelFactory" workingDirectory=".">
+<blackBoxStochModel
+        xmlns="http://www.openda.org"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/blackBoxStochModelConfig.xsd">
+  <modelFactory
+          className="org.hydpy.openda.HydPyModelFactory"
+          workingDirectory=".">
     <!-- Reference to configuration file of HydPy Servers -->
     <arg>configFile:hydpy.properties</arg>
     <!-- Configure instance dir for black-box model -->
     <arg>templateDir:results/template</arg>
     <arg>instanceNumberFormat:00</arg>
     <arg>instanceDir:results/instance_%instanceNumber%</arg>
-    <!-- configure output of conditions and series for HydPy using instanceDir -->
-    <arg>outputConditionsDir:%INSTANCEDIR%/conditions</arg>
-    <arg>seriesWriterDir:%INSTANCEDIR%/series</arg>
   </modelFactory>
   <vectorSpecification>
     <state>
-      <noiseModel id="NoiseModelLZ" className="org.hydpy.openda.noise.SpatialNoiseModelFactory" workingDirectory=".">
+      <noiseModel
+              id="NoiseModelLZ"
+              className="org.hydpy.openda.noise.SpatialNoiseModelFactory"
+              workingDirectory=".">
         <configFile>spatialNoise.xml</configFile>
         <exchangeItems>
           <exchangeItem id="noise_lz" operation="add">

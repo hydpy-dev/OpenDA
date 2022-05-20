@@ -118,28 +118,28 @@ headwaters:
 >>> print_values(lahn_1.sim_uncorrected[-7:])
 2.118165, 2.030685, 1.946818, 1.866414, 1.789331, 1.715432, 1.644584
 >>> print_values(lahn_1.sim_corrected[-7:])
-3.027342, 2.902313, 2.880375, 2.761415, 2.647369, 2.538033, 2.433212
+3.027345, 2.902315, 2.880376, 2.761417, 2.64737, 2.538034, 2.433213
 >>> print_values(lahn_1.sim_true[-7:])
 3.092645, 2.964919, 2.842468, 2.725074, 2.612528, 2.504631, 2.40119
 
 >>> print_values(dill.sim_uncorrected[-7:])
 1.006758, 0.949917, 0.896284, 0.84568, 0.797933, 0.752882, 0.710374
 >>> print_values(dill.sim_corrected[-7:])
-0.645061, 0.608641, 0.56005, 0.52843, 0.498595, 0.470444, 0.443883
+0.645062, 0.608641, 0.560051, 0.52843, 0.498595, 0.470444, 0.443883
 >>> print_values(dill.sim_true[-7:])
 0.651233, 0.614464, 0.579772, 0.547038, 0.516152, 0.48701, 0.459513
 
 When inspecting the whole time series of all gauges, some striking differences
 emerge.  The time increment of 5 days causes significant jumps in the results.
-Compared different gauges, we see
-that the `AEnKF` requires only two or three adjustments to correct the `LZ`_
-value of the `lahn_1` catchment but some more steps for the `dill` catchment.
-The simulation agreement for `lahn_2` is also satisfactory, which indicates
-that the `AEnKF` did not make false `LZ`_ adjustments.  However, there is a
-temporary improvement for "lahn_3", but this gets lost until the end of the
-simulation period.  Presumably, the `AEnKF` would require more time to tare the
-`LZ`_ values of all subbasins to also reach a good result for the catchment's
-outlet, which is affected by all modifications above.
+Compared different gauges, we see that the `AEnKF` requires only two or three
+adjustments to correct the `LZ`_ value of the `lahn_1` catchment but some more
+steps for the `dill` catchment.  The simulation agreement for `lahn_2` is also
+satisfactory, which indicates that the `AEnKF` did not make false `LZ`_
+adjustments.  However, there is a temporary improvement for "lahn_3", but this
+gets lost until the end of the simulation period.  Presumably, the `AEnKF`
+would require more time to tare the `LZ`_ values of all subbasins to also reach
+a good result for the catchment's outlet, which is affected by all
+modifications above.
 
 
 >>> from matplotlib import pyplot

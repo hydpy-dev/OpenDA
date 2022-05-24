@@ -81,6 +81,7 @@ final class Timeseries1DMultiItem extends AbstractServerItem<Timeseries1D>
     {
       final HydPyExchangeItemDescription description = m_descriptions.get( column );
 
+      // TODO: this is a performance hotspot, if we have many subitems.
       final IArray slice = allValues.getSlice( VALUE_DIMENSION_INDEX, column );
       final double[] values = slice.getValuesAsDoubles();
 

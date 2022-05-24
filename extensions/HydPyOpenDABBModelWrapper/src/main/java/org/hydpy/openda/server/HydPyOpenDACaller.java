@@ -71,30 +71,6 @@ final class HydPyOpenDACaller
       "POST_register_simulationdates," + //
           "POST_register_changeitemvalues";
 
-  private static final String METHODS_SIMULATE_AND_QUERY_ITEMVALUES = //
-      /* activate current instance-state */
-      "GET_activate_simulationdates," + //
-
-          "GET_load_internalconditions," + //
-          "GET_activate_changeitemvalues," + //
-
-          /* run simulation */
-          "GET_simulate," + //
-
-          /* apply hydpy state to instance-state */
-          "GET_deregister_internalconditions," + // REMARK: we need to delete the old state, else we might get memory problems in HydPY
-          "GET_save_internalconditions," + //
-
-          // TODO: check, why is there no GET_update_itemvalues as e.q. with query?
-          "GET_update_conditionitemvalues," + //
-          "GET_update_getitemvalues," + //
-          "GET_update_inputitemvalues," + //
-          "GET_update_outputitemvalues," + //
-
-          /* and retrieve them directly */
-          "GET_query_itemvalues," + //
-          "GET_query_simulationdates"; //
-
   private static final String METHODS_SAVE_CONTROLPARAMETERS = //
       "POST_register_outputcontroldir," + //
           "GET_save_controls";
@@ -103,7 +79,12 @@ final class HydPyOpenDACaller
 
   private static final String METHODS_WRITE_CONDITIONS = //
       "POST_register_outputconditiondir," + //$NON-NLS-1$
+          "GET_load_internalconditions," + //$NON-NLS-1$
           "GET_save_conditions"; //$NON-NLS-1$
+
+  private static final String METHODS_REGISTER_CONDITION_DIRS = //
+      "POST_register_outputconditiondir," + //$NON-NLS-1$
+          "POST_register_inputconditiondir"; //$NON-NLS-1$
 
   private static final String ITEM_ID_FIRST_DATE_INIT = "firstdate_init"; //$NON-NLS-1$
 
@@ -128,6 +109,9 @@ final class HydPyOpenDACaller
   private static final Map<String, Object> SHARED_INITIAL_STATE = new HashMap<>();
 
   private final Map<String, HydPyExchangeCache> m_instanceCaches = new HashMap<>();
+
+  /** tracks which simulation has been executed at least once */
+  private final Map<String, Boolean> m_firstSimulationDone = new HashMap<>();
 
   private Map<String, String[]> m_itemNames = null;
 
@@ -269,10 +253,10 @@ final class HydPyOpenDACaller
     // FIXME: we fetch for every instance the full set of item-values and keep them as initial state.
     // This can be quite costly for long model runs / models with many elements
     // However in most cases, the initial state could be shared between all instances.
-    // So todo:
-    // - make items (in hydpy xml?) which are initially the same for all instances
-    // - fetch those only once
-    // - share these between model instances
+    // So:
+    // - mark items (in hydpy xml?) which are initially the same for all instances: todo
+    // - fetch those only once: todo
+    // - share these between model instances: done (we fetch them multiple times, but parse them only once for now)
 
     /*
      * set simulation-dates
@@ -447,11 +431,21 @@ final class HydPyOpenDACaller
     return itemNames;
   }
 
-  public List<IExchangeItem> simulate( final String instanceId, final File outputControlDir ) throws HydPyServerException
+  public List<IExchangeItem> simulate( final String instanceId, final File outputControlDir, final File stateConditionsDir ) throws HydPyServerException
   {
     m_client.debugOut( m_name, "running simulation for current state for instanceId = '%s'", instanceId );
 
-    final Properties props = m_client.callGet( instanceId, METHODS_SIMULATE_AND_QUERY_ITEMVALUES );
+    if( stateConditionsDir != null )
+    {
+      m_client.callPost( instanceId, METHODS_REGISTER_CONDITION_DIRS ) //
+          .body( ARGUMENT_INPUTCONDITIONDIR, stateConditionsDir.getAbsolutePath() ) //
+          .body( ARGUMENT_OUTPUTCONDITIONDIR, stateConditionsDir.getAbsolutePath() ) //
+          .execute();
+    }
+
+    final boolean firstSimulationDone = m_firstSimulationDone.getOrDefault( instanceId, false );
+    final String methods = buildSimulateMethods( firstSimulationDone, stateConditionsDir != null );
+    final Properties props = m_client.callGet( instanceId, methods );
 
     /* pre-parse items */
     final Map<String, Object> preValues = preParseValuesOrGetShared( props, null );
@@ -466,12 +460,62 @@ final class HydPyOpenDACaller
           .execute();
     }
 
+    // FIXME: very ugly, and valid only for ParticleFilter...
+    // do not do this for the very first run; except this is a 'real' restart...
+    // maybe the better way would be to use the general restart mechanism to create the conditions files in the instance dir?
+    m_firstSimulationDone.put( instanceId, true );
+
     return simulationResult;
   }
 
-  public void writeConditions( final String instanceId, final File outputConditionsDir ) throws HydPyServerException
+  private String buildSimulateMethods( final boolean firstSimulationDone, final boolean stateConditions )
+  {
+    final StringBuilder buffer = new StringBuilder();
+
+    /* activate current instance-state */
+    buffer.append( "GET_activate_simulationdates," ); //
+
+    // FIXME: see above
+    if( firstSimulationDone && stateConditions )
+      buffer.append( "GET_load_conditions," ); //
+    else
+      buffer.append( "GET_load_internalconditions," ); //
+
+    buffer.append( "GET_activate_changeitemvalues," ); //
+
+    /* run simulation */
+    buffer.append( "GET_simulate," ); //
+
+    /* apply hydpy state to instance-state */
+    buffer.append( "GET_deregister_internalconditions," ); // REMARK: we need to delete the old state, else we might get memory problems in HydPY
+
+    if( stateConditions )
+      buffer.append( "GET_save_conditions," ); //
+    // REMARK: we always save the conditions also internally, to keep the state consistent
+    buffer.append( "GET_save_internalconditions," ); //
+
+    // TODO: check, why is there no GET_update_itemvalues as e.q. with query?
+    buffer.append( "GET_update_conditionitemvalues," ); //
+    buffer.append( "GET_update_getitemvalues," ); //
+    buffer.append( "GET_update_inputitemvalues," ); //
+    buffer.append( "GET_update_outputitemvalues," ); //
+
+    /* and retrieve them directly */
+    buffer.append( "GET_query_itemvalues," ); //
+    buffer.append( "GET_query_simulationdates" ); //
+
+    return buffer.toString();
+  }
+
+  public void writeFinalConditions( final String instanceId, final File outputConditionsDir ) throws HydPyServerException
   {
     Validate.notNull( outputConditionsDir );
+
+    // FIXME: we need to set the correct simulation range here, especially the start time must
+    // be set to the last simulation end time, so hydpy can activate the right conditions
+    // "POST_register_simulationdates"
+    // "GET_activate_simulationdates"
+    // HydPyModelInstance.ITEM_ID_FIRST_DATE
 
     m_client.callPost( instanceId, METHODS_WRITE_CONDITIONS ) //
         .body( ARGUMENT_OUTPUTCONDITIONDIR, outputConditionsDir.getAbsolutePath() ) //

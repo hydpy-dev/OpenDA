@@ -63,7 +63,8 @@ public final class HydPyModelInstance
   public void simulate( )
   {
     final File outputControlDir = m_instanceDirs.getOutputControlDir();
-    m_server.simulate( m_instanceId, outputControlDir );
+    final File stateConditionsDir = m_instanceDirs.getStateConditionsDir();
+    m_server.simulate( m_instanceId, outputControlDir, stateConditionsDir );
   }
 
   public String[] getItemNames( final String itemId ) throws HydPyServerException
@@ -71,10 +72,15 @@ public final class HydPyModelInstance
     return m_server.getItemNames( itemId );
   }
 
-  public void writeConditions( )
+  public void writeFinalConditions( )
   {
     final File outputConditionsDir = m_instanceDirs.getOutputConditionsDir();
     if( outputConditionsDir != null )
-      m_server.writeConditions( m_instanceId, outputConditionsDir );
+      m_server.writeFinalConditions( m_instanceId, outputConditionsDir );
+  }
+
+  public String[] getRestartFileNames( )
+  {
+    return m_instanceDirs.getRestartFileNames();
   }
 }

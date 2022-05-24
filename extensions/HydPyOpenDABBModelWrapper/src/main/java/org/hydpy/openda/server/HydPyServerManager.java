@@ -42,7 +42,7 @@ public final class HydPyServerManager
 
   private static HydPyServerManager INSTANCE = null;
 
-  public static Properties create( final File workingDir, final String filename )
+  public static void create( final File workingDir, final String filename )
   {
     if( INSTANCE != null )
       throw new IllegalStateException( "create was called more than once" );
@@ -51,7 +51,7 @@ public final class HydPyServerManager
 
     final Properties args = new Properties();
     final Path properiesFile = workingDir.toPath().resolve( filename );
-    try( BufferedReader propertiesReader = Files.newBufferedReader( properiesFile ) )
+    try( final BufferedReader propertiesReader = Files.newBufferedReader( properiesFile ) )
     {
       args.load( propertiesReader );
     }
@@ -67,8 +67,6 @@ public final class HydPyServerManager
     final HydPyInstanceConfiguration instanceDirs = HydPyInstanceConfiguration.read( workingDir, args );
 
     INSTANCE = new HydPyServerManager( hydPyConfig, instanceDirs );
-
-    return args;
   }
 
   public synchronized static HydPyServerManager instance( )
@@ -202,7 +200,7 @@ public final class HydPyServerManager
   synchronized void finish( )
   {
     /* let each instance write its conditions */
-    m_instances.forEach( ( id, instance ) -> instance.writeConditions() );
+    m_instances.forEach( ( id, instance ) -> instance.writeFinalConditions() );
 
     /* start shutdown for all servers */
     final List<Future<Void>> futures = m_starters.values().stream().map( HydPyServerStarter::shutdown ).collect( Collectors.toList() );

@@ -33,8 +33,10 @@ import org.openda.blackbox.config.BBWrapperConfig.CloneType;
 import org.openda.blackbox.config.DataObjectConfig;
 import org.openda.blackbox.interfaces.IModelFactory;
 import org.openda.blackbox.wrapper.BBModelFactory;
+import org.openda.blackbox.wrapper.BBModelInstance;
 import org.openda.interfaces.IExchangeItem.Role;
 import org.openda.interfaces.IModelInstance;
+import org.openda.interfaces.IModelState;
 import org.openda.interfaces.IStochModelFactory.OutputLevel;
 import org.openda.interfaces.ITime;
 
@@ -138,9 +140,42 @@ public class HydPyModelFactory implements IModelFactory
 
     final HydPyModelInstance server = HydPyServerManager.instance().getOrCreateInstance( HydPyServerManager.ANY_INSTANCE, null );
     final Collection<HydPyExchangeItemDescription> items = server.getItems();
-    final BBModelConfig bbModelConfig = initializeModelConfig( m_workingDir, wrapperConfig, items );
 
-    return new BBModelFactory( bbModelConfig );
+    final String[] restartFileNames = server.getRestartFileNames();
+
+    final BBModelConfig bbModelConfig = initializeModelConfig( m_workingDir, wrapperConfig, items, restartFileNames );
+
+    return new BBModelFactory( bbModelConfig )
+    {
+      @Override
+      public BBModelInstance getInstance( final String[] arguments, final OutputLevel outputLevel )
+      {
+        final int newInstanceNumber = instanceNumber.val();
+        instanceNumber.inc();
+        return new BBModelInstance( this.bbModelConfig, newInstanceNumber, this.timeHorizon )
+        {
+          @Override
+          public IModelState saveInternalState( )
+          {
+            // REMARK: we need to access any exchange item at this point in order to force
+            // waiting for any simulation of this instance to be finished.
+            // Accessing an exchange item will indirectly call getItemValue on the hydpy instance
+            // which will block until the simulation has finished and returned its current item values.
+
+            // This is necessary in the case, where we write 'state conditions' for every simulation run.
+            // Which in turn is necessary for some algorithms like the ParticleFilter.
+
+            // This can happen, if the algorithm saves the internal state (as files via BBModel stuff) before
+            // accessing the item values.
+
+            final String[] exchangeItemIDs = getExchangeItemIDs();
+            /* final IExchangeItem exchangeItem = */getExchangeItem( exchangeItemIDs[0] );
+
+            return super.saveInternalState();
+          }
+        };
+      }
+    };
   }
 
   private BBWrapperConfig initializeWrapperConfig( final File workingDir, final String templateDirPath, final String instanceDirPath )
@@ -222,7 +257,7 @@ public class HydPyModelFactory implements IModelFactory
     return ioObjects;
   }
 
-  private BBModelConfig initializeModelConfig( final File workingDir, final BBWrapperConfig wrapperConfig, final Collection<HydPyExchangeItemDescription> items )
+  private BBModelConfig initializeModelConfig( final File workingDir, final BBWrapperConfig wrapperConfig, final Collection<HydPyExchangeItemDescription> items, final String[] restartFileNames )
   {
     final File configRootDir = workingDir;
 
@@ -240,9 +275,8 @@ public class HydPyModelFactory implements IModelFactory
     final boolean skipModelActionsIfInstanceDirExists = false;
     final boolean doCleanUp = false;
 
-    final String[] restartFileNames = new String[] {};
-    // TODO: support saved state
-    final String savedStatesDirPrefix = null;
+    // REMARK: for now we use the default value which BBModelInstance normally would get from their xml file.
+    final String savedStatesDirPrefix = "./savedModelState_";
 
     return new BBModelConfig( configRootDir, wrapperConfig, m_instanceNumberFormat, startTime, endTime, timeStepMJD, startTimeExchangeItemIds, endTimeExchangeItemIds, timeStepExchangeItemIds, vectorConfigs, skipModelActionsIfInstanceDirExists, doCleanUp, restartFileNames, savedStatesDirPrefix );
   }

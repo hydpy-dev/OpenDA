@@ -7,29 +7,6 @@ This version of _HydPyOpenDABBModelWrapper_ is currently compatible with OpenDA 
 
 You can download the pre-compiled version of the wrapper [here](https://github.com/hydpy-dev/OpenDA/releases) at GitHub and directly skip to [installation](#installation). 
 
-## Compilation
-
-Building the sources is done via [Gradle](https://gradle.org/). Usually,`gradle build` should be enough to create all artifacts.
-
-The release will be distributed under 
-_HydPyOpenDABBModelWrapper\build\distributions\HydPyOpenDABBModelWrapper.zip_
-
-[Eclipse](https://www.eclipse.org/) is used as IDE for development, and all 
-required Eclipse artifacts are part of the sources. 
-You need the Eclipse Gradle integration, 
-[Eclipse Buildship](https://projects.eclipse.org/projects/tools.buildship), 
-as well.
-
-## Debugging
-
-Debugging OpenDA and the wrapper implementation from Eclipse works well, 
-just create a _Java Application_ configuration with main class 
-`org.openda.application.OpenDaApplication`.
-
-Then add the following to the class path of the launch configuration:
- * all jars (or all least the openda_core.jar) from an existing OpenDA installation _bin_ directory
- * the _HydPyOpenDABBModelWrapper_  
-
 ## Installation
 
 To install the _HydPyOpenDABBModelWrapper_ into [OpenDA](http://openda.org/), 
@@ -207,3 +184,26 @@ Depending on your HyPy and [Python](https://www.python.org/) installation two ad
 * HYD_PY_SCRIPT_PATH: Path to the hyd.py script. (defaults to 'hyd.py')
 
 With [Python](https://www.python.org/) already on your system path, you may not need to configure these system variables.
+
+## Compilation
+
+Building the sources is done via [Gradle](https://gradle.org/). Usually,`gradle build` should be enough to create all artifacts.
+
+The release will be distributed under 
+_HydPyOpenDABBModelWrapper\build\distributions\HydPyOpenDABBModelWrapper.zip_
+
+[Eclipse](https://www.eclipse.org/) is used as IDE for development, and all 
+required Eclipse artifacts are part of the sources. 
+You need the Eclipse Gradle integration, 
+[Eclipse Buildship](https://projects.eclipse.org/projects/tools.buildship), 
+as well.
+
+## Debugging
+
+Debugging OpenDA and the wrapper implementation from Eclipse works well, 
+just create a _Java Application_ configuration with main class 
+`org.openda.application.OpenDaApplication`.
+
+Then add the following to the class path of the launch configuration:
+ * all jars (or all least the openda_core.jar) from an existing OpenDA installation _bin_ directory
+ * the _HydPyOpenDABBModelWrapper_

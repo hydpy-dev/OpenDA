@@ -115,7 +115,7 @@ final class SpatialNoiseModelState implements IModelState
 
     try( final FileOutputStream out = new FileOutputStream( file ) )
     {
-      properties.store( out, PROPERTY_COLDSTART );
+      properties.store( out, null );
     }
     catch( final IOException e )
     {

@@ -327,8 +327,7 @@ final class SpatialNoiseModelInstance extends Instance implements IStochModelIns
   @Override
   public IModelState saveInternalState( )
   {
-    final boolean coldStart = m_timeStep == -1;
-    return new SpatialNoiseModelState( coldStart, m_curentTime, m_timeStep, m_state.clone() );
+    return new SpatialNoiseModelState( false, m_curentTime, m_timeStep, m_state.clone() );
   }
 
   @Override

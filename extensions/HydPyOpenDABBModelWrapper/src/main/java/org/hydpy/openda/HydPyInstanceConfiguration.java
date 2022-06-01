@@ -35,7 +35,9 @@ public final class HydPyInstanceConfiguration
 
   private static final String PROPERTY_OUTPUTCONTROLDIR = "outputControlDir"; //$NON-NLS-1$
 
-  private static final String PROPERTY_STATECONDITIONS_DIR = "stateConditionsDir"; //$NON-NLS-1$
+  // FIXME: decide with or without zip
+  // FIXME: if we do this only during saveInternalState / restore internalState, maybe we should use a fixed name?
+  private static final String PROPERTY_STATECONDITIONS_FILE = "stateConditionsFile"; //$NON-NLS-1$
 
   private final File m_workingDir;
 
@@ -61,7 +63,7 @@ public final class HydPyInstanceConfiguration
     final String seriesWriterPath = properties.getProperty( PROPERTY_SERIESWRITERDIR );
     final String outputControlPath = properties.getProperty( PROPERTY_OUTPUTCONTROLDIR );
 
-    final String stateConditionsRelativePath = properties.getProperty( PROPERTY_STATECONDITIONS_DIR );
+    final String stateConditionsRelativePath = properties.getProperty( PROPERTY_STATECONDITIONS_FILE );
     final boolean useStateConditions = StringUtils.isBlank( stateConditionsRelativePath );
 
     final String stateConditionsPath = useStateConditions ? null : "%INSTANCEDIR%/" + stateConditionsRelativePath;

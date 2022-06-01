@@ -63,7 +63,8 @@ final class HydPyOpenDACaller
 
   private static final String METHODS_SET_AND_LOAD_CONDITIONS = //
       "POST_register_inputconditiondir," + //
-          "GET_load_conditions"; //
+          "GET_load_conditions," + //
+          "GET_save_internalconditions"; //$NON-NLS-1$
 
   // IMPORTANT: register_simulationdates must be called before the rest,
   // as timeseries-items will be cut to exactly this time span.
@@ -109,9 +110,6 @@ final class HydPyOpenDACaller
   private static final Map<String, Object> SHARED_INITIAL_STATE = new HashMap<>();
 
   private final Map<String, HydPyExchangeCache> m_instanceCaches = new HashMap<>();
-
-  /** tracks which simulation has been executed at least once */
-  private final Map<String, Boolean> m_firstSimulationDone = new HashMap<>();
 
   private Map<String, String[]> m_itemNames = null;
 
@@ -431,6 +429,32 @@ final class HydPyOpenDACaller
     return itemNames;
   }
 
+  public List<IExchangeItem> restoreInternalState( final String instanceId, final File stateConditionsDir ) throws HydPyServerException
+  {
+    if( stateConditionsDir != null )
+    {
+      m_client.callPost( instanceId, METHODS_REGISTER_CONDITION_DIRS ) //
+          .body( ARGUMENT_INPUTCONDITIONDIR, stateConditionsDir.getAbsolutePath() ) //
+          .body( ARGUMENT_OUTPUTCONDITIONDIR, stateConditionsDir.getAbsolutePath() ) //
+          .execute();
+    }
+
+    final String METHODS_LOAD_CONDITIONS = //
+        "GET_load_conditions," + //
+            "GET_save_internalconditions," + //
+            "GET_update_conditionitemvalues," + //
+            "GET_query_itemvalues," + //
+            "GET_query_simulationdates";
+
+    final Properties props = m_client.callGet( instanceId, METHODS_LOAD_CONDITIONS );
+
+    /* pre-parse items */
+    final Map<String, Object> preValues = preParseValuesOrGetShared( props, null );
+
+    final HydPyExchangeCache instanceCache = m_instanceCaches.get( instanceId );
+    return parseItemValues( instanceCache, preValues );
+  }
+
   public List<IExchangeItem> simulate( final String instanceId, final File outputControlDir, final File stateConditionsDir ) throws HydPyServerException
   {
     m_client.debugOut( m_name, "running simulation for current state for instanceId = '%s'", instanceId );
@@ -443,8 +467,7 @@ final class HydPyOpenDACaller
           .execute();
     }
 
-    final boolean firstSimulationDone = m_firstSimulationDone.getOrDefault( instanceId, false );
-    final String methods = buildSimulateMethods( firstSimulationDone, stateConditionsDir != null );
+    final String methods = buildSimulateMethods( stateConditionsDir != null );
     final Properties props = m_client.callGet( instanceId, methods );
 
     /* pre-parse items */
@@ -460,26 +483,17 @@ final class HydPyOpenDACaller
           .execute();
     }
 
-    // FIXME: very ugly, and valid only for ParticleFilter...
-    // do not do this for the very first run; except this is a 'real' restart...
-    // maybe the better way would be to use the general restart mechanism to create the conditions files in the instance dir?
-    m_firstSimulationDone.put( instanceId, true );
-
     return simulationResult;
   }
 
-  private String buildSimulateMethods( final boolean firstSimulationDone, final boolean stateConditions )
+  private String buildSimulateMethods( final boolean stateConditions )
   {
     final StringBuilder buffer = new StringBuilder();
 
     /* activate current instance-state */
     buffer.append( "GET_activate_simulationdates," ); //
 
-    // FIXME: see above
-    if( firstSimulationDone && stateConditions )
-      buffer.append( "GET_load_conditions," ); //
-    else
-      buffer.append( "GET_load_internalconditions," ); //
+    buffer.append( "GET_load_internalconditions," ); //
 
     buffer.append( "GET_activate_changeitemvalues," ); //
 
@@ -489,8 +503,10 @@ final class HydPyOpenDACaller
     /* apply hydpy state to instance-state */
     buffer.append( "GET_deregister_internalconditions," ); // REMARK: we need to delete the old state, else we might get memory problems in HydPY
 
+    // TODO: see saveInternalState ni HydPyBBModelInstance; would be better to trigger this eplicitely
     if( stateConditions )
       buffer.append( "GET_save_conditions," ); //
+
     // REMARK: we always save the conditions also internally, to keep the state consistent
     buffer.append( "GET_save_internalconditions," ); //
 

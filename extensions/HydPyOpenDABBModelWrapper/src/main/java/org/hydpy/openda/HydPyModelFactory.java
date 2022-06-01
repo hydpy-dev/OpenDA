@@ -36,7 +36,6 @@ import org.openda.blackbox.wrapper.BBModelFactory;
 import org.openda.blackbox.wrapper.BBModelInstance;
 import org.openda.interfaces.IExchangeItem.Role;
 import org.openda.interfaces.IModelInstance;
-import org.openda.interfaces.IModelState;
 import org.openda.interfaces.IStochModelFactory.OutputLevel;
 import org.openda.interfaces.ITime;
 
@@ -152,28 +151,8 @@ public class HydPyModelFactory implements IModelFactory
       {
         final int newInstanceNumber = instanceNumber.val();
         instanceNumber.inc();
-        return new BBModelInstance( this.bbModelConfig, newInstanceNumber, this.timeHorizon )
-        {
-          @Override
-          public IModelState saveInternalState( )
-          {
-            // REMARK: we need to access any exchange item at this point in order to force
-            // waiting for any simulation of this instance to be finished.
-            // Accessing an exchange item will indirectly call getItemValue on the hydpy instance
-            // which will block until the simulation has finished and returned its current item values.
 
-            // This is necessary in the case, where we write 'state conditions' for every simulation run.
-            // Which in turn is necessary for some algorithms like the ParticleFilter.
-
-            // This can happen, if the algorithm saves the internal state (as files via BBModel stuff) before
-            // accessing the item values.
-
-            final String[] exchangeItemIDs = getExchangeItemIDs();
-            /* final IExchangeItem exchangeItem = */getExchangeItem( exchangeItemIDs[0] );
-
-            return super.saveInternalState();
-          }
-        };
+        return new HydPyBBModelInstance( this.bbModelConfig, newInstanceNumber, this.timeHorizon );
       }
     };
   }

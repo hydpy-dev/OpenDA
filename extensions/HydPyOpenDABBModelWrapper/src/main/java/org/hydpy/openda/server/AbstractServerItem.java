@@ -53,9 +53,9 @@ abstract class AbstractServerItem<TYPE>
     final String split[] = StringUtils.split( hydPyType, "(" );
 
     // FIXME: we probably need this to avoid excessive server/client communication of simulation timeseries
-    final Role role = Role.InOut;
-    // FIXME: get this information from elsewhere (either hydpy via its config or determine how items are used)
-    final boolean isInitialStateShared = true;
+    final Role role = determineRole( id );
+    // FIXME: hacky for now; determine via spezialized item id
+    final boolean isInitialStateShared = id.contains( ".shared" );
 
     switch( split[0].trim() )
     {
@@ -71,7 +71,7 @@ abstract class AbstractServerItem<TYPE>
       case TYPE_TIMESERIES_1D:
       {
         // TODO: HACK: special handling of some items that we want to split into multiple exchange items
-        if( id.endsWith( ".split" ) )
+        if( id.contains( ".split" ) )
           return new Timeseries1DMultiItem( id, role, isInitialStateShared, itemNames );
 
         return new Timeseries1DItem( id, role, isInitialStateShared );
@@ -85,6 +85,22 @@ abstract class AbstractServerItem<TYPE>
     }
 
     throw new IllegalArgumentException( String.format( "Invalid item type: %s", hydPyType ) );
+  }
+
+  private static Role determineRole( final String id )
+  {
+    final String[] split = StringUtils.split( id, '.' );
+    for( final String token : split )
+    {
+      if( token.startsWith( "role_" ) )
+      {
+        final String role = token.substring( "role_".length() );
+        return Role.valueOf( role );
+      }
+    }
+
+    /* default value */
+    return Role.InOut;
   }
 
   public static AbstractServerItem<Instant> newTimeItem( final String id )

@@ -108,6 +108,13 @@ final class HydPyServerInstance
     return getServer().getItemNames( itemId );
   }
 
+  public synchronized void restoreInternalState( final String instanceId, final File stateConditionsDir )
+  {
+    // REMARK: we always restore the conditions fetch the current exchange item state in one call
+    final Future<List<IExchangeItem>> future = HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().restoreInternalState( instanceId, stateConditionsDir ) );
+    m_currentSimulations.put( instanceId, future );
+  }
+
   public synchronized void simulate( final String instanceId, final File outputControlDir, final File stateConditionsDir )
   {
     // REMARK: we always directly simulate and fetch the results in one call
@@ -115,12 +122,12 @@ final class HydPyServerInstance
     m_currentSimulations.put( instanceId, future );
   }
 
-  public void shutdown( )
+  public synchronized void shutdown( )
   {
     HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().shutdown() );
   }
 
-  public void writeFinalConditions( final String instanceId, final File outputConditionsDir )
+  public synchronized void writeFinalConditions( final String instanceId, final File outputConditionsDir )
   {
     final Callable<Void> callable = ( ) -> {
       getServer().writeFinalConditions( instanceId, outputConditionsDir );
@@ -129,4 +136,5 @@ final class HydPyServerInstance
 
     HydPyUtils.submitAndLogExceptions( m_executor, callable );
   }
+
 }

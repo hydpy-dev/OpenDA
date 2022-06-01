@@ -60,6 +60,12 @@ public final class HydPyModelInstance
     m_server.setItemValues( m_instanceId, values );
   }
 
+  public void restoreInternalState( )
+  {
+    final File stateConditionsDir = m_instanceDirs.getStateConditionsDir();
+    m_server.restoreInternalState( m_instanceId, stateConditionsDir );
+  }
+
   public void simulate( )
   {
     final File outputControlDir = m_instanceDirs.getOutputControlDir();

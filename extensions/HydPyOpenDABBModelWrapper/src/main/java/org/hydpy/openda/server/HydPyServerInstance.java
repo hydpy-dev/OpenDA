@@ -69,7 +69,9 @@ final class HydPyServerInstance
 
   public synchronized void initializeInstance( final String instanceId, final HydPyInstanceDirs instanceDirs )
   {
-    final Future<List<IExchangeItem>> future = HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().initializeInstance( instanceId, instanceDirs ) );
+    final Callable<List<IExchangeItem>> callable = ( ) -> getServer().initializeInstance( instanceId, instanceDirs );
+
+    final Future<List<IExchangeItem>> future = HydPyUtils.submitAndLogExceptions( m_executor, callable );
 
     m_currentSimulations.put( instanceId, future );
   }
@@ -136,5 +138,4 @@ final class HydPyServerInstance
 
     HydPyUtils.submitAndLogExceptions( m_executor, callable );
   }
-
 }

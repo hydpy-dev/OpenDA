@@ -44,21 +44,32 @@ public final class HydPyServerManager
 
   public static void create( final File workingDir, final String filename )
   {
+    final Path configFile = workingDir.toPath().resolve( filename ).normalize();
+
     if( INSTANCE != null )
-      throw new IllegalStateException( "create was called more than once" );
+    {
+      /*
+       * If both create are with the exact same config file, we ignore the second call
+       * Else, we protect the user from possible confusion by throwing a hard error.
+       */
+      if( INSTANCE.m_configFile.compareTo( configFile ) == 0 )
+        return;
+
+      final String message = String.format( "HydPy Server initialization failed.%nThe server configuration is applied twice with different configuration files.%nPlease check your observer and stoch-model configurations.%n%s%n%s%n", configFile, INSTANCE.m_configFile );
+      throw new IllegalStateException( message );
+    }
 
     HydPyRequirements.checkOpenDaVersion( System.out );
 
     final Properties args = new Properties();
-    final Path properiesFile = workingDir.toPath().resolve( filename );
-    try( final BufferedReader propertiesReader = Files.newBufferedReader( properiesFile ) )
+    try( final BufferedReader propertiesReader = Files.newBufferedReader( configFile ) )
     {
       args.load( propertiesReader );
     }
     catch( final IOException e )
     {
       e.printStackTrace();
-      final String message = String.format( "Failed to read HydPy server configuration file: %s", properiesFile );
+      final String message = String.format( "Failed to read HydPy server configuration file: %s", configFile );
       throw new RuntimeException( message, e );
     }
 
@@ -66,7 +77,7 @@ public final class HydPyServerManager
 
     final HydPyInstanceConfiguration instanceDirs = HydPyInstanceConfiguration.read( workingDir, args );
 
-    INSTANCE = new HydPyServerManager( hydPyConfig, instanceDirs );
+    INSTANCE = new HydPyServerManager( hydPyConfig, instanceDirs, configFile );
   }
 
   public synchronized static HydPyServerManager instance( )
@@ -109,10 +120,13 @@ public final class HydPyServerManager
 
   private int m_nextProcessId = 0;
 
-  public HydPyServerManager( final HydPyServerConfiguration config, final HydPyInstanceConfiguration instanceDirs )
+  private final Path m_configFile;
+
+  public HydPyServerManager( final HydPyServerConfiguration config, final HydPyInstanceConfiguration instanceDirs, final Path configFile )
   {
     m_config = config;
     m_instanceDirs = instanceDirs;
+    m_configFile = configFile;
 
     // REMARK: always try to shutdown the running HydPy servers.
     Runtime.getRuntime().addShutdownHook( new ShutdownThread( this ) );

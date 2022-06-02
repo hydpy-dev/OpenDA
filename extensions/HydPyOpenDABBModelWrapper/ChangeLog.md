@@ -11,6 +11,9 @@ The wrapper will fetch theme only once, will will improve performance for very l
 
 Moved developer related stuff to end of documentation.
 
+Allow to specify hydpy.properties twice (at observer and stoch-model) instead of hard stopping the application.
+The wrapper will now only complain if two different files are specified, to protect user from confusion. 
+
 Fixed the `EnKF` example, so that it works with the newest version of the adapter.  (And adjust the `AEnKF` example a little.)
 Updated the `LahnH` example project: `musk_classic` replaced `musk_v001`.
 

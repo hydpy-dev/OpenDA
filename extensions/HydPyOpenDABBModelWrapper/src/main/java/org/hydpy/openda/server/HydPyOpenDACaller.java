@@ -40,53 +40,6 @@ final class HydPyOpenDACaller
   // how the model must be called and specifically on how the internal model state must be
   // preserved and restored.
 
-  private static final String METHODS_REQUEST_ITEMTYPES = //
-      "GET_query_itemtypes"; //
-
-  private static final String METHODS_REQUEST_INITIAL_STATE = //
-      /* tell HydPy to write default values into state-register */
-      "GET_register_initialitemvalues," + //
-      /* and also query the initialization time grid (i.e. time span and step with which the HydPy is configured */
-          "GET_query_initialisationtimegrid"; //
-
-  private static final String METHODS_INITIALIZE_INSTANCE = //
-      /* register default values into instance-state */
-      "GET_register_initialitemvalues," + //
-          "POST_register_simulationdates," + //
-          /* and fetch them */
-          "GET_query_itemvalues," + //
-          "GET_query_simulationdates"; //
-
-  private static final String METHODS_REGISTER_SERIESREADERDIR = "POST_register_seriesreaderdir";
-
-  private static final String METHODS_REGISTER_SERIESWRITERDIR = "POST_register_serieswriterdir";
-
-  private static final String METHODS_SET_AND_LOAD_CONDITIONS = //
-      "POST_register_inputconditiondir," + //
-          "GET_load_conditions," + //
-          "GET_save_internalconditions"; //$NON-NLS-1$
-
-  // IMPORTANT: register_simulationdates must be called before the rest,
-  // as timeseries-items will be cut to exactly this time span.
-  private static final String METHODS_REGISTER_ITEMVALUES = //
-      "POST_register_simulationdates," + //
-          "POST_register_changeitemvalues";
-
-  private static final String METHODS_SAVE_CONTROLPARAMETERS = //
-      "POST_register_outputcontroldir," + //
-          "GET_save_controls";
-
-  private static final String METHODS_REQUEST_ITEMNAMES = "GET_query_itemsubnames"; //$NON-NLS-1$
-
-  private static final String METHODS_WRITE_CONDITIONS = //
-      "POST_register_outputconditiondir," + //$NON-NLS-1$
-          "GET_load_internalconditions," + //$NON-NLS-1$
-          "GET_save_conditions"; //$NON-NLS-1$
-
-  private static final String METHODS_REGISTER_CONDITION_DIRS = //
-      "POST_register_outputconditiondir," + //$NON-NLS-1$
-          "POST_register_inputconditiondir"; //$NON-NLS-1$
-
   private static final String ITEM_ID_FIRST_DATE_INIT = "firstdate_init"; //$NON-NLS-1$
 
   private static final String ITEM_ID_LAST_DATE_INIT = "lastdate_init"; //$NON-NLS-1$
@@ -135,7 +88,13 @@ final class HydPyOpenDACaller
     /* Retrieve initial state and also init-dates and stepsize */
     // REMARK: HydPy always need instanceId; we give fake one here
     m_client.debugOut( m_name, "requesting fixed item states and initial time-grid" );
-    final Properties props = m_client.callGet( HydPyServerManager.ANY_INSTANCE, METHODS_REQUEST_INITIAL_STATE );
+    final Properties props = m_client.get( HydPyServerManager.ANY_INSTANCE ) //
+    // FIXME remove register method!
+//        /* tell HydPy to write default values into state-register */
+        .method( "GET_register_initialitemvalues" ) //
+        /* and also query the initialization time grid (i.e. time span and step with which the HydPy is configured */
+        .method( "GET_query_initialisationtimegrid" ) //
+        .execute();
 
     m_firstDateValue = props.getProperty( ITEM_ID_FIRST_DATE_INIT );
     m_lastDateValue = props.getProperty( ITEM_ID_LAST_DATE_INIT );
@@ -180,7 +139,9 @@ final class HydPyOpenDACaller
 
   private List<AbstractServerItem< ? >> requestItems( ) throws HydPyServerException
   {
-    final Properties props = m_client.callGet( null, METHODS_REQUEST_ITEMTYPES );
+    final Properties props = m_client.get( null ) //
+        .method( "GET_query_itemtypes" ) //
+        .execute();
 
     final List<AbstractServerItem< ? >> items = new ArrayList<>( props.size() );
 
@@ -217,6 +178,8 @@ final class HydPyOpenDACaller
   {
     m_client.debugOut( m_name, "initializing state for instanceId = '%s'", instanceId );
 
+    final Poster caller = m_client.post( instanceId );
+
     // REMARK: special handling for the simulation-timegrid: we set the whole (aka init) timegrid as starting state for the simulation-timegrid
     // OpenDa will soon request all items and especially the start/stop time and expect the complete, yet unchanged, simulation-time
 
@@ -224,9 +187,16 @@ final class HydPyOpenDACaller
     final File seriesWriterDir = instanceDirs.getSeriesWriterDir();
     if( seriesWriterDir != null )
     {
-      m_client.callPost( instanceId, METHODS_REGISTER_SERIESWRITERDIR ) //
-          .body( ARGUMENT_SERIESWRITERDIR, seriesWriterDir.getAbsolutePath() ) //
-          .execute();
+      caller.method( "POST_register_serieswriterdir" ) //
+          .body( ARGUMENT_SERIESWRITERDIR, seriesWriterDir.getAbsolutePath() ); //
+    }
+
+    /* register directory for reading series */
+    final File seriesReaderDir = instanceDirs.getSeriesReaderDir();
+    if( seriesReaderDir != null )
+    {
+      caller.method( "POST_register_seriesreaderdir" ) //
+          .body( ARGUMENT_SERIESREADERDIR, seriesReaderDir.toString() ); //
     }
 
     /* Load conditions but only if they exist */
@@ -234,35 +204,38 @@ final class HydPyOpenDACaller
     if( inputConditionsDir != null )
     {
       // REMARK: OpenDa will purge all old instance dirs, so we cannot reuse that structure
-      m_client.callPost( instanceId, METHODS_SET_AND_LOAD_CONDITIONS ) //
+      caller.method( "POST_register_inputconditiondir" ) //
           .body( ARGUMENT_INPUTCONDITIONDIR, inputConditionsDir.toString() ) //
-          .execute();
+          .method( "GET_load_conditions" ) //
+          .method( "GET_save_internalconditions" ) //
+          .method( "GET_update_conditionitemvalues" ) //
+
+          // REMARK: actually everything from "GET_register_initialchangeitemvalues" except "GET_register_initialconditionitemvalues"
+          .method( "GET_register_initialparameteritemvalues" ) //
+          .method( "GET_register_initialinputitemvalues" ) //
+          .method( "GET_register_initialoutputitemvalues" ) //
+          .method( "GET_register_initialgetitemvalues" );
     }
+    else
+      /* register default values into instance-state if we did not load them ourself */
+      caller.method( "GET_register_initialitemvalues" ); //
 
-    /* load series */
-    final File seriesReaderDir = instanceDirs.getSeriesReaderDir();
-    if( seriesReaderDir != null )
-    {
-      m_client.callPost( instanceId, METHODS_REGISTER_SERIESREADERDIR ) //
-          .body( ARGUMENT_SERIESREADERDIR, seriesReaderDir.toString() ) //
-          .execute();
-    }
+    final Properties props = caller //
 
-    // FIXME: we fetch for every instance the full set of item-values and keep them as initial state.
-    // This can be quite costly for long model runs / models with many elements
-    // However in most cases, the initial state could be shared between all instances.
-    // So:
-    // - mark items (in hydpy xml?) which are initially the same for all instances: todo
-    // - fetch those only once: todo
-    // - share these between model instances: done (we fetch them multiple times, but parse them only once for now)
-
-    /*
-     * set simulation-dates
-     * We always set the initial simulation dates to the init dates of HydPy, as OpenDa we request those to initialize their simulation-range
-     */
-    final Properties props = m_client.callPost( instanceId, METHODS_INITIALIZE_INSTANCE ) //
+        /*
+         * set simulation-dates
+         * We always set the initial simulation dates to the init dates of HydPy, as OpenDa we request those to initialize their simulation-range
+         */
+        .method( "POST_register_simulationdates" ) //
         .body( HydPyModelInstance.ITEM_ID_FIRST_DATE, m_firstDateValue ) //
         .body( HydPyModelInstance.ITEM_ID_LAST_DATE, m_lastDateValue ) //
+
+        /* and fetch them */
+        // FIXME: we already share item values between instances if they are markes as suh (.shared)
+        // but we still request them, because we cant request individual items
+        .method( "GET_query_itemvalues" ) //
+        .method( "GET_query_simulationdates" ) //
+
         .execute();
 
     /* pre-parse items */
@@ -352,7 +325,11 @@ final class HydPyOpenDACaller
 
     final HydPyExchangeCache instanceCache = m_instanceCaches.get( instanceId );
 
-    final Poster caller = m_client.callPost( instanceId, METHODS_REGISTER_ITEMVALUES );
+    final Poster caller = m_client.post( instanceId ) //
+        // IMPORTANT: register_simulationdates must be called before the rest,
+        // as timeseries-items will be cut to exactly this time span.
+        .method( "POST_register_simulationdates" ) //
+        .method( "POST_register_changeitemvalues" ); //
 
     for( final AbstractServerItem< ? > serverItem : m_itemIndex.values() )
     {
@@ -409,7 +386,9 @@ final class HydPyOpenDACaller
     {
       m_itemNames = new HashMap<>();
 
-      final Properties props = m_client.callGet( null, METHODS_REQUEST_ITEMNAMES );
+      final Properties props = m_client.get( null ) //
+          .method( "GET_query_itemsubnames" ) //
+          .execute();
 
       /* fetch and parse and the names */
       final Set<String> itemIds = props.stringPropertyNames();
@@ -431,22 +410,22 @@ final class HydPyOpenDACaller
 
   public List<IExchangeItem> restoreInternalState( final String instanceId, final File stateConditionsDir ) throws HydPyServerException
   {
+    final Poster caller = m_client.post( instanceId );
+
     if( stateConditionsDir != null )
     {
-      m_client.callPost( instanceId, METHODS_REGISTER_CONDITION_DIRS ) //
-          .body( ARGUMENT_INPUTCONDITIONDIR, stateConditionsDir.getAbsolutePath() ) //
-          .body( ARGUMENT_OUTPUTCONDITIONDIR, stateConditionsDir.getAbsolutePath() ) //
-          .execute();
+      caller //
+          .method( "POST_register_inputconditiondir" ) //
+          .body( ARGUMENT_INPUTCONDITIONDIR, stateConditionsDir.getAbsolutePath() ); //
     }
 
-    final String METHODS_LOAD_CONDITIONS = //
-        "GET_load_conditions," + //
-            "GET_save_internalconditions," + //
-            "GET_update_conditionitemvalues," + //
-            "GET_query_itemvalues," + //
-            "GET_query_simulationdates";
-
-    final Properties props = m_client.callGet( instanceId, METHODS_LOAD_CONDITIONS );
+    final Properties props = caller //
+        .method( "GET_load_conditions" ) //
+        .method( "GET_save_internalconditions" ) //
+        .method( "GET_update_conditionitemvalues" ) //
+        .method( "GET_query_itemvalues" ) //
+        .method( "GET_query_simulationdates" ) //
+        .execute();
 
     /* pre-parse items */
     final Map<String, Object> preValues = preParseValuesOrGetShared( props, null );
@@ -459,16 +438,53 @@ final class HydPyOpenDACaller
   {
     m_client.debugOut( m_name, "running simulation for current state for instanceId = '%s'", instanceId );
 
+    // FIXME: try to make this an separate call
+    final Poster caller = m_client.post( instanceId );
+
+    caller //
+        /* activate current instance-state */
+        .method( "GET_activate_simulationdates" ) //
+        .method( "GET_load_internalconditions" ) //
+        .method( "GET_activate_changeitemvalues" ) //
+
+        /* run simulation */
+        .method( "GET_simulate" ) //
+
+        /* apply hydpy state to instance-state */
+        .method( "GET_deregister_internalconditions" ); // REMARK: we need to delete the old state, else we might get memory problems in HydPY
+
+    // TODO: see saveInternalState in HydPyBBModelInstance; would be better to trigger this eplicitely
     if( stateConditionsDir != null )
     {
-      m_client.callPost( instanceId, METHODS_REGISTER_CONDITION_DIRS ) //
-          .body( ARGUMENT_INPUTCONDITIONDIR, stateConditionsDir.getAbsolutePath() ) //
+      caller //
+          .method( "POST_register_outputconditiondir" ) //
           .body( ARGUMENT_OUTPUTCONDITIONDIR, stateConditionsDir.getAbsolutePath() ) //
-          .execute();
+          .method( "GET_save_conditions" ); //
     }
 
-    final String methods = buildSimulateMethods( stateConditionsDir != null );
-    final Properties props = m_client.callGet( instanceId, methods );
+    // REMARK: we always save the conditions also internally, to keep the state consistent
+    caller //
+        .method( "GET_save_internalconditions" ) //
+
+        // TODO: check, why is there no GET_update_itemvalues as e.q. with query?
+        .method( "GET_update_conditionitemvalues" ) //
+        .method( "GET_update_getitemvalues" ) //
+        .method( "GET_update_inputitemvalues" ) //
+        .method( "GET_update_outputitemvalues" ) //
+
+        /* and retrieve them directly */
+        .method( "GET_query_itemvalues" ) //
+        .method( "GET_query_simulationdates" ); //
+
+    if( outputControlDir != null )
+    {
+      caller //
+          .method( "POST_register_outputcontroldir" ) //
+          .method( "GET_save_controls" ) //
+          .body( ARGUMENT_OUTPUTCONTROLDIR, outputControlDir.getAbsolutePath() );
+    }
+
+    final Properties props = caller.execute();
 
     /* pre-parse items */
     final Map<String, Object> preValues = preParseValuesOrGetShared( props, null );
@@ -476,51 +492,7 @@ final class HydPyOpenDACaller
     final HydPyExchangeCache instanceCache = m_instanceCaches.get( instanceId );
     final List<IExchangeItem> simulationResult = parseItemValues( instanceCache, preValues );
 
-    if( outputControlDir != null )
-    {
-      m_client.callPost( instanceId, METHODS_SAVE_CONTROLPARAMETERS ) //
-          .body( ARGUMENT_OUTPUTCONTROLDIR, outputControlDir.getAbsolutePath() ) //
-          .execute();
-    }
-
     return simulationResult;
-  }
-
-  private String buildSimulateMethods( final boolean stateConditions )
-  {
-    final StringBuilder buffer = new StringBuilder();
-
-    /* activate current instance-state */
-    buffer.append( "GET_activate_simulationdates," ); //
-
-    buffer.append( "GET_load_internalconditions," ); //
-
-    buffer.append( "GET_activate_changeitemvalues," ); //
-
-    /* run simulation */
-    buffer.append( "GET_simulate," ); //
-
-    /* apply hydpy state to instance-state */
-    buffer.append( "GET_deregister_internalconditions," ); // REMARK: we need to delete the old state, else we might get memory problems in HydPY
-
-    // TODO: see saveInternalState ni HydPyBBModelInstance; would be better to trigger this eplicitely
-    if( stateConditions )
-      buffer.append( "GET_save_conditions," ); //
-
-    // REMARK: we always save the conditions also internally, to keep the state consistent
-    buffer.append( "GET_save_internalconditions," ); //
-
-    // TODO: check, why is there no GET_update_itemvalues as e.q. with query?
-    buffer.append( "GET_update_conditionitemvalues," ); //
-    buffer.append( "GET_update_getitemvalues," ); //
-    buffer.append( "GET_update_inputitemvalues," ); //
-    buffer.append( "GET_update_outputitemvalues," ); //
-
-    /* and retrieve them directly */
-    buffer.append( "GET_query_itemvalues," ); //
-    buffer.append( "GET_query_simulationdates" ); //
-
-    return buffer.toString();
   }
 
   public void writeFinalConditions( final String instanceId, final File outputConditionsDir ) throws HydPyServerException
@@ -533,8 +505,11 @@ final class HydPyOpenDACaller
     // "GET_activate_simulationdates"
     // HydPyModelInstance.ITEM_ID_FIRST_DATE
 
-    m_client.callPost( instanceId, METHODS_WRITE_CONDITIONS ) //
+    m_client.post( instanceId ) //
+        .method( "GET_load_internalconditions" ) //
+        .method( "POST_register_outputconditiondir" ) //
         .body( ARGUMENT_OUTPUTCONDITIONDIR, outputConditionsDir.getAbsolutePath() ) //
+        .method( "GET_save_conditions" ) //
         .execute();
   }
 

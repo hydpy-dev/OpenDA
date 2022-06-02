@@ -16,6 +16,8 @@ import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.http.HttpEntity;
@@ -34,18 +36,55 @@ import org.apache.http.util.EntityUtils;
  */
 final class HydPyServerClient
 {
-  public final class Poster
+  private abstract class Caller<M extends Caller<M>>
+  {
+    private final String m_instanceId;
+
+    private final List<String> m_methods = new ArrayList<>();
+
+    public Caller( final String instanceId )
+    {
+      m_instanceId = instanceId;
+    }
+
+    public final M method( final String method )
+    {
+      m_methods.add( method );
+      @SuppressWarnings( "unchecked" ) final M me = (M)this;
+      return me;
+    }
+
+    public final Properties execute( ) throws HydPyServerException
+    {
+      final String methods = String.join( ",", m_methods );
+
+      return doExecute( HydPyServerClient.this, m_instanceId, methods );
+    }
+
+    protected abstract Properties doExecute( HydPyServerClient client, String instanceId, String methods ) throws HydPyServerException;
+  }
+
+  public final class Getter extends Caller<Getter>
+  {
+    public Getter( final String instanceId )
+    {
+      super( instanceId );
+    }
+
+    @Override
+    protected Properties doExecute( final HydPyServerClient client, final String instanceId, final String methods ) throws HydPyServerException
+    {
+      return client.callGet( instanceId, methods );
+    }
+  }
+
+  public final class Poster extends Caller<Poster>
   {
     private final StringBuffer m_body = new StringBuffer();
 
-    private final String m_instanceId;
-
-    private final String m_methods;
-
-    public Poster( final String instanceId, final String methods )
+    public Poster( final String instanceId )
     {
-      m_instanceId = instanceId;
-      m_methods = methods;
+      super( instanceId );
     }
 
     public Poster body( final String key, final String value )
@@ -54,9 +93,10 @@ final class HydPyServerClient
       return this;
     }
 
-    public Properties execute( ) throws HydPyServerException
+    @Override
+    protected Properties doExecute( final HydPyServerClient client, final String instanceId, final String methods ) throws HydPyServerException
     {
-      return HydPyServerClient.this.callPost( m_instanceId, m_methods, m_body.toString() );
+      return client.callPost( instanceId, methods, m_body.toString() );
     }
   }
 
@@ -195,13 +235,13 @@ final class HydPyServerClient
   // Normally this should already happen via the server-side (using non-threaded HttpServer),
   // however we still get sometimes 'Connection Refused' errors if too many calls are made within a small timespan.
   // Enlarging the socket-queue-size does not really help.
-  public synchronized Properties callGet( final String instanceId, final String methods ) throws HydPyServerException
+  private synchronized Properties callGet( final String instanceId, final String methods ) throws HydPyServerException
   {
     final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, methods );
     return callGetAndParse( endpoint, m_timeoutMillis );
   }
 
-  protected synchronized Properties callPost( final String instanceId, final String methods, final String postBody ) throws HydPyServerException
+  private synchronized Properties callPost( final String instanceId, final String methods, final String postBody ) throws HydPyServerException
   {
     final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, methods );
     return callPostAndParse( endpoint, m_timeoutMillis, postBody );
@@ -244,8 +284,13 @@ final class HydPyServerClient
     m_debugOut.println();
   }
 
-  public Poster callPost( final String instanceId, final String methods )
+  public Poster post( final String instanceId )
   {
-    return new Poster( instanceId, methods );
+    return new Poster( instanceId );
+  }
+
+  public Getter get( final String instanceId )
+  {
+    return new Getter( instanceId );
   }
 }

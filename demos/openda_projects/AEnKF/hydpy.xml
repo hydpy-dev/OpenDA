@@ -32,8 +32,7 @@
       <writer>
         <sequences>
           <node>
-            <sim>
-            </sim>
+            <sim/>
           </node>
           <hland_v1>
             <states>

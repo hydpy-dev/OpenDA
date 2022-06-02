@@ -91,7 +91,7 @@ value of `LZ`_) and recalculate the discharge series, taken as the
 
 The Ensemble Kalman Filter needs to know (an estimate of) the "true"
 discharge to improve the model states.  As in the `calibration example`_,
-we write the "true" series into a *NOOS*  file:
+we write the "true" series into a *NOOS* file:
 
 >>> filepath = '../openda_projects/EnKF/data/lahn_1.discharge.noos'
 >>> with open(filepath, 'w') as noosfile:

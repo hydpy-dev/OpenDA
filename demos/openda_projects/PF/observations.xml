@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataObjectStochObserver
+        xmlns="http://www.openda.org"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/dataObjectStochObserver.xsd">
+  <uncertaintyModule
+          className="org.openda.uncertainties.UncertaintyEngine"
+          workingDirectory=".">
+    <arg>stochObsUncertainties.xml</arg>
+    <arg>useFixedSeed</arg>
+  </uncertaintyModule>
+  <dataObject className="org.hydpy.openda.HydPyIoObject" workingDirectory=".">
+    <fileName>hydpy.properties</fileName>
+  </dataObject>
+ <removeMissingValues>true</removeMissingValues>
+</dataObjectStochObserver>

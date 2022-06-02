@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openDaApplication
+        xmlns="http://www.openda.org"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/openDaApplication.xsd">
+  <stochObserver className="org.openda.observers.IoObjectStochObserver">
+    <workingDirectory/>
+    <configFile>observations.xml</configFile>
+  </stochObserver>
+  <stochModelFactory className="org.openda.blackbox.wrapper.BBStochModelFactory">
+    <workingDirectory/>
+    <configFile>model.xml</configFile>
+  </stochModelFactory>
+  <algorithm className="org.openda.algorithms.kalmanFilter.ParticleFilter">
+    <workingDirectory/>
+    <configString>algorithm.xml</configString>
+  </algorithm>
+  <resultWriters>
+    <resultWriter className="org.openda.resultwriters.PythonResultWriter">
+      <workingDirectory>results</workingDirectory>
+      <configFile>final.py</configFile>
+      <selection>
+        <resultItem id="pred_f"/>
+      </selection>
+    </resultWriter>
+  </resultWriters>
+</openDaApplication>

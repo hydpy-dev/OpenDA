@@ -23,7 +23,7 @@
   <conditions_io>
     <inputdir>init_1996_01_01_00_00_00</inputdir>
     <outputdir>irrelevant</outputdir>
-    <zip>true</zip>
+    <zip>false</zip>
   </conditions_io>
   <series_io>
     <readers>

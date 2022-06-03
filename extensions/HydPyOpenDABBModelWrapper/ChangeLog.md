@@ -1,8 +1,7 @@
 # Changes since v0.20.0
 
-Introduced new configuration for 'stateConditions' that will be written on every simulation run; these stateConditions will be automatically the 'internal' state of a hyd py instance.
-Started to implement support for restart files and saving/restoring the 'internal' state.
-Especially restoring the internal state is implemented by letting HydPy instances load and apply the above mentioned stateConditions.
+Started to implement support for restart files and saving/restoring the 'internal' state. The 'internal' state (of HydPy) will be automaticall written to a file called _hydPyIntrnalState.zip_ within the instance directory.
+Especially restoring the internal state is implemented by letting HydPy instances load and apply the above mentioned file.
 
 Introduced new hack for item id's. for HydPy item ids that contain ".shared", it will be assumed that the initial value retreived from HydPy is identical for all instances.
 The wrapper will fetch theme only once, will will improve performance for very large data sets. Typical use cases are

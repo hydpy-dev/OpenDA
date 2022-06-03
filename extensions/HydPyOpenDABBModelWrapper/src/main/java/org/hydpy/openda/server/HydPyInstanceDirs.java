@@ -28,19 +28,13 @@ public final class HydPyInstanceDirs
 
   private final File m_outputControlDir;
 
-  private final File m_stateConditionsDir;
-
-  private final String[] m_restartFileNames;
-
-  public HydPyInstanceDirs( final File inputConditionsDir, final File outputConditionsDir, final File seriesReaderDir, final File seriesWriterDir, final File outputControlDir, final String[] restartFileNames, final File stateConditionsDir )
+  public HydPyInstanceDirs( final File inputConditionsDir, final File outputConditionsDir, final File seriesReaderDir, final File seriesWriterDir, final File outputControlDir )
   {
     m_inputConditionsDir = inputConditionsDir;
     m_outputConditionsDir = outputConditionsDir;
     m_seriesReaderDir = seriesReaderDir;
     m_seriesWriterDir = seriesWriterDir;
     m_outputControlDir = outputControlDir;
-    m_restartFileNames = restartFileNames;
-    m_stateConditionsDir = stateConditionsDir;
   }
 
   public File getInputConditionsDir( )
@@ -66,15 +60,5 @@ public final class HydPyInstanceDirs
   public File getOutputControlDir( )
   {
     return m_outputControlDir;
-  }
-
-  public String[] getRestartFileNames( )
-  {
-    return m_restartFileNames;
-  }
-
-  public File getStateConditionsDir( )
-  {
-    return m_stateConditionsDir;
   }
 }

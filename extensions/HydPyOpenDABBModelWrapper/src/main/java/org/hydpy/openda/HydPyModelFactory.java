@@ -48,6 +48,8 @@ import org.openda.interfaces.ITime;
  */
 public class HydPyModelFactory implements IModelFactory
 {
+  static final String PATH_HYDPY_INTERNAL_STATE = "hydpyInternalState.zip"; //$NON-NLS-1$
+
   private static final String TOKEN_INSTANCE_NUMBER = "%instanceNumber%";
 
   private static final String PROPERTY_CONFIG_FILE = "configFile"; //$NON-NLS-1$
@@ -140,7 +142,8 @@ public class HydPyModelFactory implements IModelFactory
     final HydPyModelInstance server = HydPyServerManager.instance().getOrCreateInstance( HydPyServerManager.ANY_INSTANCE, null );
     final Collection<HydPyExchangeItemDescription> items = server.getItems();
 
-    final String[] restartFileNames = server.getRestartFileNames();
+    /* register the file that will be written during saveInternalState */
+    final String[] restartFileNames = new String[] { PATH_HYDPY_INTERNAL_STATE };
 
     final BBModelConfig bbModelConfig = initializeModelConfig( m_workingDir, wrapperConfig, items, restartFileNames );
 

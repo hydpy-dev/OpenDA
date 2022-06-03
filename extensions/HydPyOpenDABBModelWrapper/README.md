@@ -100,7 +100,6 @@ The following properties are supported:
 * seriesReaderDir (string, optional): The directory path from where time series will be read (per model instance) by HydPy. Supports additional placeholder tokens, see below.
 * seriesWriterDir (string, optional): The directory path where time series will be written to (per model instance). Supports additional placeholder tokens, see below.
 * outputControlDir (string, optional): The directory path where the control parameters will be written for each model run.
-* stateConditionsFile (string, optional): The relative file path within an instanceDir (as defined in the xml configuration of the black box stoch model). If defined, the wrapper will tell HydPy to write its current conditions to this file on every model simulation. See below for an in depth explanation. Must end with '.zip'.
 
 The wrapper resolves all arguments denoting files or directories relative to the working directory of the factory.
 
@@ -154,12 +153,13 @@ model-instances created by OpenDA, or whole divisors of that number.
 Apart from the chosen algorithm, keep in mind that also the number of physical available processors and the execution time of one single model simulation do influence the optimal number
 of server instances.
 
-#### Not on stateConditionsFile
-As stated if set, the wrapper tells HydPy to write conditions on every model run. HydPy must be configured to write conditions as zip archives, as OpenDA can only handle individual files.
-The wrapper will automatically add this file to the internal state of each model instance.
+#### Note on restart and algorithm that save/restore internal model states
 
-This is necessary, if algorithms are used, that use the internal model state, e.g. the ParticleFilter.
-If the algorithm is based on ensemble instances, it is also necessary to define the 'dirPrefix' within the 'restartInfo' tag of the stoch model xml configuration to use instance based instances.
+The wrapper also handles saving and restoring the 'internal state' of the model (i.e. HydPy) from the OpenDA viewpoint.
+It does so by saving/loading the state from a file which will automatically be called _hydpyInternalState.zip_ and which is located in the instance directory.
+The Black Box model wrapper will be automatically configured to recognize this file as a restart file.
+
+For some algorithms (which are based on ensemble instances, such as the Particle Filter), it is also necessary to define the 'dirPrefix' within the 'restartInfo' tag of the stoch model xml configuration to use instance based instances.
 This is achieved by prefixing the 'dirPrefix' with 'INSTANCE_DIR/', for example
 ```xml
 	<restartInfo dirPrefix="INSTANCE_DIR/savedStochModelState_"/>

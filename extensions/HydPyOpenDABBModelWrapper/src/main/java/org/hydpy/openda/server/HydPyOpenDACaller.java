@@ -64,6 +64,8 @@ final class HydPyOpenDACaller
 
   private final Map<String, HydPyExchangeCache> m_instanceCaches = new HashMap<>();
 
+  private final Map<String, Instant> m_lastSimulationEndTimes = new HashMap<>();
+
   private Map<String, String[]> m_itemNames = null;
 
   private final String m_name;
@@ -89,9 +91,6 @@ final class HydPyOpenDACaller
     // REMARK: HydPy always need instanceId; we give fake one here
     m_client.debugOut( m_name, "requesting fixed item states and initial time-grid" );
     final Properties props = m_client.get( HydPyServerManager.ANY_INSTANCE ) //
-    // FIXME remove register method!
-//        /* tell HydPy to write default values into state-register */
-        .method( "GET_register_initialitemvalues" ) //
         /* and also query the initialization time grid (i.e. time span and step with which the HydPy is configured */
         .method( "GET_query_initialisationtimegrid" ) //
         .execute();
@@ -231,8 +230,8 @@ final class HydPyOpenDACaller
         .body( HydPyModelInstance.ITEM_ID_LAST_DATE, m_lastDateValue ) //
 
         /* and fetch them */
-        // FIXME: we already share item values between instances if they are markes as suh (.shared)
-        // but we still request them, because we cant request individual items
+        // FIXME: we already share item values between instances if they are marked as such (.shared)
+        // but we still request them, because we can't request individual items
         .method( "GET_query_itemvalues" ) //
         .method( "GET_query_simulationdates" ) //
 
@@ -434,11 +433,10 @@ final class HydPyOpenDACaller
     return parseItemValues( instanceCache, preValues );
   }
 
-  public List<IExchangeItem> simulate( final String instanceId, final File outputControlDir, final File stateConditionsDir ) throws HydPyServerException
+  public List<IExchangeItem> simulate( final String instanceId, final File outputControlDir ) throws HydPyServerException
   {
     m_client.debugOut( m_name, "running simulation for current state for instanceId = '%s'", instanceId );
 
-    // FIXME: try to make this an separate call
     final Poster caller = m_client.post( instanceId );
 
     caller //
@@ -452,15 +450,6 @@ final class HydPyOpenDACaller
 
         /* apply hydpy state to instance-state */
         .method( "GET_deregister_internalconditions" ); // REMARK: we need to delete the old state, else we might get memory problems in HydPY
-
-    // TODO: see saveInternalState in HydPyBBModelInstance; would be better to trigger this eplicitely
-    if( stateConditionsDir != null )
-    {
-      caller //
-          .method( "POST_register_outputconditiondir" ) //
-          .body( ARGUMENT_OUTPUTCONDITIONDIR, stateConditionsDir.getAbsolutePath() ) //
-          .method( "GET_save_conditions" ); //
-    }
 
     // REMARK: we always save the conditions also internally, to keep the state consistent
     caller //
@@ -489,27 +478,61 @@ final class HydPyOpenDACaller
     /* pre-parse items */
     final Map<String, Object> preValues = preParseValuesOrGetShared( props, null );
 
+    /* remember last simulation end time for potential following calls to writeConditions */
+    final Instant endSimulationTime = (Instant)preValues.get( HydPyModelInstance.ITEM_ID_LAST_DATE );
+    m_lastSimulationEndTimes.put( instanceId, endSimulationTime );
+
     final HydPyExchangeCache instanceCache = m_instanceCaches.get( instanceId );
     final List<IExchangeItem> simulationResult = parseItemValues( instanceCache, preValues );
 
     return simulationResult;
   }
 
-  public void writeFinalConditions( final String instanceId, final File outputConditionsDir ) throws HydPyServerException
+  public void writeConditions( final String instanceId, final File outputConditionsDir ) throws HydPyServerException
   {
     Validate.notNull( outputConditionsDir );
 
-    // FIXME: we need to set the correct simulation range here, especially the start time must
-    // be set to the last simulation end time, so hydpy can activate the right conditions
-    // "POST_register_simulationdates"
-    // "GET_activate_simulationdates"
-    // HydPyModelInstance.ITEM_ID_FIRST_DATE
+    // REMARK: we must set the current starting time to the last simulated time, as load_internalconditions
+    // will load from the currently set start time, which is exactly present for the last simulated end time.
+    final Instant startTime = m_lastSimulationEndTimes.get( instanceId );
+    // REMARK: the exact value of end time is irrelevant in these calls, so we simply use the start time + plus one time step (hydpy complains if they are the same)
+    final Instant endTime = startTime.plus( m_stepSeconds * 1000 );
+
+    final TimeItem startItem = (TimeItem)m_itemIndex.get( HydPyModelInstance.ITEM_ID_FIRST_DATE );
+    final TimeItem endItem = (TimeItem)m_itemIndex.get( HydPyModelInstance.ITEM_ID_LAST_DATE );
+    final String startTimeText = startItem.printValue( startTime );
+    final String endTimeText = startItem.printValue( endTime );
+
+    /* we also need the current simulation range in order to restare it later */
+    final Properties simulationRangeProperties = m_client.get( instanceId ) //
+        .method( "GET_activate_simulationdates" ) //
+        .method( "GET_query_simulationdates" ) //
+        .execute();
+    final String originalStartTimeText = simulationRangeProperties.getProperty( HydPyModelInstance.ITEM_ID_FIRST_DATE );
+    final String originalEndTimeText = simulationRangeProperties.getProperty( HydPyModelInstance.ITEM_ID_LAST_DATE );
 
     m_client.post( instanceId ) //
+        /* set simulation range to fake range */
+        .method( "POST_register_simulationdates" ) //
+        .body( startItem.getId(), startTimeText ) //
+        .body( endItem.getId(), endTimeText ) //
+        .method( "GET_activate_simulationdates" ) //
+
+        /* restore conditions for current instance and save those */
         .method( "GET_load_internalconditions" ) //
         .method( "POST_register_outputconditiondir" ) //
         .body( ARGUMENT_OUTPUTCONDITIONDIR, outputConditionsDir.getAbsolutePath() ) //
         .method( "GET_save_conditions" ) //
+
+        .execute();
+
+    /* set simulation range to fake range, because anytime (e.g. during restoreInternalState) a query_items may occur */
+    // REMARK: must be a separate call because the item-id's in the body are the same.
+    m_client.post( instanceId ) //
+        .method( "POST_register_simulationdates" ) //
+        .body( startItem.getId(), originalStartTimeText ) //
+        .body( endItem.getId(), originalEndTimeText ) //
+        .method( "GET_activate_simulationdates" ) //
         .execute();
   }
 

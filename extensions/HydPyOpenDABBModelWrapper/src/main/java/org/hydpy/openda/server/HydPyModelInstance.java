@@ -60,17 +60,19 @@ public final class HydPyModelInstance
     m_server.setItemValues( m_instanceId, values );
   }
 
-  public void restoreInternalState( )
+  /**
+   * @param deleteFiles
+   *          If <code>true</code>, the files will be deleted after the state is restored. This must happen inside the implementation, because we need to wait until hydpy really has read them.
+   */
+  public void restoreInternalState( final File stateConditionsDir, final boolean deleteFiles )
   {
-    final File stateConditionsDir = m_instanceDirs.getStateConditionsDir();
-    m_server.restoreInternalState( m_instanceId, stateConditionsDir );
+    m_server.restoreInternalState( m_instanceId, stateConditionsDir, deleteFiles );
   }
 
   public void simulate( )
   {
     final File outputControlDir = m_instanceDirs.getOutputControlDir();
-    final File stateConditionsDir = m_instanceDirs.getStateConditionsDir();
-    m_server.simulate( m_instanceId, outputControlDir, stateConditionsDir );
+    m_server.simulate( m_instanceId, outputControlDir );
   }
 
   public String[] getItemNames( final String itemId ) throws HydPyServerException
@@ -78,15 +80,22 @@ public final class HydPyModelInstance
     return m_server.getItemNames( itemId );
   }
 
-  public void writeFinalConditions( )
+  public void writeConditions( final File outputConditionsFileOrDir ) throws HydPyServerException
   {
-    final File outputConditionsDir = m_instanceDirs.getOutputConditionsDir();
-    if( outputConditionsDir != null )
-      m_server.writeFinalConditions( m_instanceId, outputConditionsDir );
+    m_server.writeConditions( m_instanceId, outputConditionsFileOrDir );
   }
 
-  public String[] getRestartFileNames( )
+  public void writeFinalConditions( )
   {
-    return m_instanceDirs.getRestartFileNames();
+    try
+    {
+      final File outputConditionsDir = m_instanceDirs.getOutputConditionsDir();
+      if( outputConditionsDir != null )
+        m_server.writeConditions( m_instanceId, outputConditionsDir );
+    }
+    catch( final HydPyServerException e )
+    {
+      e.printStackTrace();
+    }
   }
 }

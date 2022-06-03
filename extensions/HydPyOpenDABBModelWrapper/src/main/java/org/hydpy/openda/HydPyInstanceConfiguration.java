@@ -35,10 +35,6 @@ public final class HydPyInstanceConfiguration
 
   private static final String PROPERTY_OUTPUTCONTROLDIR = "outputControlDir"; //$NON-NLS-1$
 
-  // FIXME: decide with or without zip
-  // FIXME: if we do this only during saveInternalState / restore internalState, maybe we should use a fixed name?
-  private static final String PROPERTY_STATECONDITIONS_FILE = "stateConditionsFile"; //$NON-NLS-1$
-
   private final File m_workingDir;
 
   private final String m_inputConditionsPath;
@@ -51,10 +47,6 @@ public final class HydPyInstanceConfiguration
 
   private final String m_outputControlPath;
 
-  private final String m_stateConditionsPath;
-
-  private final String[] m_restartFileNames;
-
   public static HydPyInstanceConfiguration read( final File workingDir, final Properties properties )
   {
     final String inputConditionsPath = properties.getProperty( PROPERTY_INPUTCONDITIONSDIR );
@@ -63,25 +55,10 @@ public final class HydPyInstanceConfiguration
     final String seriesWriterPath = properties.getProperty( PROPERTY_SERIESWRITERDIR );
     final String outputControlPath = properties.getProperty( PROPERTY_OUTPUTCONTROLDIR );
 
-    final String stateConditionsRelativePath = properties.getProperty( PROPERTY_STATECONDITIONS_FILE );
-    final boolean useStateConditions = StringUtils.isBlank( stateConditionsRelativePath );
-
-    final String stateConditionsPath = useStateConditions ? null : "%INSTANCEDIR%/" + stateConditionsRelativePath;
-    final String[] restartFileNames = buildRestartFilenames( stateConditionsRelativePath, useStateConditions );
-
-    return new HydPyInstanceConfiguration( workingDir, inputConditionsPath, outputConditionsPath, seriesReaderPath, seriesWriterPath, outputControlPath, restartFileNames, stateConditionsPath );
+    return new HydPyInstanceConfiguration( workingDir, inputConditionsPath, outputConditionsPath, seriesReaderPath, seriesWriterPath, outputControlPath );
   }
 
-  private static String[] buildRestartFilenames( final String stateConditionsRelativePath, final boolean useStateConditions )
-  {
-    if( useStateConditions )
-      return new String[0];
-
-    // REMARK: hydpy will do exactly this, simply append .zip to the path
-    return new String[] { stateConditionsRelativePath + ".zip" };
-  }
-
-  private HydPyInstanceConfiguration( final File workingDir, final String inputConditionsPath, final String outputConditionsPath, final String seriesReaderPath, final String seriesWriterPath, final String outputControlPath, final String[] restartFileNames, final String stateConditionsPath )
+  private HydPyInstanceConfiguration( final File workingDir, final String inputConditionsPath, final String outputConditionsPath, final String seriesReaderPath, final String seriesWriterPath, final String outputControlPath )
   {
     m_workingDir = workingDir;
     m_inputConditionsPath = inputConditionsPath;
@@ -89,8 +66,6 @@ public final class HydPyInstanceConfiguration
     m_seriesReaderPath = seriesReaderPath;
     m_seriesWriterPath = seriesWriterPath;
     m_outputControlPath = outputControlPath;
-    m_restartFileNames = restartFileNames;
-    m_stateConditionsPath = stateConditionsPath;
   }
 
   public HydPyInstanceDirs resolve( final String instanceId, final File instanceDir, final File hydpyModelDir )
@@ -100,9 +75,8 @@ public final class HydPyInstanceConfiguration
     final File seriesReaderDir = resolveDirectory( instanceId, instanceDir, m_seriesReaderPath, hydpyModelDir, true );
     final File seriesWriterDir = resolveDirectory( instanceId, instanceDir, m_seriesWriterPath, hydpyModelDir, false );
     final File outputControlDir = resolveDirectory( instanceId, instanceDir, m_outputControlPath, hydpyModelDir, false );
-    final File stateConditionsDir = resolveDirectory( instanceId, instanceDir, m_stateConditionsPath, hydpyModelDir, false );
 
-    return new HydPyInstanceDirs( inputConditionsDir, outputConditionsDir, seriesReaderDir, seriesWriterDir, outputControlDir, m_restartFileNames, stateConditionsDir );
+    return new HydPyInstanceDirs( inputConditionsDir, outputConditionsDir, seriesReaderDir, seriesWriterDir, outputControlDir );
   }
 
   private File resolveDirectory( final String instanceId, final File instanceDir, final String path, final File hydpyModelDir, final boolean checkExists )

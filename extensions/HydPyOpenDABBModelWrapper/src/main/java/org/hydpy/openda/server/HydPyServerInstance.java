@@ -12,6 +12,8 @@
 package org.hydpy.openda.server;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +23,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+import org.apache.commons.io.FileUtils;
 import org.openda.interfaces.IExchangeItem;
 
 /**
@@ -31,6 +34,8 @@ import org.openda.interfaces.IExchangeItem;
 final class HydPyServerInstance
 {
   private final Map<String, Future<List<IExchangeItem>>> m_currentSimulations = new HashMap<>();
+
+  private final Map<String, List<File>> m_fileToDeleteAfterGetItems = new HashMap<>();
 
   private final HydPyOpenDACaller m_server;
 
@@ -87,12 +92,32 @@ final class HydPyServerInstance
       final List<IExchangeItem> itemValues = currentSimulation.get();
       // we keep the last simulation forever in case of consecutive 'getItemsValues'
       // m_currentSimulation = null;
+
+      /* we can now also delete files that had been moarked for deletion */
+      deleteFilesMarkedForDeletion( instanceId );
+
       return itemValues;
     }
     catch( final InterruptedException | ExecutionException e )
     {
       throw toHydPyServerException( e );
     }
+  }
+
+  private void deleteFilesMarkedForDeletion( final String instanceId )
+  {
+    final List<File> filesToDelete = m_fileToDeleteAfterGetItems.computeIfAbsent( instanceId, key -> new ArrayList<>() );
+    filesToDelete.forEach( file -> {
+      try
+      {
+        FileUtils.forceDelete( file );
+      }
+      catch( final IOException e )
+      {
+        e.printStackTrace();
+      }
+    } );
+    filesToDelete.clear();
   }
 
   public void setItemValues( final String instanceId, final Collection<IExchangeItem> values )
@@ -110,17 +135,23 @@ final class HydPyServerInstance
     return getServer().getItemNames( itemId );
   }
 
-  public synchronized void restoreInternalState( final String instanceId, final File stateConditionsDir )
+  public synchronized void restoreInternalState( final String instanceId, final File stateConditionsDir, final boolean deleteFiles )
   {
     // REMARK: we always restore the conditions fetch the current exchange item state in one call
     final Future<List<IExchangeItem>> future = HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().restoreInternalState( instanceId, stateConditionsDir ) );
     m_currentSimulations.put( instanceId, future );
+
+    if( deleteFiles )
+    {
+      final List<File> filesToDelete = m_fileToDeleteAfterGetItems.computeIfAbsent( instanceId, key -> new ArrayList<>() );
+      filesToDelete.add( stateConditionsDir );
+    }
   }
 
-  public synchronized void simulate( final String instanceId, final File outputControlDir, final File stateConditionsDir )
+  public synchronized void simulate( final String instanceId, final File outputControlDir )
   {
     // REMARK: we always directly simulate and fetch the results in one call
-    final Future<List<IExchangeItem>> future = HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().simulate( instanceId, outputControlDir, stateConditionsDir ) );
+    final Future<List<IExchangeItem>> future = HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().simulate( instanceId, outputControlDir ) );
     m_currentSimulations.put( instanceId, future );
   }
 
@@ -129,13 +160,22 @@ final class HydPyServerInstance
     HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().shutdown() );
   }
 
-  public synchronized void writeFinalConditions( final String instanceId, final File outputConditionsDir )
+  public synchronized void writeConditions( final String instanceId, final File outputConditionsDir ) throws HydPyServerException
   {
     final Callable<Void> callable = ( ) -> {
-      getServer().writeFinalConditions( instanceId, outputConditionsDir );
+      getServer().writeConditions( instanceId, outputConditionsDir );
       return null;
     };
 
-    HydPyUtils.submitAndLogExceptions( m_executor, callable );
+    try
+    {
+      final Future<Void> future = HydPyUtils.submitAndLogExceptions( m_executor, callable );
+      // REMARK: block until everything is written
+      future.get();
+    }
+    catch( InterruptedException | ExecutionException e )
+    {
+      throw toHydPyServerException( e );
+    }
   }
 }

@@ -21,6 +21,8 @@
       <configFile>final.py</configFile>
       <selection>
         <resultItem id="pred_f"/>
+        <resultItem id="weights" outputLevel="Verbose" />
+        <resultItem id="resamplingIndices" outputLevel="Verbose" />
       </selection>
     </resultWriter>
   </resultWriters>

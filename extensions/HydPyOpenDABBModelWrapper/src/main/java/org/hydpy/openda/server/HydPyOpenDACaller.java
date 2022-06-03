@@ -520,6 +520,9 @@ final class HydPyOpenDACaller
 
         /* restore conditions for current instance and save those */
         .method( "GET_load_internalconditions" ) //
+
+        .method( "GET_activate_changeitemvalues" ) //
+
         .method( "POST_register_outputconditiondir" ) //
         .body( ARGUMENT_OUTPUTCONDITIONDIR, outputConditionsDir.getAbsolutePath() ) //
         .method( "GET_save_conditions" ) //

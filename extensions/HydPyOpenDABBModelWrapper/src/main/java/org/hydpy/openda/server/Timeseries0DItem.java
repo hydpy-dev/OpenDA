@@ -93,6 +93,9 @@ final class Timeseries0DItem extends AbstractSingleServerItem<Timeseries0D>
   {
     final TimeSeries timeSeries = new TimeSeries( modelRangeValue.getTimes(), modelRangeValue.getValues() );
 
+    if( !currentStartTime.isBefore( currentEndTime ) )
+      return new Timeseries0D( new double[0], new double[0], false );
+
     final TimeSeries subset = timeSeries.selectTimeSubset( HydPyUtils.instantToMjd( currentStartTime ), HydPyUtils.instantToMjd( currentEndTime ) );
 
     return toValue( subset );

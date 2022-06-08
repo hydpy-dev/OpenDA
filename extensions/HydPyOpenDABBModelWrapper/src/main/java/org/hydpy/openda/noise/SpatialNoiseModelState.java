@@ -13,9 +13,9 @@
 package org.hydpy.openda.noise;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Properties;
@@ -115,7 +115,7 @@ final class SpatialNoiseModelState implements IModelState
     properties.setProperty( PROPERTY_TIME, Double.toString( m_time ) );
     properties.setProperty( PROPERTY_TIMESTEP, Integer.toString( m_timestep ) );
 
-    try( final FileOutputStream out = new FileOutputStream( file ) )
+    try( final Writer out = Files.newBufferedWriter( file.toPath(), StandardCharsets.ISO_8859_1 ) )
     {
       properties.store( out, null );
     }

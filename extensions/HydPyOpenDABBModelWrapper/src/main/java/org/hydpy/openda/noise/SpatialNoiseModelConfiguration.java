@@ -40,6 +40,8 @@ final class SpatialNoiseModelConfiguration
 
   private final ITime m_timeHorizon;
 
+  private final boolean m_suppressInternalStateSaving;
+
   public static SpatialNoiseModelConfiguration read( final File workingDir, final String[] arguments, final ITime modelHorizon )
   {
     final String configString = arguments[0];
@@ -51,6 +53,8 @@ final class SpatialNoiseModelConfiguration
     final ConfigTree conf = new ConfigTree( workingDir, configString );
 
     final ITime noiseHorizon = parseTimeHorizon( conf, modelHorizon );
+
+    final boolean suppressInternalStateSaving = conf.getAsBoolean( "@suppressInternalStateSaving", false );
 
     // read geometry definitions
     final Map<String, ISpatialNoiseGeometry> geometries = readGeometries( conf, workingDir );
@@ -67,7 +71,7 @@ final class SpatialNoiseModelConfiguration
       items.add( item );
     }
 
-    return new SpatialNoiseModelConfiguration( noiseHorizon, items );
+    return new SpatialNoiseModelConfiguration( noiseHorizon, suppressInternalStateSaving, items );
   }
 
   /*
@@ -238,9 +242,10 @@ final class SpatialNoiseModelConfiguration
     }
   }
 
-  public SpatialNoiseModelConfiguration( final ITime timeHorizon, final Collection<SpatialNoiseModelConfigurationItem> items )
+  public SpatialNoiseModelConfiguration( final ITime timeHorizon, final boolean suppressInternalStateSaving, final Collection<SpatialNoiseModelConfigurationItem> items )
   {
     m_timeHorizon = timeHorizon;
+    m_suppressInternalStateSaving = suppressInternalStateSaving;
     m_items = items;
   }
 
@@ -252,5 +257,10 @@ final class SpatialNoiseModelConfiguration
   public Collection<SpatialNoiseModelConfigurationItem> getItems( )
   {
     return m_items;
+  }
+
+  public boolean isSuppressInternalStateSaving( )
+  {
+    return m_suppressInternalStateSaving;
   }
 }

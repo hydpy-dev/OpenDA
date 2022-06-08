@@ -106,11 +106,6 @@
         <documentation>The unit of the quantity contained in the noise item</documentation>
       </annotation>
     </attribute>
-    <attribute name="timezone" type="string" use="optional">
-      <annotation>
-        <documentation>Time zone for the noise noise item (GMT, CET, etc ...). Currently not supported</documentation>
-      </annotation>
-    </attribute>
   </complexType>
 
   <complexType name="SpatialNoiseModelConfigType">
@@ -119,6 +114,16 @@
       <element name="geometry" type="hydpy:GeometryType" maxOccurs="unbounded" />
       <element name="noiseItem" type="hydpy:NoiseItemType" maxOccurs="unbounded" />
     </sequence>
+    <attribute name="suppressInternalStateSaving" type="boolean" default="false" use="optional">
+      <annotation>
+        <documentation>HACK: suppresses the saving/restoring of the internal state for the noise model.
+        This is necessary for using a noise model in the state of e.g. the ParticleFilter, which currently is
+        implemented by copying state between ensemble instances. However, due to the order in which noise model
+        is computed, added to the deterministic model and then the deterministic model is computed, this leads to a 
+        (most probably unintended) collapse of the ensemble field. 
+        </documentation>
+      </annotation>
+    </attribute>
   </complexType>
   <element name="spatialNoiseModelConfig" type="hydpy:SpatialNoiseModelConfigType">
     <annotation>

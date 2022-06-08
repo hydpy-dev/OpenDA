@@ -84,10 +84,13 @@ final class SpatialNoiseModelInstance extends Instance implements IStochModelIns
 
   private int m_timeStep; // integer value is used for testing equality and counting
 
+  private final boolean m_preventStateRestoration;
+
   public SpatialNoiseModelInstance( final int instanceNumber, final OutputLevel outputLevel, final SpatialNoiseModelConfiguration configuration )
   {
     m_instanceNumber = instanceNumber;
     m_outputLevel = outputLevel;
+    m_preventStateRestoration = configuration.isSuppressInternalStateSaving();
 
     m_timeHorizon = configuration.getTimeHorizon();
 
@@ -333,6 +336,9 @@ final class SpatialNoiseModelInstance extends Instance implements IStochModelIns
   @Override
   public void restoreInternalState( final IModelState savedInternalState )
   {
+    if( m_preventStateRestoration )
+      return;
+
     final SpatialNoiseModelState saveState = (SpatialNoiseModelState)savedInternalState;
 
     final IVector state = saveState.getState();

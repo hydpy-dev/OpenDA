@@ -2,13 +2,13 @@
 <spatialNoiseModelConfig
         xmlns="https://github.com/hydpy-dev/OpenDA"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="https://github.com/hydpy-dev/OpenDA FIXME">
+        xsi:schemaLocation="https://github.com/hydpy-dev/OpenDA https://raw.githubusercontent.com/hydpy-dev/OpenDA/master/extensions/HydPyOpenDABBModelWrapper/src/main/resources/schemas/spatialNoiseModel.xsd">
   <geometry
           id="irregularpoints"
           coordinates="xy"
           horizontalCorrelationScale="1.0"
           horizontalCorrelationScaleUnit="m">
-    <points factory="org.hydpy.openda.noise.points.HydPySpatialNoisePointsGeometryFactory"
+    <pointsHydPy factory="org.hydpy.openda.noise.points.HydPySpatialNoisePointsGeometryFactory"
             modelExchangeItem="lz"
             locationsFile="locations_lz.txt"/>
   </geometry>

@@ -4,11 +4,11 @@
 <img src="logo.png" align="right" width="350">
 
 [![Travis (.com)](https://img.shields.io/travis/com/hydpy-dev/OpenDA/master)](https://app.travis-ci.com/github/hydpy-dev/OpenDA/branches)
-[![GitHub all releases](https://img.shields.io/github/downloads/hydpy-dev/OpenDA/total)](/hydpy-dev/OpenDA/releases)
-[![GitHub License](https://img.shields.io/github/license/hydpy-dev/OpenDA?color=blue)](/hydpy-dev/OpenDA/blob/master/LICENSE)
+[![GitHub all releases](https://img.shields.io/github/downloads/hydpy-dev/OpenDA/total)](https://github.com//hydpy-dev/OpenDA/releases)
+[![GitHub License](https://img.shields.io/github/license/hydpy-dev/OpenDA?color=blue)](https://github.com/hydpy-dev/OpenDA/blob/master/LICENSE)
 
-[![GitHub Open Issues](https://img.shields.io/github/issues-raw/hydpy-dev/OpenDA)](/hydpy-dev/OpenDA/issues?q=is%3Aopen+is%3Aissue)
-[![GitHub Closed Issues](https://img.shields.io/github/issues-closed-raw/hydpy-dev/OpenDA?label=closed)](/hydpy-dev/OpenDA/issues?q=is%3Aissue+is%3Aclosed)
+[![GitHub Open Issues](https://img.shields.io/github/issues-raw/hydpy-dev/OpenDA)](https://github.com//hydpy-dev/OpenDA/issues?q=is%3Aopen+is%3Aissue)
+[![GitHub Closed Issues](https://img.shields.io/github/issues-closed-raw/hydpy-dev/OpenDA?label=closed)](https://github.com/hydpy-dev/OpenDA/issues?q=is%3Aissue+is%3Aclosed)
 
 This repository provides an extension to the open data assimilation framework [OpenDA](http://openda.org/) that integrates 
 [HydPy](https://github.com/hydpy-dev/hydpy) in form of a [wrapper](extensions/HydPyOpenDABBModelWrapper) via OpenDA's black box model concept.

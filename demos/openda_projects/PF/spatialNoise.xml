@@ -2,7 +2,7 @@
 <spatialNoiseModelConfig
         xmlns="https://github.com/hydpy-dev/OpenDA"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="https://github.com/hydpy-dev/OpenDA https://raw.githubusercontent.com/hydpy-dev/OpenDA/master/extensions/HydPyOpenDABBModelWrapper/src/main/resources/schemas/spatialNoiseModel.xsdalNoiseModel.xsd"
+        xsi:schemaLocation="https://github.com/hydpy-dev/OpenDA https://raw.githubusercontent.com/hydpy-dev/OpenDA/master/extensions/HydPyOpenDABBModelWrapper/src/main/resources/schemas/spatialNoiseModel.xsd"
         suppressInternalStateSaving="false">
   <geometry
           id="irregularpoints"

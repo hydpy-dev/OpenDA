@@ -23,15 +23,14 @@ This example modifies the `EnKF`_ example:
  1. We tell `main.oda`_ to use the Particle Filter instead of the Ensemble Kalman
     Filter. Its configuration in `algorithm.xml`_ is nearly identical to the `EnKF`_
     example, except for the additional definition of a sampling method (the only
-    currently available option is `residual resampling`).
+    currently available option is `residual resampling`).  Additionally, we must add the
+    XML element `restartInfo` to `model.xml`_, for which we advise defining the value
+    given in this example.
  2. In the `EnKF`_ example, all ensemble members start from the same initial state.
     This time, all ensemble members start with different conditions (as if we would
     execute today's forecasting run based on the results of yesterday's forecasting
-    run).  Therefore, we must add the XML element `restartInfo` to `model.xml`_ and the
-    `stateConditionsFile` property to `hydpy.properties`_, for which we advise defining
-    the values given in this example.  Additionally, we need to define the naming
-    convention for the directories containing the member-specific conditions via the
-    `inputConditionsDir` property.
+    run).  Therefore, we must define the naming convention for the directories
+    containing the member-specific conditions via the `inputConditionsDir` property.
  3. The HydPy Server supplies the faked "true" discharge to OpenDA.  Therefore, we store
     the related artificial data in HydPy's `asc` files instead of Noos files and select
     `IoObjectStochObserver` instead of `NoosTimeSeriesStochObserver` in `main.oda`_.
@@ -54,7 +53,7 @@ We prepare the same artificial data as for the `EnKF`_ example:
 >>> os.chdir("../../hydpy_projects")
 >>> from hydpy import HydPy, pub, print_values, run_subprocess
 >>> pub.options.printprogress = False
->>> pub.options.reprdigits = 6
+>>> pub.options.reprdigits = 4
 >>> hp = HydPy("LahnH")
 >>> pub.timegrids = "1996-01-01", "1996-02-10", "1d"
 >>> hp.prepare_everything()
@@ -67,8 +66,7 @@ We prepare the same artificial data as for the `EnKF`_ example:
 >>> conditions = hp.conditions
 
 >>> element.model.sequences.states.lz += 4.0
->>> pub.timegrids.sim.firstdate = "1996-01-06"
->>> pub.timegrids.sim.lastdate = "1996-02-10"
+>>> pub.timegrids.sim.dates = "1996-01-06", "1996-02-10"
 >>> hp.simulate()
 >>> sim_true = node.sequences.sim.series.copy()
 
@@ -129,14 +127,14 @@ reaches a close approximation of the "true" discharge at the end of the simulati
 period:
 
 >>> print_values(sim_uncorrected[-7:])
-2.118165, 2.030685, 1.946818, 1.866414, 1.789331, 1.715432, 1.644584
+2.1182, 2.0307, 1.9468, 1.8664, 1.7893, 1.7154, 1.6446
 >>> print_values(sim_corrected[-7:])
-2.910938, 2.964189, 2.931574, 2.630573, 2.768182, 2.325961, 2.347302
+2.9109, 2.9642, 2.9316, 2.6306, 2.7682, 2.326, 2.3473
 >>> print_values(sim_true[-7:])
-3.092645, 2.964919, 2.842468, 2.725074, 2.612528, 2.504631, 2.40119
+3.0926, 2.9649, 2.8425, 2.7251, 2.6125, 2.5046, 2.4012
 
-We load the discharges of the individual ensemble members from the NetCDF files
-within the member-specific result directories:
+We load the discharges of the individual ensemble members from the NetCDF files within
+the member-specific result directories:
 
 >>> from netCDF4 import Dataset
 >>> sim_qs = []
@@ -150,7 +148,7 @@ Particle Filter's strategy of removing the worse and duplicating the better ense
 members:
 
 >>> print_values(sim_qs[0][:7])
-6.324971, 7.315168, 8.683226, 8.016613, 7.562901, 7.38678, 6.856517
+6.3249, 7.3152, 8.6832, 8.0166, 7.5629, 7.3868, 6.8565
 
 The following figure shows the slow progression of the ensemble towards the "true"
 discharge:
@@ -174,9 +172,9 @@ around January 20:
 
 >>> for sim_q in sim_qs:
 ...     print_values(sim_q[19:24])
-4.837738, 4.66079, 4.153893, 4.090537, 4.089549
-4.65794, 4.455157, 4.153893, 3.753347, 4.089549
-4.897043, 4.657431, 4.153893, 4.313108, 3.912578
-4.826983, 4.473287, 4.153893, 3.844529, 3.517095
+4.8377, 4.6608, 4.1539, 4.0905, 4.0895
+4.6579, 4.4551, 4.1539, 3.7533, 4.0895
+4.897, 4.6574, 4.1539, 4.3131, 3.9126
+4.827, 4.4733, 4.1539, 3.8445, 3.5171
 
 We are not sure about the cause of this flaw yet.

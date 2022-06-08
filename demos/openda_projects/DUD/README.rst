@@ -28,150 +28,137 @@
 Calibrating model parameters with DUD
 -------------------------------------
 
-`DUD`_ stands for "doesn't use derivates".  It is - as the name suggests -
-a derivative-free optimisation algorithm.  This example shows how to use its
-`OpenDA`_ implementation for calibrating parameters of `HydPy`_ models.
-To keep the configuration as simple as possible, we calibrate a single
-model parameter, the nonlinearity parameter `Alpha`_ of the *HydPy* model
-`hland_v1`_, affecting the generation of direct discharge, within a single
-headwater catchment of the `LahnH`_ example project.
+`DUD`_ stands for "doesn't use derivates".  It is - as the name suggests - a
+derivative-free optimisation algorithm.  This example shows how to use its `OpenDA`_
+implementation for calibrating parameters of `HydPy`_ models.  To keep the configuration
+as simple as possible, we calibrate a single model parameter, the nonlinearity parameter
+`Alpha`_ of the *HydPy* model `hland_v1`_, affecting the generation of direct discharge,
+within a single headwater catchment of the `LahnH`_ example project.
 
 Prepare the artificial data
 ...........................
 
-This is an artificial data example.  To prove that `DUD`_ finds the
-"true" value of `Alpha`_, we simulate a "true" discharge time series
-with this value of `Alpha`_ beforehand.  Afterwards, we start a `DUD`_
-run with another `Alpha`_ value, using the previously simulated discharge
-as "artificial observations".
+This is an artificial data example.  To prove that `DUD`_ finds the "true" value of
+`Alpha`_, we simulate a "true" discharge time series with this value of `Alpha`_
+beforehand.  Afterwards, we start a `DUD`_ run with another `Alpha`_ value, using the
+previously simulated discharge as "artificial observations".
 
-You can generate this (or a similar) discharge time series by yourself by
-executing the following commands in your Python console.  However, this is
-not necessary to run `DUD`_, as the resulting `observation file`_ is already
-available.
+You can generate this (or a similar) discharge time series by yourself by executing the
+following commands in your Python console.  However, this is not necessary to run
+`DUD`_, as the resulting `observation file`_ is already available.
 
-First, we go into the `HydPy projects`_ directory, containing the *LahnH*
-example project:
+First, we go into the `HydPy projects`_ directory, containing the *LahnH* example
+project:
 
 >>> import os
->>> os.chdir('../../hydpy_projects')
+>>> os.chdir("../../hydpy_projects")
 
 Second, we import the necessary `HydPy`_ tools (the `HydPy main class`_, the
-`module pub`_, and functions `print_values`_ and `run_subprocess`_) and set
-options `printprogress`_ and `reprdigits`_ to our favour:
+`module pub`_, and functions `print_values`_ and `run_subprocess`_) and set options
+`printprogress`_ and `reprdigits`_ to our favour:
 
 >>> from hydpy import HydPy, pub, print_values, run_subprocess
 >>> pub.options.printprogress = False
->>> pub.options.reprdigits = 6
+>>> pub.options.reprdigits = 4
 
-Third, we initialise the project in the default way for 1996.  The value
-of parameter `Alpha`_ is 1.0 for subcatchment Dill, which is our "true"
-value in the following:
+Third, we initialise the project in the default way for 1996.  The value of parameter
+`Alpha`_ is 1.0 for subcatchment Dill, which is our "true" value in the following:
 
->>> hp = HydPy('LahnH')
->>> pub.timegrids = '1996-01-01', '1997-01-01', '1d'
+>>> hp = HydPy("LahnH")
+>>> pub.timegrids = "1996-01-01", "1997-01-01", "1d"
 >>> hp.prepare_everything()
 >>> hp.elements.land_dill.model.parameters.control.alpha
 alpha(1.0)
 
-Fourth, we perform a simulation run and show the first five discharge
-values simulated for the outlet of the Dill catchment, serving as the
-"true" discharge values in the following:
+Fourth, we perform a simulation run and show the first five discharge values simulated
+for the outlet of the Dill catchment, serving as the "true" discharge values in the
+following:
 
 >>> hp.simulate()
 >>> true_discharge = hp.nodes.dill.sequences.sim.series
 >>> print_values(true_discharge[:5])
-11.78038, 8.901179, 7.131072, 6.017787, 5.313211
+11.7804, 8.9012, 7.1311, 6.0178, 5.3132
 
-Fifth, we write the "true" discharge into `observation file`_
-*dill.discharge.noos*:
+Fifth, we write the "true" discharge into `observation file`_ *dill.discharge.noos*:
 
->>> filepath = '../openda_projects/DUD/data/dill.discharge.noos'
->>> with open(filepath, 'w') as noosfile:
-...     _ = noosfile.write('# TimeZone:GMT+1\n')
+>>> filepath = "../openda_projects/DUD/data/dill.discharge.noos"
+>>> with open(filepath, "w") as noosfile:
+...     _ = noosfile.write("# TimeZone:GMT+1\n")
 ...     for date, discharge in zip(pub.timegrids.init, true_discharge):
-...         date = date + '1d'
-...         line = f'{date.datetime.strftime("%Y%m%d%H%M%S")}   {discharge}\n'
+...         date = date + "1d"
+...         line = f"{date.datetime.strftime('%Y%m%d%H%M%S')}   {discharge}\n"
 ...         _ = noosfile.write(line)
 
-The resulting file agrees with the "NOOS" format, which is one of many options.
-See the `OpenDA`_ documentation on the format specifications and the other
-available formats of time series files.
+The resulting file agrees with the "NOOS" format, which is one of many options.  See the
+`OpenDA`_ documentation on the format specifications and the other available formats of
+time series files.
 
-Sixths, we go back to the original working directory, to finally start
-applying `DUD`_:
+Sixths, we go back to the original working directory, to finally start applying `DUD`_:
 
->>> os.chdir('../openda_projects/DUD')
+>>> os.chdir("../openda_projects/DUD")
 
 
 Calibrate parameter Alpha
 .........................
 
-To start `OpenDA`_, one has to write the following command into a command
-line tool:
+To start `OpenDA`_, one has to write the following command into a command line tool:
 
->>> command = 'oda_run_batch main.oda'
+>>> command = "oda_run_batch main.oda"
 
 From within a Python process, one can use function `run_subprocess`_ instead:
 
 >>> _ = run_subprocess(command, verbose=False)
 
-`oda_run_batch` is a batch script available in your `OpenDA`_ installation.
-Its path must either be added to the environment variable *PATH* or prefixed
-to the filename.
+`oda_run_batch` is a batch script available in your `OpenDA`_ installation.  Its path
+must either be added to the environment variable *PATH* or prefixed to the filename.
 
-`main.oda`_ is the entry point for `OpenDA`_, selecting the
-`NoosTimeSeriesObserver` (see above), the `DUD`_ algorithm, and the
-`PythonResultWriter`.  Using the `HydPyStochModelFactory` ensures that
-the `HydPyOpenDABBModelWrapper`_ starts and controls the `HydPy server`_.
+`main.oda`_ is the entry point for `OpenDA`_, selecting the `NoosTimeSeriesObserver`
+(see above), the `DUD`_ algorithm, and the `PythonResultWriter`.  Using the
+`HydPyStochModelFactory` ensures that the `HydPyOpenDABBModelWrapper`_ starts and
+controls the `HydPy server`_.
 
-`model.xml`_ configures the `HydPyOpenDABBModelWrapper`_.  Besides the
-*ModelFactory* specifications (see subsection *OpenDA configuration*) the
-*vectorSpecification* must be defined.  Here, we define two
-exchange items, the first one changing model parameter `Alpha`_ (we also
-named the exchange item *alpha*, but other names would do as well), the
-second one querying the simulated discharge (the name *dill_nodes_sim_series*
-is mandatory here, see the documentation on class `GetItem`_ for further
-information).
+`model.xml`_ configures the `HydPyOpenDABBModelWrapper`_.  Besides the *ModelFactory*
+specifications (see subsection *OpenDA configuration*) the *vectorSpecification* must be
+defined.  Here, we define two exchange items, the first one changing model parameter
+`Alpha`_ (we also named the exchange item *alpha*, but other names would do as well),
+the second one querying the simulated discharge (the name *dill_nodes_sim_series* is
+mandatory here, see the documentation on class `GetItem`_ for further information).
 
-`hydpy.xml`_ specifies the configuration of the initialised `LahnH`_ project
-as well as the required exchange items, corresponding to the exchange
-items defined in `model.xml`_.  You see that exchange item *alpha* is a
-`SetItem`_, which assigns values given by `DUD`_ to parameter `Alpha`_
-without any modification.  Additionally, there is the `GetItem`_ *sim.series*,
-which sends the discharge simulated for the outlet of catchment Dill
-to `DUD`_.  `hydpy.xml`_ must agree with the appropriate version of XML
+`hydpy.xml`_ specifies the configuration of the initialised `LahnH`_ project as well as
+the required exchange items, corresponding to the exchange items defined in
+`model.xml`_.  You see that exchange item *alpha* is a `SetItem`_, which assigns values
+given by `DUD`_ to parameter `Alpha`_ without any modification.  Additionally, there is
+the `GetItem`_ *sim.series*, which sends the discharge simulated for the outlet of
+catchment Dill to `DUD`_.  `hydpy.xml`_ must agree with the appropriate version of XML
 schema file `HydPyConfigMultipleRuns.xsd`_.  See the documentation on
 modules `xmltools`_ and `servertools`_ for further information.
 
-The temporary and final results of the `DUD`_ algorithm are available in
-the subfolder *results*.  Due to selecting the *PythonResultWriter*, we
-can load the final results quickly with the help of module `runpy`_:
+The temporary and final results of the `DUD`_ algorithm are available in the subfolder
+*results*.  Due to selecting the *PythonResultWriter*, we can load the final results
+quickly with the help of module `runpy`_:
 
 >>> import runpy
->>> results = runpy.run_path('results/final.py')
+>>> results = runpy.run_path("results/final.py")
 
-`model.xml`_ sets the initial value of the exchange item *alpha* to 2.0.
-After initialisation, the `HydPyOpenDABBModelWrapper`_ queries this
-value and sends it back to the `HydPy Server`_, which also sets the
-value of parameter `Alpha`_ to 2.0.  The following command prints
-all evaluated *alpha* values.  `DUD`_ starts at 2.0 and reaches
-the correct value of 1.0 with a precision of six decimal places within
-six simulation runs:
+`model.xml`_ sets the initial value of the exchange item *alpha* to 2.0.  After
+initialisation, the `HydPyOpenDABBModelWrapper`_ queries this value and sends it back to
+the `HydPy Server`_, which also sets the value of parameter `Alpha`_ to 2.0.  The
+following command prints all evaluated *alpha* values.  `DUD`_ starts at 2.0 and reaches
+the correct value of 1.0 with a precision of six decimal places within six simulation
+runs:
 
->>> print_values(2.0+results['evaluatedParameters'][:,0])
-2.0, 3.0, 1.002549, 1.000307, 1.0
+>>> print_values(2.0+results["evaluatedParameters"][:,0])
+2.0, 3.0, 1.0025, 1.0003, 1.0
 
-The following commands print the "artificial observations", the simulation
-results of the first evaluation (*alpha*=2.0), and the simulation results
-of the last evaluation (*alpha*=1.0), respectively:
+The following commands print the "artificial observations", the simulation results of
+the first evaluation (*alpha*=2.0), and the simulation results of the last evaluation
+(*alpha*=1.0), respectively:
 
->>> print_values(results['observed'][-1, :5])
-11.78038, 8.901179, 7.131072, 6.017787, 5.313211
->>> print_values(results['predicted'][0, :5])
-35.537828, 7.741064, 5.018981, 4.501784, 4.238874
->>> print_values(results['predicted'][-1, :5])
-11.780381, 8.901179, 7.131072, 6.017787, 5.313211
+>>> print_values(results["observed"][-1, :5])
+11.7804, 8.9012, 7.1311, 6.0178, 5.3132
+>>> print_values(results["predicted"][0, :5])
+35.5378, 7.7411, 5.019, 4.5018, 4.2389
+>>> print_values(results["predicted"][-1, :5])
+11.7804, 8.9012, 7.1311, 6.0178, 5.3132
 
-At least for this minimal example, `DUD`_ works well for calibrating
-`HydPy`_ models.
+At least for this minimal example, `DUD`_ works well for calibrating `HydPy`_ models.

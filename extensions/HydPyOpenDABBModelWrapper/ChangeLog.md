@@ -1,19 +1,5 @@
-# Changes since v0.20.0
+# Changes since v0.21.0
 
-Started to implement support for restart files and saving/restoring the 'internal' state. The 'internal' state (of HydPy) will be automaticall written to a file called _hydPyIntrnalState.zip_ within the instance directory.
-Especially restoring the internal state is implemented by letting HydPy instances load and apply the above mentioned file.
-
-Introduced new hack for item id's. for HydPy item ids that contain ".shared", it will be assumed that the initial value retreived from HydPy is identical for all instances.
-The wrapper will fetch theme only once, will will improve performance for very large data sets. Typical use cases are
-- items that are used as observations
-- items that are initially nan and will only be later filled by the simulation 
-
-Moved developer related stuff to end of documentation.
-
-Allow to specify hydpy.properties twice (at observer and stoch-model) instead of hard stopping the application.
-The wrapper will now only complain if two different files are specified, to protect user from confusion. 
-
-Fixed the `EnKF` example, so that it works with the newest version of the adapter.  (And adjust the `AEnKF` example a little.)
-Updated the `LahnH` example project: `musk_classic` replaced `musk_v001`.
-
-Fixed: setting seriesreader dir did not work.
+Added new option _suppressInternalStateSaving_ to configuration of _SpatialNoiseModelFactory_ which allows to
+suppress saving/restoring the internal state of the noise model. This will allow to use it in combination with
+the ParticleFilter. 

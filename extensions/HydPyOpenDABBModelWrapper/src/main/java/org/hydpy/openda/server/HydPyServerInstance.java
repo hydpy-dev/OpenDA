@@ -12,7 +12,6 @@
 package org.hydpy.openda.server;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -23,7 +22,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import org.apache.commons.io.FileUtils;
 import org.openda.interfaces.IExchangeItem;
 
 /**
@@ -107,16 +105,10 @@ final class HydPyServerInstance
   private void deleteFilesMarkedForDeletion( final String instanceId )
   {
     final List<File> filesToDelete = m_fileToDeleteAfterGetItems.computeIfAbsent( instanceId, key -> new ArrayList<>() );
-    filesToDelete.forEach( file -> {
-      try
-      {
-        FileUtils.forceDelete( file );
-      }
-      catch( final IOException e )
-      {
-        e.printStackTrace();
-      }
-    } );
+
+    // REMARK: delegate to a separate thread, in order to minimalize blocking the main thread
+    FileDeletionThread.instance().addFilesForDeletion( filesToDelete );
+
     filesToDelete.clear();
   }
 

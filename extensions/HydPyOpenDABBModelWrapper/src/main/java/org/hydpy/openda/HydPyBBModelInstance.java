@@ -11,15 +11,14 @@
  */
 package org.hydpy.openda;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,6 +29,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
+import org.hydpy.openda.server.FileDeletionThread;
 import org.hydpy.openda.server.HydPyModelInstance;
 import org.hydpy.openda.server.HydPyServerManager;
 import org.openda.blackbox.config.BBModelConfig;
@@ -72,7 +72,7 @@ final class HydPyBBModelInstance extends BBModelInstance
       /* delete temp dir/file */
       // REMARK: hydpy deletes the directory if it writes a zip file...
       if( Files.isDirectory( tempDir ) )
-        FileUtils.forceDelete( tempDir.toFile() );
+        FileDeletionThread.instance().addFilesForDeletion( Collections.singletonList( tempDir.toFile() ) );
     }
     catch( final Exception e )
     {
@@ -104,10 +104,9 @@ final class HydPyBBModelInstance extends BBModelInstance
           // maybe skip directories for formats like AR that don't store directories
           final ArchiveEntry entry = o.createArchiveEntry( sourceFile, sourceFile.getFileName().toString() );
           o.putArchiveEntry( entry );
-          try( final InputStream i = new BufferedInputStream( Files.newInputStream( sourceFile ) ) )
-          {
-            IOUtils.copy( i, o );
-          }
+
+          FileUtils.copyFile( sourceFile.toFile(), o );
+
           o.closeArchiveEntry();
         }
       }

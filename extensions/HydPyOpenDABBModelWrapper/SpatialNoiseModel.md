@@ -29,17 +29,17 @@ For example:
 
 ## Configuration
 
-As configuration, an xml file must be specified (via the _configFile_ tag) that validates by the [xml schema of the spatial noise model)(https://raw.githubusercontent.com/hydpy-dev/OpenDA/master/extensions/HydPyOpenDABBModelWrapper/src/main/resources/schemas/spatialNoiseModel.xsd). 
+A xml file must be specified (via the _configFile_ tag) that validates by the [xml schema of the spatial noise model](https://raw.githubusercontent.com/hydpy-dev/OpenDA/master/extensions/HydPyOpenDABBModelWrapper/src/main/resources/schemas/spatialNoiseModel.xsd). 
 The configuration essentially defines a list of (noise-) exchange items, a list of geometries which are referenced by the exchange items, and an (optional) simulation time span.
 
 For the general concept and the simulation time span, see the documentation and examples of the original maps noise model.
 
-### noise exchange items
+### Noise Items
 
-Each noise exchange item can be used within the state of a black box model instance and allows to defined the following
+Each noise item defines an exchange item that can be used within the state of a black box model instance and allows to defined the following
 attributes:
 * id: Unique identifier of this exchange item
-* quantity: name of the quantity this item represants
+* quantity: name of the quantity this item represents
 * unit: physical unit of the values
 * standardDeviation: the standard deviation used to compute white noise
 * timeCorrelationScale: FIXME
@@ -60,12 +60,13 @@ For example:
           geometry="my_fancy_geometry" /> 
 ```
 
-### geometries
+### Geometries
 
-Each geometry element defines a spatial distribution of model elements. Geometry elements can be referenced from several noise items, if they represent the same spatial distribution.
+Each geometry element defines a spatial distribution of the entries of the data vector of the noise (typically representing the locations of model elements or observation stations).
+Geometry elements can be referenced from multiple noise items, if they should represent the same spatial distribution.
 A geometry allows to define the following general attributes:
 * id: its unique identifier, used to be referenced by noise items
-* coordinates: the type of coordinate system which coordinates of this geometry are in. Allowed values are _xy_ and _wgs84_. Depending on this type, the distance between points is computed is either computed euclidian (_xy_) or spherical (_wgs84_).
+* coordinates: the type of coordinate system which coordinates of this geometry are in. Allowed values are _xy_ and _wgs84_. Depending on this type, the distance between points is computed as either euclidian (_xy_) or spherical (_wgs84_).
 * horizontalCorrelationScale: FIXME
 * horizontalCorrelationScaleUnit: unit of the _horizontalCorrelationScale_. Allowed values are _cm_, _m_ and _km_.
 
@@ -89,7 +90,7 @@ The attributes and further structure of the sub-element depends on its implement
 It is also possible to implement your own geometry type by providing an implementation class.
 The configuration parser will ignore the actual name of the sub-element and will work as long as the _factory_ attribute is present.   
 
-The following predefined geometry types are shipped with this extension. See the xml schema for further details.
+The following predefined geometry types are shipped with this extension. See the [xml schema](https://raw.githubusercontent.com/hydpy-dev/OpenDA/master/extensions/HydPyOpenDABBModelWrapper/src/main/resources/schemas/spatialNoiseModel.xsd) for further details.
 * grid: A regular grid of points
 * points: An arbitrary list of point coordinates
 * pointsHydPy: Specialized spatial distribution of (arbitrary) 'point' locations, where the order (within the noise vector) will be
@@ -97,14 +98,14 @@ The following predefined geometry types are shipped with this extension. See the
 
 #### Notes on pointsHydPy
 
-The pointsHydPy geometry type is specially suited to work with HydPy exchange items. As the actual model exchange item, onto which the noise will later be added
-is defined and fetched from HydPy, the order of data entries is determined by the HydPy model. In order to avoid a manual mapping between coordinates and
+The pointsHydPy geometry type is specially suited to work with HydPy exchange items. As the actual model exchange item, onto which the noise will later be added,
+is defined and fetched from HydPy, the order of data entries is determined by the HydPy model. To avoid a manual mapping between coordinates and
 model elements, this geometry type allow to map locations to elements via their names. The user than only needs to provide a mapping file between element names and
 spatial locations. See the schema for further details.
 
-### saving internal state (or rather not)
+### Saving internal state (or rather not)
 
-The root element of the configuration file, _spatialNoiseModelConfig_ , allows for an additional boolean attribute _suppressInternalStateSaving_.
+The root element of the configuration file, _spatialNoiseModelConfig_, allows for an additional boolean attribute _suppressInternalStateSaving_.
 Setting this attribute to _true_ will suppress the saving/restoring of the internal state of the noise model.
 
 This is necessary for using a noise model in the state definition of some algorithms (e.g. the ParticleFilter), 

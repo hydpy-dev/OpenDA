@@ -13,9 +13,11 @@
 package org.hydpy.openda.noise;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Properties;
 
 import org.openda.interfaces.IModelState;
@@ -43,7 +45,7 @@ final class SpatialNoiseModelState implements IModelState
   {
     final Properties properties = new Properties();
 
-    try( final FileInputStream in = new FileInputStream( persistentStateFile ) )
+    try( final Reader in = Files.newBufferedReader( persistentStateFile.toPath(), StandardCharsets.ISO_8859_1 ) )
     {
       properties.load( in );
     }

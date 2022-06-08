@@ -109,6 +109,7 @@ The arguments _inputConditionsDir_, _outputConditionsDir_, _seriesReaderDir_, _s
  * HYDPYMODELDIR: the HydPy project directory as specified in the _configFile_
  * WORKINGDIR : the working directory (not required as pathes are resolved against the working dir, but can be used to make this more explicit)
 
+<a name="HyPyIoObject"></a>
 #### Note on observations
 To access observed values, the usual mechanisms of OpenDA apply, and any existing _stochObserver_ can be used in the usual way.
 However, it is possible (and convenient) to access the observed values directly from the HydPy model, as these are often already contained within the model. 

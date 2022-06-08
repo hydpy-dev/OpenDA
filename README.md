@@ -4,6 +4,11 @@
 <img src="logo.png" align="right" width="350">
 
 [![Travis (.com)](https://img.shields.io/travis/com/hydpy-dev/OpenDA/master)](https://app.travis-ci.com/github/hydpy-dev/OpenDA/branches)
+[![GitHub all releases](https://img.shields.io/github/downloads/hydpy-dev/OpenDA/total)](https://github.com/hydpy-dev/OpenDA/releases)
+[![GitHub License](https://img.shields.io/github/license/hydpy-dev/OpenDA?color=blue)](https://github.com/hydpy-dev/OpenDA/blob/master/LICENSE)
+
+[![GitHub Open Issues](https://img.shields.io/github/issues-raw/hydpy-dev/OpenDA)](https://github.com/hydpy-dev/OpenDA/issues?q=is%3Aopen+is%3Aissue)
+[![GitHub Closed Issues](https://img.shields.io/github/issues-raw/hydpy-dev/OpenDA?label=closed)](./issues?q=is%3Aissue+is%3Aclosed)
 
 This repository provides an extension to the open data assimilation framework [OpenDA](http://openda.org/) that integrates 
 [HydPy](https://github.com/hydpy-dev/hydpy) in form of a [wrapper](extensions/HydPyOpenDABBModelWrapper) via OpenDA's black box model concept.
@@ -16,8 +21,8 @@ implemented into [HydPy](https://github.com/hydpy-dev/hydpy).
 
 For a quick overview, the extension provides the following main components:
 * a [wrapper](extensions/HydPyOpenDABBModelWrapper) for [HydPy](https://github.com/hydpy-dev/hydpy) suitable to be used as an [OpenDA](http://openda.org/) black box model
-* an IDataObject implementation that can be used to access obervation data directly from a running [HydPy](https://github.com/hydpy-dev/hydpy) instance
-* a specialized noise model implementation that correlates [HydPy](https://github.com/hydpy-dev/hydpy) model elements/HRUs by their spatial distribution
+* an [IDataObject implementation](extensions/HydPyOpenDABBModelWrapper#HyPyIoObject) that can be used to access obervation data directly from a running [HydPy](https://github.com/hydpy-dev/hydpy) instance
+* a specialized [noise model implementation](extensions/HydPyOpenDABBModelWrapper/SpatialNoiseModel.md) that correlates [HydPy](https://github.com/hydpy-dev/hydpy) model elements/HRUs by their spatial distribution
 * some [example projects](demos) that demonstrate the useage of this extension
 
 For a deeper understanding of the possibilities and limitations of the [wrapper](extensions/HydPyOpenDABBModelWrapper),

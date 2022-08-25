@@ -120,10 +120,13 @@ final class HydPyServerStarter
     {
       /* if the test-call fails, we directly destroy the process, the manager can't do it */
       if( m_process != null )
+      {
         m_process.destroyForcibly();
+        m_process = null;
+      }
 
-      /* we also shutdown the thread, else OpenDA might hang forever */
-      m_executor.shutdown();
+//      /* we also shutdown the thread, else OpenDA might hang forever */
+//      m_executor.shutdown();
 
       throw e;
     }
@@ -255,7 +258,6 @@ final class HydPyServerStarter
       default:
         throw new IllegalStateException();
     }
-
   }
 
   private void tryCallServer( final HydPyServerClient client, final PrintStream debugOut ) throws HydPyServerException

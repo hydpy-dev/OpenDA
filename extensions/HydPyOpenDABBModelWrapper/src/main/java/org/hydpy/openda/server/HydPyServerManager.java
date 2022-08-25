@@ -217,7 +217,10 @@ public final class HydPyServerManager
     m_instances.forEach( ( id, instance ) -> instance.writeFinalConditions() );
 
     /* start shutdown for all servers */
-    final List<Future<Void>> futures = m_starters.values().stream().map( HydPyServerStarter::shutdown ).collect( Collectors.toList() );
+    final List<Future<Void>> futures = m_starters.values().stream() //
+        .map( HydPyServerStarter::shutdown ) //
+        .filter( f -> f != null ) //
+        .collect( Collectors.toList() );
 
     /* and wait here for shutdown termination (which has a timeout) */
     for( final Future<Void> future : futures )

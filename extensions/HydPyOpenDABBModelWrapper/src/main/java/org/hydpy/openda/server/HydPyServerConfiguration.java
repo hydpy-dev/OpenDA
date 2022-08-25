@@ -15,6 +15,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * @author Gernot Belger
  */
@@ -26,10 +28,6 @@ final class HydPyServerConfiguration
     console,
     file
   }
-
-  private static final String ENVIRONMENT_HYD_PY_PYTHON_EXE = "HYD_PY_PYTHON_EXE"; //$NON-NLS-1$
-
-  private static final String ENVIRONMENT_HYD_PY_SCRIPT_PATH = "HYD_PY_SCRIPT_PATH"; //$NON-NLS-1$
 
   private static final String PROPERTY_SERVER_PORT = "serverPort"; //$NON-NLS-1$
 
@@ -51,9 +49,17 @@ final class HydPyServerConfiguration
 
   private static final String PROPERTY_LOG_DIRECTORY = "logDirectory"; //$NON-NLS-1$
 
+  private static final String ENVIRONMENT_HYD_PY_PYTHON_EXE = "HYD_PY_PYTHON_EXE"; //$NON-NLS-1$
+
+  private static final String PROPERTY_HYD_PY_PYTHON_EXE = "pythonPath";
+
   private static final String HYD_PY_PYTHON_EXE_DEFAULT = "python.exe"; //$NON-NLS-1$
 
-  private static final String HYD_PY_SCRIPT_PATH_DEFAULT = "hy.py"; //$NON-NLS-1$
+  private static final String ENVIRONMENT_HYD_PY_SCRIPT_PATH = "HYD_PY_SCRIPT_PATH"; //$NON-NLS-1$
+
+  private static final String PROPERTY_HYD_PY_SCRIPT_PATH = "hydPyScriptPath";
+
+  private static final String HYD_PY_SCRIPT_PATH_DEFAULT = "hyd.py"; //$NON-NLS-1$
 
   private static final String PROPERTY_TIMEOUT_SECONDS = "timeoutSeconds"; //$NON-NLS-1$
 
@@ -93,8 +99,8 @@ final class HydPyServerConfiguration
     workingDir = workDir;
 
     /* absolute paths from system environment */
-    serverExe = HydPyUtils.getOptionalSystemProperty( ENVIRONMENT_HYD_PY_PYTHON_EXE, HYD_PY_PYTHON_EXE_DEFAULT );
-    hydPyScript = HydPyUtils.getOptionalSystemProperty( ENVIRONMENT_HYD_PY_SCRIPT_PATH, HYD_PY_SCRIPT_PATH_DEFAULT );
+    serverExe = getLocalOrSystemPropertyAsString( args, PROPERTY_HYD_PY_PYTHON_EXE, ENVIRONMENT_HYD_PY_PYTHON_EXE, HYD_PY_PYTHON_EXE_DEFAULT );
+    hydPyScript = getLocalOrSystemPropertyAsString( args, PROPERTY_HYD_PY_SCRIPT_PATH, ENVIRONMENT_HYD_PY_SCRIPT_PATH, HYD_PY_SCRIPT_PATH_DEFAULT );
 
     /* Everything else from model.xml arguments */
     startPort = HydPyUtils.getRequiredPropertyAsInt( args, PROPERTY_SERVER_PORT );
@@ -132,5 +138,14 @@ final class HydPyServerConfiguration
       throw new RuntimeException( String.format( "Argument '%s': set to '%s', but '%s' not set", PROPERTY_LOG_DIRECTORY, LogMode.file, PROPERTY_LOG_DIRECTORY ) );
 
     timeout = 1000 * HydPyUtils.getOptionalPropertyAsInt( args, PROPERTY_TIMEOUT_SECONDS, 60 );
+  }
+
+  private String getLocalOrSystemPropertyAsString( final Properties args, final String localKey, final String environmentKey, final String defaultValue )
+  {
+    final String localValue = args.getProperty( localKey );
+    if( !StringUtils.isBlank( localValue ) )
+      return localValue;
+
+    return HydPyUtils.getOptionalSystemProperty( environmentKey, defaultValue );
   }
 }

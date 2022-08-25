@@ -81,6 +81,8 @@ The required configuration file for the HydPy server instances contains all info
 It also allows to configure model-instance specific input and output directories. 
 The following properties are supported: 
 
+* pythonPath (string, optional): Path to the python.exe. Can also instead be specified by an environment variable, see below. 
+* hydPyScriptPath (string, optional): Path to the hyd.py script. Can also instead be specified by an environment variable, see below.
 * serverPort (integer): The web port on which to start the HydPy server. Use any free port on your machine. 
 * serverInstances (integer, optional): The number of HydPy server processes that will be started (maximal). Defaults to 1. If greater 1 and the chosen algorithm allows multiple instances, _HydPyOpenDABBModelWrapper_ will automatically start several server instances and run simulations in parallel. Server instances will run on web ports starting with _serverPort_ up-to _serverPort+serverInstances-1_.
 * serverParallelStartup (boolean, optional): If server instances should be started in parallel at the beginning of the simulation. Defaults to 'false'. If 'true', ALL instances (regardless of how many are really used) will be started directly and parallel to each other on startup which can be significantly faster for many instances.
@@ -195,6 +197,7 @@ optimized for fast communication with OpenDA.
 Depending on your HyPy and [Python](https://www.python.org/) installation two additional system environment variables can be set:
 * HYD_PY_PYTHON_EXE: Path to the python.exe (defaults to 'python.exe') 
 * HYD_PY_SCRIPT_PATH: Path to the hyd.py script. (defaults to 'hyd.py')
+Alternatively these two paths can also be specified within the [HydPy Configuration File](#HydPy Configuration File)
 
 With [Python](https://www.python.org/) already on your system path, you may not need to configure these system variables.
 

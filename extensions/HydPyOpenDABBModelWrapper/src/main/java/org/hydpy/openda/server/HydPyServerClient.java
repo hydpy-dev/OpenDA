@@ -235,13 +235,13 @@ final class HydPyServerClient
   // Normally this should already happen via the server-side (using non-threaded HttpServer),
   // however we still get sometimes 'Connection Refused' errors if too many calls are made within a small timespan.
   // Enlarging the socket-queue-size does not really help.
-  private synchronized Properties callGet( final String instanceId, final String methods ) throws HydPyServerException
+  synchronized Properties callGet( final String instanceId, final String methods ) throws HydPyServerException
   {
     final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, methods );
     return callGetAndParse( endpoint, m_timeoutMillis );
   }
 
-  private synchronized Properties callPost( final String instanceId, final String methods, final String postBody ) throws HydPyServerException
+  synchronized Properties callPost( final String instanceId, final String methods, final String postBody ) throws HydPyServerException
   {
     final URI endpoint = buildEndpoint( PATH_EXECUTE, instanceId, methods );
     return callPostAndParse( endpoint, m_timeoutMillis, postBody );

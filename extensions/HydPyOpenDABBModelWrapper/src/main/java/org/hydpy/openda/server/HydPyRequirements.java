@@ -22,8 +22,7 @@ import org.openda.utils.VersionUtils;
  */
 final class HydPyRequirements
 {
-  // FIXME: change!
-  public final static Version VERSION_HYDPY_SUPPORTED = new Version( 4, 1, 0, null, true );
+  public final static Version VERSION_HYDPY_SUPPORTED = new Version( 5, 0, 0, null, true );
 
   public final static Version VERSION_OPENDA_SUPPORTED = new Version( 3, 0, 0, null, false );
 

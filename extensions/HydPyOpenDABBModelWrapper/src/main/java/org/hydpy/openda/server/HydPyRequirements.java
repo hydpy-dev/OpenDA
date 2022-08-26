@@ -30,9 +30,9 @@ final class HydPyRequirements
   public static void checkHydPyVersion( final Version current, final PrintStream debugOut )
   {
     if( current.compareTo( VERSION_HYDPY_SUPPORTED ) < 0 )
-      System.err.format( "WARNING: HydPy Version of Server (%s) is LESS than the supported vrsion (%s) of this wrapper, do expect compatibility problems.%n", current, VERSION_HYDPY_SUPPORTED );
+      System.err.format( "WARNING: HydPy Version of Server (%s) is LESS than the supported version (%s) of this wrapper, do expect compatibility problems.%n", current, VERSION_HYDPY_SUPPORTED );
     else if( current.compareTo( VERSION_HYDPY_SUPPORTED ) > 0 )
-      debugOut.format( "INFO: HydPy Version of Server (%s) is GREATER than the supported vrsion (%s) of this wrapper%n", current, VERSION_HYDPY_SUPPORTED );
+      debugOut.format( "INFO: HydPy Version of Server (%s) is GREATER than the supported version (%s) of this wrapper%n", current, VERSION_HYDPY_SUPPORTED );
   }
 
   public static void checkOpenDaVersion( final PrintStream debugOut )
@@ -45,9 +45,9 @@ final class HydPyRequirements
       final Version current = Version.parse( versionString );
 
       if( current.compareTo( VERSION_OPENDA_SUPPORTED ) < 0 )
-        System.err.format( "WARNING: OpenDA Version (%s) is LESS than the supported vrsion (%s) of this wrapper, do expect compatibility problems.%n", current, VERSION_OPENDA_SUPPORTED );
+        System.err.format( "WARNING: OpenDA Version (%s) is LESS than the supported version (%s) of this wrapper, do expect compatibility problems.%n", current, VERSION_OPENDA_SUPPORTED );
       else if( current.compareTo( VERSION_OPENDA_SUPPORTED ) > 0 )
-        debugOut.format( "INFO: OpenDA Version (%s) is GREATER than the supported vrsion (%s) of this wrapper%n", current, VERSION_OPENDA_SUPPORTED );
+        debugOut.format( "INFO: OpenDA Version (%s) is GREATER than the supported version (%s) of this wrapper%n", current, VERSION_OPENDA_SUPPORTED );
     }
     catch( final HydPyServerException e )
     {

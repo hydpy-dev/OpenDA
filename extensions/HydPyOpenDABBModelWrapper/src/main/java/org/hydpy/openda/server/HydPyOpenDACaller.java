@@ -495,6 +495,12 @@ final class HydPyOpenDACaller
     // REMARK: we must set the current starting time to the last simulated time, as load_internalconditions
     // will load from the currently set start time, which is exactly present for the last simulated end time.
     final Instant startTime = m_lastSimulationEndTimes.get( instanceId );
+    if( startTime == null )
+    {
+      System.err.format( "OpenDa tries to save the model state before any simulations was run. please check your analysis times.%n" );
+      return;
+    }
+
     // REMARK: the exact value of end time is irrelevant in these calls, so we simply use the start time + plus one time step (hydpy complains if they are the same)
     final Instant endTime = startTime.plus( m_stepSeconds * 1000 );
 

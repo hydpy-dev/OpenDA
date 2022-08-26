@@ -20,6 +20,7 @@ import java.util.Map;
 import org.apache.commons.lang3.ArrayUtils;
 import org.openda.exchange.ArrayExchangeItem;
 import org.openda.exchange.TimeInfo;
+import org.openda.interfaces.IAlgorithm;
 import org.openda.interfaces.IDimensionIndex;
 import org.openda.interfaces.IExchangeItem;
 import org.openda.interfaces.IExchangeItem.Role;
@@ -336,7 +337,7 @@ final class SpatialNoiseModelInstance extends Instance implements IStochModelIns
   @Override
   public void restoreInternalState( final IModelState savedInternalState )
   {
-    if( m_preventStateRestoration )
+    if( m_preventStateRestoration && isCallFromAlgorithm() )
       return;
 
     final SpatialNoiseModelState saveState = (SpatialNoiseModelState)savedInternalState;
@@ -370,6 +371,37 @@ final class SpatialNoiseModelInstance extends Instance implements IStochModelIns
       m_timeStep = saveState.getTimestep();
       m_curentTime = saveState.getTime();
     }
+  }
+
+  private boolean isCallFromAlgorithm( )
+  {
+    final StackTraceElement[] stackTrace = new Exception().getStackTrace();
+    for( final StackTraceElement stackTraceElement : stackTrace )
+    {
+      final String className = stackTraceElement.getClassName();
+      final String methodName = stackTraceElement.getMethodName();
+      if( "next".equals( methodName ) )
+      {
+        try
+        {
+          final Class< ? > type = Class.forName( className );
+          if( IAlgorithm.class.isAssignableFrom( type ) )
+          {
+            // We are called from the 'next()' function of the algorithm.
+            // I.e. this is NOT a call to load the restart-state, but
+            // probably a misuse for exchanging state bewtween ensemble members (e.g. ParticleFilter)
+            return true;
+          }
+        }
+        catch( final ClassNotFoundException e )
+        {
+          e.printStackTrace();
+        }
+      }
+    }
+
+    /* we a re (probably) not called from the algorithm but from the framework to really load restart information */
+    return false;
   }
 
   @Override

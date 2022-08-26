@@ -2,8 +2,8 @@
 <hpcmr:config xmlns="https://github.com/hydpy-dev/hydpy/releases/download/your-hydpy-version/HydPyConfigBase.xsd" xmlns:hpcmr="https://github.com/hydpy-dev/hydpy/releases/download/your-hydpy-version/HydPyConfigMultipleRuns.xsd">
   <options/>
   <timegrid>
-    <firstdate>1996-01-01T00:00:00</firstdate>
-    <lastdate>1996-02-10T00:00:00</lastdate>
+    <firstdate>1996-01-01T00:00:00+01:00</firstdate>
+    <lastdate>1996-02-10T00:00:00+01:00</lastdate>
     <stepsize>1d</stepsize>
   </timegrid>
   <add_selections>

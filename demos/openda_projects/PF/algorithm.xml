@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ParticleFilter
+<ParticleFilterConfig
         xmlns="http://www.openda.org"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.openda.org http://schemas.openda.org/algorithm/particleFilter.xsd">
@@ -8,4 +8,4 @@
   <mainModel stochParameter="false" stochForcing="false" stochInit="false"/>
   <ensembleSize>4</ensembleSize>
   <ensembleModel stochParameter="false" stochForcing="true" stochInit="true"/>
-</ParticleFilter>
+</ParticleFilterConfig>

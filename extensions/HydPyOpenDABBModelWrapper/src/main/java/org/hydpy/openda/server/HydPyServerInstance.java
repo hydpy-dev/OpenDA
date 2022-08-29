@@ -15,6 +15,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -31,6 +33,8 @@ import org.openda.interfaces.IExchangeItem;
  */
 final class HydPyServerInstance
 {
+  private final List<Future< ? >> m_pendingTasks = new LinkedList<>();
+
   private final Map<String, Future<List<IExchangeItem>>> m_currentSimulations = new HashMap<>();
 
   private final Map<String, List<File>> m_fileToDeleteAfterGetItems = new HashMap<>();
@@ -64,6 +68,32 @@ final class HydPyServerInstance
     return new HydPyServerException( cause );
   }
 
+  private synchronized void checkPendingTasks( ) throws HydPyServerException
+  {
+    // REMARK: checks the 'pending' tasks (i.e. tasks where normally get is never called)
+    // if they are finished and force an exception in the main thread if they failed.
+
+    final List<Future< ? >> x = m_pendingTasks;
+    for( final Iterator<Future< ? >> iterator = x.iterator(); iterator.hasNext(); )
+    {
+      final Future< ? > future = iterator.next();
+      if( future.isDone() )
+      {
+        iterator.remove();
+
+        try
+        {
+          future.get();
+        }
+        catch( final InterruptedException | ExecutionException e )
+        {
+          throw toHydPyServerException( e );
+        }
+      }
+    }
+
+  }
+
   public Collection<HydPyExchangeItemDescription> getItems( )
   {
     /* not threaded, the items are always available after initialization */
@@ -79,8 +109,10 @@ final class HydPyServerInstance
     m_currentSimulations.put( instanceId, future );
   }
 
-  public List<IExchangeItem> getItemValues( final String instanceId ) throws HydPyServerException
+  public synchronized List<IExchangeItem> getItemValues( final String instanceId ) throws HydPyServerException
   {
+    checkPendingTasks();
+
     final Future<List<IExchangeItem>> currentSimulation = m_currentSimulations.get( instanceId );
     if( currentSimulation == null )
       throw new HydPyServerException( "Get item values before simulation/initialization" );
@@ -112,14 +144,19 @@ final class HydPyServerInstance
     filesToDelete.clear();
   }
 
-  public void setItemValues( final String instanceId, final Collection<IExchangeItem> values )
+  public synchronized void setItemValues( final String instanceId, final Collection<IExchangeItem> values ) throws HydPyServerException
   {
+    checkPendingTasks();
+
     final Callable<Void> callable = ( ) -> {
       getServer().setItemValues( instanceId, values );
       return null;
     };
 
-    HydPyUtils.submitAndLogExceptions( m_executor, callable );
+    final Future<Void> future = HydPyUtils.submitAndLogExceptions( m_executor, callable );
+    // REMARK: specially remember task, where get normally is never called.
+    // We will check for exceptions ofthese special tasks, else OpenDA will keep running even if exceptions have occured.
+    m_pendingTasks.add( future );
   }
 
   public synchronized String[] getItemNames( final String itemId ) throws HydPyServerException
@@ -127,8 +164,10 @@ final class HydPyServerInstance
     return getServer().getItemNames( itemId );
   }
 
-  public synchronized void restoreInternalState( final String instanceId, final File stateConditionsDir, final boolean deleteFiles )
+  public synchronized void restoreInternalState( final String instanceId, final File stateConditionsDir, final boolean deleteFiles ) throws HydPyServerException
   {
+    checkPendingTasks();
+
     // REMARK: we always restore the conditions fetch the current exchange item state in one call
     final Future<List<IExchangeItem>> future = HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().restoreInternalState( instanceId, stateConditionsDir ) );
     m_currentSimulations.put( instanceId, future );
@@ -140,20 +179,26 @@ final class HydPyServerInstance
     }
   }
 
-  public synchronized void simulate( final String instanceId, final File outputControlDir )
+  public synchronized void simulate( final String instanceId, final File outputControlDir ) throws HydPyServerException
   {
+    checkPendingTasks();
+
     // REMARK: we always directly simulate and fetch the results in one call
     final Future<List<IExchangeItem>> future = HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().simulate( instanceId, outputControlDir ) );
     m_currentSimulations.put( instanceId, future );
   }
 
-  public synchronized void shutdown( )
+  public synchronized void shutdown( ) throws HydPyServerException
   {
+    checkPendingTasks();
+
     HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().shutdown() );
   }
 
   public synchronized void writeConditions( final String instanceId, final File outputConditionsDir ) throws HydPyServerException
   {
+    checkPendingTasks();
+
     final Callable<Void> callable = ( ) -> {
       getServer().writeConditions( instanceId, outputConditionsDir );
       return null;
@@ -165,7 +210,7 @@ final class HydPyServerInstance
       // REMARK: block until everything is written
       future.get();
     }
-    catch( InterruptedException | ExecutionException e )
+    catch( final InterruptedException | ExecutionException e )
     {
       throw toHydPyServerException( e );
     }

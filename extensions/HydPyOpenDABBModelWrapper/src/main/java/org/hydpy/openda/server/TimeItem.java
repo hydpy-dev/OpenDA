@@ -11,10 +11,13 @@
  */
 package org.hydpy.openda.server;
 
+import java.text.ParseException;
+
 import org.joda.time.Instant;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.openda.exchange.DoubleExchangeItem;
+import org.openda.exchange.timeseries.TimeUtils;
 import org.openda.interfaces.IExchangeItem;
 import org.openda.interfaces.IExchangeItem.Role;
 import org.openda.utils.Time;
@@ -44,7 +47,30 @@ final class TimeItem extends AbstractSingleServerItem<Instant>
 
     final double mjd = Time.milliesToMjd( date.getMillis() );
 
-    return new DoubleExchangeItem( id, role, mjd );
+    try
+    {
+      // REMARK / IMPORTANT:
+      // we use TimeUtils.date2Mjd to produce the final mjd time.
+      // This is necessary, because that is the same way, as the time is parsed when
+      // applying the restart-time (which is later set to the currentTime of the alogrithm).
+      // Why is this necessary: if we use Time.milliesToMjd, a slightly different mjd value
+      // will be computed, and this in turn will be a problem in
+      // org.openda.algorithms.kalmanFilter.AbstractSequentialAlgorithm#427 where
+      // times are compared by their mjd value, hence resulting in a forecast computation
+      // between two equal times...
+      // REMARK: we do not have this problem with the time-series, as OpenDA always compares
+      // times within times series with a small delta
+
+      final String mjdAsString = TimeUtils.mjdToString( mjd );
+      final double cleanMjd = TimeUtils.date2Mjd( mjdAsString );
+
+      return new DoubleExchangeItem( id, role, cleanMjd );
+    }
+    catch( final ParseException e )
+    {
+      /* should never happen */
+      throw new RuntimeException( e );
+    }
   }
 
   @Override

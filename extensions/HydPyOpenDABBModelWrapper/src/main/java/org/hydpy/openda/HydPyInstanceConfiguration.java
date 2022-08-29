@@ -12,6 +12,9 @@
 package org.hydpy.openda;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
@@ -35,6 +38,10 @@ public final class HydPyInstanceConfiguration
 
   private static final String PROPERTY_OUTPUTCONTROLDIR = "outputControlDir"; //$NON-NLS-1$
 
+  private static final String TOKEN_DEFAULT = "%"; //$NON-NLS-1$
+
+  private static final String PROPERTY_TOKEN = "replacementToken"; //$NON-NLS-1$
+
   private final File m_workingDir;
 
   private final String m_inputConditionsPath;
@@ -47,6 +54,8 @@ public final class HydPyInstanceConfiguration
 
   private final String m_outputControlPath;
 
+  private final String m_replacementToken;
+
   public static HydPyInstanceConfiguration read( final File workingDir, final Properties properties )
   {
     final String inputConditionsPath = properties.getProperty( PROPERTY_INPUTCONDITIONSDIR );
@@ -55,12 +64,15 @@ public final class HydPyInstanceConfiguration
     final String seriesWriterPath = properties.getProperty( PROPERTY_SERIESWRITERDIR );
     final String outputControlPath = properties.getProperty( PROPERTY_OUTPUTCONTROLDIR );
 
-    return new HydPyInstanceConfiguration( workingDir, inputConditionsPath, outputConditionsPath, seriesReaderPath, seriesWriterPath, outputControlPath );
+    final String replacementToken = properties.getProperty( PROPERTY_TOKEN, TOKEN_DEFAULT );
+
+    return new HydPyInstanceConfiguration( workingDir, replacementToken, inputConditionsPath, outputConditionsPath, seriesReaderPath, seriesWriterPath, outputControlPath );
   }
 
-  private HydPyInstanceConfiguration( final File workingDir, final String inputConditionsPath, final String outputConditionsPath, final String seriesReaderPath, final String seriesWriterPath, final String outputControlPath )
+  private HydPyInstanceConfiguration( final File workingDir, final String replacementToken, final String inputConditionsPath, final String outputConditionsPath, final String seriesReaderPath, final String seriesWriterPath, final String outputControlPath )
   {
     m_workingDir = workingDir;
+    m_replacementToken = replacementToken;
     m_inputConditionsPath = inputConditionsPath;
     m_outputConditionsPath = outputConditionsPath;
     m_seriesReaderPath = seriesReaderPath;
@@ -70,16 +82,26 @@ public final class HydPyInstanceConfiguration
 
   public HydPyInstanceDirs resolve( final String instanceId, final File instanceDir, final File hydpyModelDir )
   {
-    final File inputConditionsDir = resolveDirectory( instanceId, instanceDir, m_inputConditionsPath, hydpyModelDir, true );
-    final File outputConditionsDir = resolveDirectory( instanceId, instanceDir, m_outputConditionsPath, hydpyModelDir, false );
-    final File seriesReaderDir = resolveDirectory( instanceId, instanceDir, m_seriesReaderPath, hydpyModelDir, true );
-    final File seriesWriterDir = resolveDirectory( instanceId, instanceDir, m_seriesWriterPath, hydpyModelDir, false );
-    final File outputControlDir = resolveDirectory( instanceId, instanceDir, m_outputControlPath, hydpyModelDir, false );
+    /* configure token replacements */
+    final Map<String, String> replacements = new HashMap<>();
+    replacements.put( "INSTANCEID", instanceId );
+    if( instanceDir != null )
+      replacements.put( "INSTANCEDIR", instanceDir.getAbsolutePath() );
+    if( hydpyModelDir != null )
+      replacements.put( "HYDPYMODELDIR", hydpyModelDir.getAbsolutePath() );
+    if( m_workingDir != null )
+      replacements.put( "WORKINGDIR", m_workingDir.getAbsolutePath() );
+
+    final File inputConditionsDir = resolveDirectory( instanceId, replacements, m_inputConditionsPath, true );
+    final File outputConditionsDir = resolveDirectory( instanceId, replacements, m_outputConditionsPath, false );
+    final File seriesReaderDir = resolveDirectory( instanceId, replacements, m_seriesReaderPath, true );
+    final File seriesWriterDir = resolveDirectory( instanceId, replacements, m_seriesWriterPath, false );
+    final File outputControlDir = resolveDirectory( instanceId, replacements, m_outputControlPath, false );
 
     return new HydPyInstanceDirs( inputConditionsDir, outputConditionsDir, seriesReaderDir, seriesWriterDir, outputControlDir );
   }
 
-  private File resolveDirectory( final String instanceId, final File instanceDir, final String path, final File hydpyModelDir, final boolean checkExists )
+  private File resolveDirectory( final String instanceId, final Map<String, String> replacements, final String path, final boolean checkExists )
   {
     if( HydPyServerManager.ANY_INSTANCE.equals( instanceId ) )
       return null;
@@ -87,15 +109,7 @@ public final class HydPyInstanceConfiguration
     if( StringUtils.isBlank( path ) )
       return null;
 
-    String resolved = path;
-
-    resolved = StringUtils.replace( resolved, "%INSTANCEID%", instanceId );
-    if( instanceDir != null )
-      resolved = StringUtils.replace( resolved, "%INSTANCEDIR%", instanceDir.getAbsolutePath() );
-    if( hydpyModelDir != null )
-      resolved = StringUtils.replace( resolved, "%HYDPYMODELDIR%", hydpyModelDir.getAbsolutePath() );
-    if( m_workingDir != null )
-      resolved = StringUtils.replace( resolved, "%WORKINGDIR%", m_workingDir.getAbsolutePath() );
+    final String resolved = doTokenReplacement( path, replacements );
 
     final File resolvedDir = resolveAbsoluteOrRelativeDir( resolved );
     final File normalizedDir = resolvedDir.toPath().normalize().toFile();
@@ -107,6 +121,23 @@ public final class HydPyInstanceConfiguration
     }
 
     return resolvedDir;
+  }
+
+  private String doTokenReplacement( final String toBeResolved, final Map<String, String> replacements )
+  {
+    String resolved = toBeResolved;
+
+    for( final Entry<String, String> entry : replacements.entrySet() )
+    {
+      final String key = entry.getKey();
+      final String value = entry.getValue();
+
+      final String token = m_replacementToken + key + m_replacementToken;
+
+      resolved = StringUtils.replace( resolved, token, value );
+    }
+
+    return resolved;
   }
 
   private File resolveAbsoluteOrRelativeDir( final String relativeOrAbsolutePath )

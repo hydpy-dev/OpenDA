@@ -191,18 +191,9 @@ public final class HydPyServerManager
 
   private HydPyServerInstance getOrCreateServer( final int processId )
   {
-    try
-    {
-      /* start the real server (if that is not yet the case) and wait for it */
-      final HydPyServerStarter starter = getOrCreateStarter( processId );
-      return starter.getServer();
-    }
-    catch( final HydPyServerException e )
-    {
-      e.printStackTrace();
-
-      throw new RuntimeException( "Failed to start HydPy Server", e );
-    }
+    /* start the real server (if that is not yet the case) and wait for it */
+    final HydPyServerStarter starter = getOrCreateStarter( processId );
+    return starter.getServer();
   }
 
   synchronized void killAllServers( )

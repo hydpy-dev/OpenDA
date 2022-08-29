@@ -55,7 +55,7 @@ public final class HydPyModelInstance
     return m_server.getItemValues( m_instanceId );
   }
 
-  public synchronized void setItemValues( final Collection<IExchangeItem> values )
+  public synchronized void setItemValues( final Collection<IExchangeItem> values ) throws HydPyServerException
   {
     m_server.setItemValues( m_instanceId, values );
   }
@@ -64,12 +64,12 @@ public final class HydPyModelInstance
    * @param deleteFiles
    *          If <code>true</code>, the files will be deleted after the state is restored. This must happen inside the implementation, because we need to wait until hydpy really has read them.
    */
-  public void restoreInternalState( final File stateConditionsDir, final boolean deleteFiles )
+  public void restoreInternalState( final File stateConditionsDir, final boolean deleteFiles ) throws HydPyServerException
   {
     m_server.restoreInternalState( m_instanceId, stateConditionsDir, deleteFiles );
   }
 
-  public void simulate( )
+  public void simulate( ) throws HydPyServerException
   {
     final File outputControlDir = m_instanceDirs.getOutputControlDir();
     m_server.simulate( m_instanceId, outputControlDir );
@@ -87,15 +87,8 @@ public final class HydPyModelInstance
 
   public void writeFinalConditions( )
   {
-    try
-    {
-      final File outputConditionsDir = m_instanceDirs.getOutputConditionsDir();
-      if( outputConditionsDir != null )
-        m_server.writeConditions( m_instanceId, outputConditionsDir );
-    }
-    catch( final HydPyServerException e )
-    {
-      e.printStackTrace();
-    }
+    final File outputConditionsDir = m_instanceDirs.getOutputConditionsDir();
+    if( outputConditionsDir != null )
+      m_server.writeConditions( m_instanceId, outputConditionsDir );
   }
 }

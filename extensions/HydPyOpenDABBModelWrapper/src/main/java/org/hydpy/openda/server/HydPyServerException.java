@@ -14,7 +14,7 @@ package org.hydpy.openda.server;
 /**
  * @author Gernot Belger
  */
-public final class HydPyServerException extends Exception
+public final class HydPyServerException extends RuntimeException
 {
   public HydPyServerException( final String message )
   {

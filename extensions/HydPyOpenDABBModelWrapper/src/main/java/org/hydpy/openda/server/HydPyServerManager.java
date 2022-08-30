@@ -11,10 +11,10 @@
  */
 package org.hydpy.openda.server;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +23,7 @@ import java.util.Properties;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.FileUtils;
 import org.hydpy.openda.HydPyInstanceConfiguration;
 
 /**
@@ -61,10 +62,30 @@ public final class HydPyServerManager
 
     HydPyRequirements.checkOpenDaVersion( System.out );
 
+    final Properties args = readConfiguration( configFile );
+
+    final HydPyServerConfiguration hydPyConfig = new HydPyServerConfiguration( workingDir.toPath(), args );
+
+    final HydPyInstanceConfiguration instanceDirs = HydPyInstanceConfiguration.read( workingDir, args );
+
+    INSTANCE = new HydPyServerManager( hydPyConfig, instanceDirs, configFile );
+  }
+
+  private static Properties readConfiguration( final Path configFile )
+  {
     final Properties args = new Properties();
-    try( final BufferedReader propertiesReader = Files.newBufferedReader( configFile ) )
+
+    try
     {
-      args.load( propertiesReader );
+      // REMARK: ugly but necessary for cases where we do not have influence how
+      // paths are created in the .properties file (aka FEWS)
+      // Replace all backslashes with slashes (hopefully we never have real escape sequences here)
+      final String content = FileUtils.readFileToString( configFile.toFile(), StandardCharsets.ISO_8859_1 );
+      final String contentNoBackslashes = content.replace( '\\', '/' );
+
+      final StringReader reader = new StringReader( contentNoBackslashes );
+      args.load( reader );
+      return args;
     }
     catch( final IOException e )
     {
@@ -72,12 +93,6 @@ public final class HydPyServerManager
       final String message = String.format( "Failed to read HydPy server configuration file: %s", configFile );
       throw new RuntimeException( message, e );
     }
-
-    final HydPyServerConfiguration hydPyConfig = new HydPyServerConfiguration( workingDir.toPath(), args );
-
-    final HydPyInstanceConfiguration instanceDirs = HydPyInstanceConfiguration.read( workingDir, args );
-
-    INSTANCE = new HydPyServerManager( hydPyConfig, instanceDirs, configFile );
   }
 
   public synchronized static HydPyServerManager instance( )

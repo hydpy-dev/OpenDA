@@ -67,9 +67,18 @@ public final class FileDeletionThread extends Thread
       try
       {
         final File file = m_queue.take();
-        FileUtils.forceDelete( file );
+
+        try
+        {
+          FileUtils.forceDelete( file );
+        }
+        catch( final IOException e )
+        {
+          e.printStackTrace();
+          m_queue.offer( file, 5, TimeUnit.SECONDS );
+        }
       }
-      catch( final IOException | InterruptedException e )
+      catch( final InterruptedException e )
       {
         e.printStackTrace();
       }

@@ -32,3 +32,12 @@ jobs:
       with:
         arguments: build
         build-root-directory: extensions/HydPyOpenDABBModelWrapper
+        
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Package
+        path: 
+          extensions/HydPyOpenDABBModelWrapper/build/distributions/HydPyOpenDABBModelWrapper-*.zip
+
+
+        

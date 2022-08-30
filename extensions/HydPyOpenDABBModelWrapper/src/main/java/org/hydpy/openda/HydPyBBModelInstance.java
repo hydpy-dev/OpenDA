@@ -11,27 +11,17 @@
  */
 package org.hydpy.openda;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
-import org.apache.commons.compress.archivers.ArchiveEntry;
-import org.apache.commons.compress.archivers.ArchiveInputStream;
-import org.apache.commons.compress.archivers.ArchiveOutputStream;
-import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.apache.commons.compress.utils.IOUtils;
-import org.apache.commons.io.FileUtils;
 import org.hydpy.openda.server.FileDeletionThread;
 import org.hydpy.openda.server.HydPyModelInstance;
 import org.hydpy.openda.server.HydPyServerManager;
+import org.hydpy.openda.server.HydPyUtils;
 import org.openda.blackbox.config.BBModelConfig;
 import org.openda.blackbox.wrapper.BBModelInstance;
 import org.openda.interfaces.IModelState;
@@ -90,27 +80,7 @@ final class HydPyBBModelInstance extends BBModelInstance
     if( Files.isRegularFile( tipFile ) )
       Files.move( tipFile, targetZipFile, StandardCopyOption.REPLACE_EXISTING );
     else
-    {
-      // REMARK: we know that hydpy only ever writes a flat list of files
-      final List<Path> files = Files.list( sourceDir ).collect( Collectors.toList() );
-
-      try( final ArchiveOutputStream o = new ZipArchiveOutputStream( Files.newOutputStream( targetZipFile ) ) )
-      {
-        for( final Path sourceFile : files )
-        {
-          if( !Files.isRegularFile( sourceFile ) )
-            throw new IllegalStateException();
-
-          // maybe skip directories for formats like AR that don't store directories
-          final ArchiveEntry entry = o.createArchiveEntry( sourceFile, sourceFile.getFileName().toString() );
-          o.putArchiveEntry( entry );
-
-          FileUtils.copyFile( sourceFile.toFile(), o );
-
-          o.closeArchiveEntry();
-        }
-      }
-    }
+      HydPyUtils.zipConditionsDirectory( sourceDir, targetZipFile );
   }
 
   @Override
@@ -127,7 +97,7 @@ final class HydPyBBModelInstance extends BBModelInstance
       // delete the zip file in this case. We do not want this...
       final Path tempDir = Files.createTempDirectory( "hydpyinternalstate_loading" );
       final Path internalStateFile = getInternalStateFile();
-      unzipConditions( internalStateFile, tempDir );
+      HydPyUtils.unzipConditions( internalStateFile, tempDir );
 
       // REMARK: we now tell HydPy to load the previously saved conditions file and register it for
       // the given instance
@@ -138,25 +108,6 @@ final class HydPyBBModelInstance extends BBModelInstance
     catch( final Exception e )
     {
       throw new RuntimeException( "Failed to read internal state", e );
-    }
-  }
-
-  private void unzipConditions( final Path internalStateFile, final Path targetDir ) throws IOException
-  {
-    try( final ArchiveInputStream i = new ZipArchiveInputStream( Files.newInputStream( internalStateFile ) ) )
-    {
-      ArchiveEntry entry = null;
-      while( (entry = i.getNextEntry()) != null )
-      {
-        if( !i.canReadEntryData( entry ) )
-          throw new IllegalStateException();
-
-        final Path targetFile = targetDir.resolve( entry.getName() );
-        try( final OutputStream o = new BufferedOutputStream( Files.newOutputStream( targetFile ) ) )
-        {
-          IOUtils.copy( i, o );
-        }
-      }
     }
   }
 

@@ -11,6 +11,11 @@
  */
 package org.hydpy.openda.server;
 
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,7 +25,15 @@ import java.util.StringTokenizer;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.ArchiveInputStream;
+import org.apache.commons.compress.archivers.ArchiveOutputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.collections.api.list.primitive.MutableDoubleList;
 import org.eclipse.collections.impl.factory.primitive.DoubleLists;
@@ -433,5 +446,46 @@ public final class HydPyUtils
       dimensions[i] = dims[i] + 1;
 
     return new Array( values, dimensions, false );
+  }
+
+  public static void zipConditionsDirectory( final Path sourceDir, final Path targetZipFile ) throws IOException
+  {
+    // REMARK: we know that hydpy only ever writes a flat list of files
+    final List<Path> files = Files.list( sourceDir ).collect( Collectors.toList() );
+    try( final ArchiveOutputStream o = new ZipArchiveOutputStream( Files.newOutputStream( targetZipFile ) ) )
+    {
+      for( final Path sourceFile : files )
+      {
+        if( !Files.isRegularFile( sourceFile ) )
+          throw new IllegalStateException();
+
+        // maybe skip directories for formats like AR that don't store directories
+        final ArchiveEntry entry = o.createArchiveEntry( sourceFile, sourceFile.getFileName().toString() );
+        o.putArchiveEntry( entry );
+
+        FileUtils.copyFile( sourceFile.toFile(), o );
+
+        o.closeArchiveEntry();
+      }
+    }
+  }
+
+  public static void unzipConditions( final Path sourceZipFile, final Path targetDir ) throws IOException
+  {
+    try( final ArchiveInputStream i = new ZipArchiveInputStream( Files.newInputStream( sourceZipFile ) ) )
+    {
+      ArchiveEntry entry = null;
+      while( (entry = i.getNextEntry()) != null )
+      {
+        if( !i.canReadEntryData( entry ) )
+          throw new IllegalStateException();
+
+        final Path targetFile = targetDir.resolve( entry.getName() );
+        try( final OutputStream o = new BufferedOutputStream( Files.newOutputStream( targetFile ) ) )
+        {
+          IOUtils.copy( i, o );
+        }
+      }
+    }
   }
 }

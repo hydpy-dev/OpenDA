@@ -114,7 +114,7 @@ public final class HydPyInstanceConfiguration
     final File resolvedDir = resolveAbsoluteOrRelativeDir( resolved );
     final File normalizedDir = resolvedDir.toPath().normalize().toFile();
 
-    if( checkExists && !normalizedDir.isDirectory() )
+    if( checkExists && !normalizedDir.exists() )
     {
       final String message = String.format( "Path '%s' resolved to '%s' but does not exist", path, normalizedDir );
       throw new RuntimeException( message );

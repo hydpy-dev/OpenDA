@@ -12,6 +12,9 @@
 package org.hydpy.openda.server;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -202,9 +205,12 @@ final class HydPyOpenDACaller
     final File inputConditionsDir = instanceDirs.getInputConditionsDir();
     if( inputConditionsDir != null )
     {
+      /* unzip if necessary */
+      final Path realInputConditionsDir = prepareInputConditionsDir( inputConditionsDir );
+
       // REMARK: OpenDa will purge all old instance dirs, so we cannot reuse that structure
       caller.method( "POST_register_inputconditiondir" ) //
-          .body( ARGUMENT_INPUTCONDITIONDIR, inputConditionsDir.toString() ) //
+          .body( ARGUMENT_INPUTCONDITIONDIR, realInputConditionsDir.toString() ) //
           .method( "GET_load_conditions" ) //
           .method( "GET_save_internalconditions" ) //
           .method( "GET_update_conditionitemvalues" ) //
@@ -214,6 +220,9 @@ final class HydPyOpenDACaller
           .method( "GET_register_initialinputitemvalues" ) //
           .method( "GET_register_initialoutputitemvalues" ) //
           .method( "GET_register_initialgetitemvalues" );
+
+      if( !inputConditionsDir.toPath().equals( realInputConditionsDir ) )
+        FileDeletionThread.instance().addFilesForDeletion( Collections.singletonList( realInputConditionsDir.toFile() ) );
     }
     else
       /* register default values into instance-state if we did not load them ourself */
@@ -243,6 +252,34 @@ final class HydPyOpenDACaller
     final HydPyExchangeCache instanceCache = new HydPyExchangeCache( preValues );
     m_instanceCaches.put( instanceId, instanceCache );
     return parseItemValues( instanceCache, preValues );
+  }
+
+  private Path prepareInputConditionsDir( final File inputConditionsDir )
+  {
+    if( inputConditionsDir.isDirectory() )
+      return inputConditionsDir.toPath();
+
+    if( inputConditionsDir.isFile() )
+    {
+      // REMARK: if we got a file, we assume it's a zip.
+      // We do not want hydpy to unzip the file itself, because it will delete the zip.
+      try
+      {
+        final Path tempDir = Files.createTempDirectory( "hydpyconditions_loading" );
+        HydPyUtils.unzipConditions( inputConditionsDir.toPath(), tempDir );
+        return tempDir;
+      }
+      catch( final IOException e )
+      {
+        e.printStackTrace();
+
+        final String message = "Failed to unzip input file for conditions: " + inputConditionsDir;
+        throw new HydPyServerException( message );
+      }
+    }
+
+    final String message = "input directory/file for conditions does not exist: " + inputConditionsDir;
+    throw new HydPyServerException( message );
   }
 
   private List<IExchangeItem> parseItemValues( final HydPyExchangeCache instanceCache, final Map<String, Object> preValues )

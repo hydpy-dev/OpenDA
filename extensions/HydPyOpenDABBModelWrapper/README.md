@@ -97,7 +97,7 @@ The following properties are supported:
   * HydPy\_Client\_\<instanceId\>.log: the calls from the wrapper to the HydPy server instances.
   * HydPy\_Server\_\<instanceId\>.log: the process output stream of the HydPy server instance
   * HydPy\_Server\_\<instanceId\>.err: the process error stream of the HydPy server instance
-* inputConditionsDir (string, optional): The directory path from where initial conditions will be read (per model instance). Supports additional placeholder tokens, see below. 
+* inputConditionsDir (string, optional): The directory or zip-file path from where initial conditions will be read (per model instance). Supports additional placeholder tokens, see below. 
 * outputConditionsDir (string, optional): The directory path where the conditions at the end of the simulation will be written (per model instance). Supports additional placeholder tokens, see below.
 * seriesReaderDir (string, optional): The directory path from where time series will be read (per model instance) by HydPy. Supports additional placeholder tokens, see below.
 * seriesWriterDir (string, optional): The directory path where time series will be written to (per model instance). Supports additional placeholder tokens, see below.

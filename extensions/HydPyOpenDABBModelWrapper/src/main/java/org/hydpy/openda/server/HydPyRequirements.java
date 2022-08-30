@@ -50,7 +50,7 @@ final class HydPyRequirements
     }
     catch( final HydPyServerException e )
     {
-      System.err.format( "WARNING: Failed to determine OpenDA Version. The supported vrsion is %s%n", VERSION_OPENDA_SUPPORTED );
+      System.err.format( "WARNING: Failed to determine OpenDA Version. The supported version is %s%n", VERSION_OPENDA_SUPPORTED );
     }
   }
 }

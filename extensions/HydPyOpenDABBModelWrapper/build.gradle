@@ -47,8 +47,10 @@ dependencies {
 	implementation 'ch.randelshofer:fastdoubleparser:0.2.0'
 
 	// OpenDA shipf with slf4j-api (and uses it) bit doesn_'t ship with any StaticLoggerBinder
-	// So we add it here so in our case we avoid the ugly log messages about that	
-	runtimeOnly group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.21', transitive: false
+	// So we add it here so in our case we avoid the ugly log messages about that
+	// REMARK: for the moment, we do not want this, because OpenDA only uses slf4j at some random
+	// places and does not really log something useful	
+	// runtimeOnly group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.21', transitive: false
 
 	openDaLibs ':openda_core'
 

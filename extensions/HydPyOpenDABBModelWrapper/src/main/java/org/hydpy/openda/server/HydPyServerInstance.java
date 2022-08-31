@@ -68,7 +68,7 @@ final class HydPyServerInstance
     return new HydPyServerException( cause );
   }
 
-  private synchronized void checkPendingTasks( ) throws HydPyServerException
+  public synchronized void checkPendingTasks( ) throws HydPyServerException
   {
     // REMARK: checks the 'pending' tasks (i.e. tasks where normally get is never called)
     // if they are finished and force an exception in the main thread if they failed.
@@ -91,7 +91,6 @@ final class HydPyServerInstance
         }
       }
     }
-
   }
 
   public Collection<HydPyExchangeItemDescription> getItems( )
@@ -190,9 +189,13 @@ final class HydPyServerInstance
 
   public synchronized void shutdown( ) throws HydPyServerException
   {
-    checkPendingTasks();
+    // REMARK: we do NOT check for pending tasks here, else shutdown will not terminate correctly
 
-    HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().shutdown() );
+    final Future<Void> future = HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().shutdown() );
+
+    // REMARK: specially remember task, where get normally is never called.
+    // We will check for exceptions ofthese special tasks, else OpenDA will keep running even if exceptions have occured.
+    m_pendingTasks.add( future );
   }
 
   public synchronized void writeConditions( final String instanceId, final File outputConditionsDir ) throws HydPyServerException

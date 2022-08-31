@@ -240,5 +240,17 @@ public final class HydPyServerManager
         e.printStackTrace();
       }
     }
+
+    /* also check a last time for pending futures */
+    m_starters.values().forEach( starter -> {
+      try
+      {
+        starter.getServer().checkPendingTasks();
+      }
+      catch( final Exception e )
+      {
+        e.printStackTrace();
+      }
+    } );
   }
 }

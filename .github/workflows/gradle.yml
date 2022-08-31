@@ -32,7 +32,6 @@ jobs:
       with:
         arguments: build
         build-root-directory: extensions/HydPyOpenDABBModelWrapper
-        
     - name: Release
     # action docu: https://github.com/ncipollo/release-action
     - uses: ncipollo/release-action@v1

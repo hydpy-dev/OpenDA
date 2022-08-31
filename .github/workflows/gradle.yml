@@ -32,12 +32,17 @@ jobs:
       with:
         arguments: build
         build-root-directory: extensions/HydPyOpenDABBModelWrapper
-# no this only adds it to the job
-#    - name: Deplyment
-#    - uses: actions/upload-artifact@v3
-#      with:
-#        path: 
-#          extensions/HydPyOpenDABBModelWrapper/build/distributions/HydPyOpenDABBModelWrapper-*.zip
-
-
         
+    - name: Release
+    # action docu: https://github.com/ncipollo/release-action
+    - uses: ncipollo/release-action@v1
+      with:
+        draft: false
+        prerelease: true
+        # FIXME: remove
+        name: githubrelease
+        artifacts: "extensions/HydPyOpenDABBModelWrapper/build/distributions/HydPyOpenDABBModelWrapper-*.zip"
+        artifactContentType: application/zip
+        generateReleaseNotes: false
+        bodyFile: "extensions/HydPyOpenDABBModelWrapper/ReleaseNotes.md"
+        # token: ${{ secrets.YOUR_GITHUB_TOKEN }}

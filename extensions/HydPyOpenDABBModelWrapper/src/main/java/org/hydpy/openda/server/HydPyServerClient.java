@@ -282,6 +282,7 @@ final class HydPyServerClient
     m_debugOut.print( ": " ); //$NON-NLS-1$
     m_debugOut.format( message, arguments );
     m_debugOut.println();
+    m_debugOut.flush();
   }
 
   public Poster post( final String instanceId )

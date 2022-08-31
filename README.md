@@ -6,7 +6,7 @@
 [![GitHub all releases](https://img.shields.io/github/downloads/hydpy-dev/OpenDA/total)](https://github.com//hydpy-dev/OpenDA/releases)
 [![GitHub License](https://img.shields.io/github/license/hydpy-dev/OpenDA?color=blue)](https://github.com/hydpy-dev/OpenDA/blob/master/LICENSE)
 
-[![Travis (.com)](https://img.shields.io/travis/com/hydpy-dev/OpenDA/master?label=Travis%20CI%20build)](https://app.travis-ci.com/github/hydpy-dev/OpenDA/branches)
+[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fhydpy-dev%2FOpenDA%2Fbadge&style=flat)](https://actions-badge.atrox.dev/hydpy-dev/OpenDA/goto)
 
 [![GitHub Open Issues](https://img.shields.io/github/issues-raw/hydpy-dev/OpenDA)](https://github.com//hydpy-dev/OpenDA/issues?q=is%3Aopen+is%3Aissue)
 [![GitHub Closed Issues](https://img.shields.io/github/issues-closed-raw/hydpy-dev/OpenDA)](https://github.com/hydpy-dev/OpenDA/issues?q=is%3Aissue+is%3Aclosed)

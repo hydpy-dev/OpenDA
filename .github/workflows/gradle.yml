@@ -14,7 +14,7 @@ on:
 
 permissions:
   contents: read
-  deployments: write
+  #deployments: write
 
 jobs:
   build:

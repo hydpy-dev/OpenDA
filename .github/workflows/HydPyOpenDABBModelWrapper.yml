@@ -40,8 +40,6 @@ jobs:
       with:
         draft: false
         prerelease: true
-        # FIXME: remove
-        name: githubrelease
         artifacts: "extensions/HydPyOpenDABBModelWrapper/build/distributions/HydPyOpenDABBModelWrapper-*.zip"
         artifactContentType: application/zip
         generateReleaseNotes: false

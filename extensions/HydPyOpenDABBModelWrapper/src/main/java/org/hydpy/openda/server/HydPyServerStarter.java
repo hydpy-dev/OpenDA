@@ -26,6 +26,7 @@ import java.util.concurrent.ThreadFactory;
 
 import org.apache.commons.io.output.NullPrintStream;
 import org.apache.http.client.utils.URIBuilder;
+import org.hydpy.openda.HydPyInstanceConfiguration;
 import org.hydpy.openda.server.HydPyServerConfiguration.LogMode;
 
 /**
@@ -52,9 +53,12 @@ final class HydPyServerStarter
 
   private PrintStream m_debugOutToClose = null;
 
-  public HydPyServerStarter( final HydPyServerConfiguration config, final int processId )
+  private final HydPyInstanceConfiguration m_instanceDirs;
+
+  public HydPyServerStarter( final HydPyServerConfiguration config, final HydPyInstanceConfiguration instanceDirs, final int processId )
   {
     m_config = config;
+    m_instanceDirs = instanceDirs;
     m_processId = processId;
 
     m_port = config.startPort + processId;
@@ -201,7 +205,22 @@ final class HydPyServerStarter
       final String portArgument = Integer.toString( m_port );
       final String configFile = m_config.configFile.toString();
 
-      final ProcessBuilder builder = new ProcessBuilder( command, m_config.hydPyScript, operation, portArgument, m_config.modelName, configFile ) //
+      // REMARK: let hydpy load conditions/series only if it's not triggered via the wrapper.
+      final boolean doHydPyLoadConditions = !m_instanceDirs.isLoadConditions();
+      final boolean doHdPyLoadSeries = !m_instanceDirs.isLoadSeries();
+      final String loadConditionsParam = "load_conditions=" + doHydPyLoadConditions;
+      final String loadSeriesParam = "load_series=" + doHdPyLoadSeries;
+
+      final String[] parameters = new String[] { command, //
+          m_config.hydPyScript, //
+          operation, //
+          portArgument, //
+          m_config.modelName, //
+          configFile, //
+          loadConditionsParam, //
+          loadSeriesParam };
+
+      final ProcessBuilder builder = new ProcessBuilder( parameters ) //
           .directory( m_config.modelDir.toFile() );
 
       configureProcessForLogging( builder );

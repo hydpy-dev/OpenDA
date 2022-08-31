@@ -156,7 +156,7 @@ public final class HydPyServerManager
   private HydPyServerStarter getOrCreateStarter( final int processId )
   {
     if( !m_starters.containsKey( processId ) )
-      m_starters.put( processId, new HydPyServerStarter( m_config, processId ) );
+      m_starters.put( processId, new HydPyServerStarter( m_config, m_instanceDirs, processId ) );
 
     return m_starters.get( processId );
   }

@@ -148,4 +148,14 @@ public final class HydPyInstanceConfiguration
 
     return new File( m_workingDir, relativeOrAbsolutePath );
   }
+
+  public boolean isLoadConditions( )
+  {
+    return !StringUtils.isBlank( m_inputConditionsPath );
+  }
+
+  public boolean isLoadSeries( )
+  {
+    return !StringUtils.isBlank( m_seriesReaderPath );
+  }
 }

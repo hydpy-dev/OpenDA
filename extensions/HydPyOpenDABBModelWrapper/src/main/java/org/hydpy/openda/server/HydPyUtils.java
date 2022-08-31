@@ -481,6 +481,9 @@ public final class HydPyUtils
           throw new IllegalStateException();
 
         final Path targetFile = targetDir.resolve( entry.getName() );
+        if( !targetFile.normalize().startsWith( targetDir ) )
+          throw new IOException( "Bad zip entry" );
+
         try( final OutputStream o = new BufferedOutputStream( Files.newOutputStream( targetFile ) ) )
         {
           IOUtils.copy( i, o );

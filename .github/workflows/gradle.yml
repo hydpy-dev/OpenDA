@@ -44,4 +44,4 @@ jobs:
         artifactContentType: application/zip
         generateReleaseNotes: false
         bodyFile: "extensions/HydPyOpenDABBModelWrapper/ReleaseNotes.md"
-        # token: ${{ secrets.YOUR_GITHUB_TOKEN }}
+        token: ${{ secrets.YOUR_GITHUB_TOKEN }}

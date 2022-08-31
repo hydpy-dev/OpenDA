@@ -221,8 +221,8 @@ final class HydPyOpenDACaller
           .method( "GET_register_initialoutputitemvalues" ) //
           .method( "GET_register_initialgetitemvalues" );
 
-      if( !inputConditionsDir.toPath().equals( realInputConditionsDir ) )
-        FileDeletionThread.instance().addFilesForDeletion( Collections.singletonList( realInputConditionsDir.toFile() ) );
+//      if( !inputConditionsDir.toPath().equals( realInputConditionsDir ) )
+//        FileDeletionThread.instance().addFilesForDeletion( Collections.singletonList( realInputConditionsDir.toFile() ) );
     }
     else
       /* register default values into instance-state if we did not load them ourself */

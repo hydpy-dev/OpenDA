@@ -13,7 +13,7 @@ on:
       - '*'
 
 permissions:
-  contents: read
+  contents: write
   deployments: write
   #actions: read|write|none
   #checks: read|write|none

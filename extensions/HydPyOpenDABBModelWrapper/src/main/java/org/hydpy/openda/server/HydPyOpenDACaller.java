@@ -180,6 +180,9 @@ final class HydPyOpenDACaller
   {
     m_client.debugOut( m_name, "initializing state for instanceId = '%s'", instanceId );
 
+    /* prepare a container for files that should be deleted after hydpy was called */
+    final List<File> tempFilesToDelete = new ArrayList<>();
+
     final Poster caller = m_client.post( instanceId );
 
     // REMARK: special handling for the simulation-timegrid: we set the whole (aka init) timegrid as starting state for the simulation-timegrid
@@ -206,7 +209,7 @@ final class HydPyOpenDACaller
     if( inputConditionsDir != null )
     {
       /* unzip if necessary */
-      final Path realInputConditionsDir = prepareInputConditionsDir( inputConditionsDir );
+      final Path realInputConditionsDir = prepareInputConditionsDir( inputConditionsDir, tempFilesToDelete );
 
       // REMARK: OpenDa will purge all old instance dirs, so we cannot reuse that structure
       caller.method( "POST_register_inputconditiondir" ) //
@@ -220,9 +223,6 @@ final class HydPyOpenDACaller
           .method( "GET_register_initialinputitemvalues" ) //
           .method( "GET_register_initialoutputitemvalues" ) //
           .method( "GET_register_initialgetitemvalues" );
-
-//      if( !inputConditionsDir.toPath().equals( realInputConditionsDir ) )
-//        FileDeletionThread.instance().addFilesForDeletion( Collections.singletonList( realInputConditionsDir.toFile() ) );
     }
     else
       /* register default values into instance-state if we did not load them ourself */
@@ -246,6 +246,9 @@ final class HydPyOpenDACaller
 
         .execute();
 
+    /* delete temporary assets */
+    FileDeletionThread.instance().addFilesForDeletion( tempFilesToDelete );
+
     /* pre-parse items */
     final Map<String, Object> preValues = preParseValuesOrGetShared( props, SHARED_INITIAL_STATE );
 
@@ -254,7 +257,7 @@ final class HydPyOpenDACaller
     return parseItemValues( instanceCache, preValues );
   }
 
-  private Path prepareInputConditionsDir( final File inputConditionsDir )
+  private Path prepareInputConditionsDir( final File inputConditionsDir, final List<File> tempFilesToDelete )
   {
     if( inputConditionsDir.isDirectory() )
       return inputConditionsDir.toPath();
@@ -266,6 +269,8 @@ final class HydPyOpenDACaller
       try
       {
         final Path tempDir = Files.createTempDirectory( "hydpyconditions_loading" );
+        tempFilesToDelete.add( tempDir.toFile() );
+
         HydPyUtils.unzipConditions( inputConditionsDir.toPath(), tempDir );
         return tempDir;
       }

@@ -344,7 +344,7 @@ final class HydPyServerStarter
       final HydPyServerInstance server = getServer();
       server.shutdown();
     }
-    catch( final HydPyServerException e )
+    catch( final Exception e )
     {
       e.printStackTrace();
     }

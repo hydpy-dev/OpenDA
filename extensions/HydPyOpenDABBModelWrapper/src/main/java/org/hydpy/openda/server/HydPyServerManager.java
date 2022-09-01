@@ -220,7 +220,16 @@ public final class HydPyServerManager
   synchronized void finish( )
   {
     /* let each instance write its conditions */
-    m_instances.forEach( ( id, instance ) -> instance.writeFinalConditions() );
+    m_instances.forEach( ( id, instance ) -> {
+      try
+      {
+        instance.writeFinalConditions();
+      }
+      catch( final Exception e )
+      {
+        e.printStackTrace();
+      }
+    } );
 
     /* start shutdown for all servers */
     final List<Future<Void>> futures = m_starters.values().stream() //

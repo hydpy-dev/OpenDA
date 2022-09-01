@@ -85,7 +85,7 @@ public final class HydPyModelInstance
     m_server.writeConditions( m_instanceId, outputConditionsFileOrDir );
   }
 
-  public void writeFinalConditions( )
+  public void writeFinalConditions( ) throws HydPyServerException
   {
     final File outputConditionsDir = m_instanceDirs.getOutputConditionsDir();
     if( outputConditionsDir != null )

@@ -48,6 +48,15 @@ final class Double0DItem extends AbstractSingleServerItem<Double>
   @Override
   public String printValue( final Double value )
   {
+    if( value == null )
+    {
+      // hm.... hopeyfully this never happens
+      return "null";
+    }
+
+    if( value.isNaN() )
+      return HydPyUtils.HYD_PY_NAN;
+
     return Double.toString( value );
   }
 

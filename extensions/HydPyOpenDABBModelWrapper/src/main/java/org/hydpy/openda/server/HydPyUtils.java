@@ -57,6 +57,8 @@ public final class HydPyUtils
 
   private static final double secondsToDays = 1.0 / daysToSeconds;
 
+  public static final String HYD_PY_NAN = "nan";
+
   private HydPyUtils( )
   {
     throw new UnsupportedOperationException();
@@ -146,7 +148,7 @@ public final class HydPyUtils
 
   private static double parseDouble( final String token )
   {
-    if( "nan".equals( token ) )
+    if( HYD_PY_NAN.equals( token ) )
       return Double.NaN;
 
     return Double.parseDouble( token );
@@ -158,7 +160,10 @@ public final class HydPyUtils
 
     for( int i = 0; i < doubles.length; i++ )
     {
-      buffer.append( doubles[i] );
+      if( Double.isNaN( doubles[i] ) )
+        buffer.append( HYD_PY_NAN );
+      else
+        buffer.append( doubles[i] );
 
       if( i < doubles.length - 1 )
         buffer.append( ',' );

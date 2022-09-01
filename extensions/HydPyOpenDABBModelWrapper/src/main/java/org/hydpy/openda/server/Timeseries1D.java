@@ -84,7 +84,7 @@ final class Timeseries1D
     return swappedArray.toString()//
         .replace( '{', '[' ) //
         .replace( '}', ']' ) //
-        .replace( "NaN", "nan" );
+        .replace( "NaN", HydPyUtils.HYD_PY_NAN );
   }
 
   public Timeseries1D insert( final Timeseries1D other )

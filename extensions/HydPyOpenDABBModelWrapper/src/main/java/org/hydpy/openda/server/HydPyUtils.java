@@ -496,4 +496,13 @@ public final class HydPyUtils
       }
     }
   }
+
+  static HydPyServerException toHydPyServerException( final Exception e )
+  {
+    final Throwable cause = e.getCause();
+    if( cause instanceof HydPyServerException )
+      return (HydPyServerException)cause;
+
+    return new HydPyServerException( cause );
+  }
 }

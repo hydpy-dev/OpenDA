@@ -587,9 +587,9 @@ final class HydPyOpenDACaller
         .execute();
   }
 
-  public void shutdown( )
+  public void closeServer( )
   {
     m_client.debugOut( m_name, "shutting down..." );
-    m_client.shutdown();
+    m_client.closeServer();
   }
 }

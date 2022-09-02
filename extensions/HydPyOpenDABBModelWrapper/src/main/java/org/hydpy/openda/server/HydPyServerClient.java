@@ -263,7 +263,7 @@ final class HydPyServerClient
     return Version.parse( response.getProperty( "version" ) );
   }
 
-  public void shutdown( )
+  public void closeServer( )
   {
     try
     {

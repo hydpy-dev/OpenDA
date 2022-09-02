@@ -59,15 +59,6 @@ final class HydPyServerInstance
     return getServer().getName();
   }
 
-  private HydPyServerException toHydPyServerException( final Exception e )
-  {
-    final Throwable cause = e.getCause();
-    if( cause instanceof HydPyServerException )
-      return (HydPyServerException)cause;
-
-    return new HydPyServerException( cause );
-  }
-
   public synchronized void checkPendingTasks( ) throws HydPyServerException
   {
     // REMARK: checks the 'pending' tasks (i.e. tasks where normally get is never called)
@@ -87,7 +78,7 @@ final class HydPyServerInstance
         }
         catch( final InterruptedException | ExecutionException e )
         {
-          throw toHydPyServerException( e );
+          throw HydPyUtils.toHydPyServerException( e );
         }
       }
     }
@@ -129,7 +120,7 @@ final class HydPyServerInstance
     }
     catch( final InterruptedException | ExecutionException e )
     {
-      throw toHydPyServerException( e );
+      throw HydPyUtils.toHydPyServerException( e );
     }
   }
 
@@ -187,18 +178,18 @@ final class HydPyServerInstance
     m_currentSimulations.put( instanceId, future );
   }
 
-  public synchronized void shutdown( ) throws HydPyServerException
+  public synchronized void closeServer( ) throws HydPyServerException
   {
     // REMARK: we do NOT check for pending tasks here, else shutdown will not terminate correctly
 
-    final Future<Void> future = HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().shutdown() );
+    final Future<Void> future = HydPyUtils.submitAndLogExceptions( m_executor, ( ) -> getServer().closeServer() );
 
     // REMARK: specially remember task, where get normally is never called.
     // We will check for exceptions ofthese special tasks, else OpenDA will keep running even if exceptions have occured.
     m_pendingTasks.add( future );
   }
 
-  public synchronized void writeConditions( final String instanceId, final File outputConditionsDir ) throws HydPyServerException
+  public synchronized Future<Void> writeConditions( final String instanceId, final File outputConditionsDir ) throws HydPyServerException
   {
     checkPendingTasks();
 
@@ -207,15 +198,6 @@ final class HydPyServerInstance
       return null;
     };
 
-    try
-    {
-      final Future<Void> future = HydPyUtils.submitAndLogExceptions( m_executor, callable );
-      // REMARK: block until everything is written
-      future.get();
-    }
-    catch( final InterruptedException | ExecutionException e )
-    {
-      throw toHydPyServerException( e );
-    }
+    return HydPyUtils.submitAndLogExceptions( m_executor, callable );
   }
 }

@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.output.NullPrintStream;
 import org.apache.http.client.utils.URIBuilder;
@@ -71,7 +72,7 @@ final class HydPyServerStarter
   }
 
   /**
-   * Get the startet server process instance. Blocks until it is really started.
+   * Get the started server process instance. Blocks until it is really started.
    */
   public HydPyServerInstance getServer( ) throws HydPyServerException
   {
@@ -128,9 +129,6 @@ final class HydPyServerStarter
         m_process.destroyForcibly();
         m_process = null;
       }
-
-//      /* we also shutdown the thread, else OpenDA might hang forever */
-//      m_executor.shutdown();
 
       throw e;
     }
@@ -337,23 +335,19 @@ final class HydPyServerStarter
     throw new HydPyServerException( message );
   }
 
-  public Future<Void> shutdown( )
+  public Future<Void> closeServerAndWaitForProcessEnd( )
   {
     try
     {
       final HydPyServerInstance server = getServer();
-      server.shutdown();
+      server.closeServer();
     }
     catch( final Exception e )
     {
       e.printStackTrace();
     }
 
-    final Future<Void> future = HydPyUtils.submitAndLogExceptions( m_executor, this::shutdownProcessAndCloseDebugOut );
-
-    m_executor.shutdown();
-
-    return future;
+    return HydPyUtils.submitAndLogExceptions( m_executor, this::shutdownProcessAndCloseDebugOut );
   }
 
   private void shutdownProcessAndCloseDebugOut( )
@@ -411,6 +405,22 @@ final class HydPyServerStarter
     m_process.destroy();
   }
 
+  public void terminate( )
+  {
+    try
+    {
+      /* stop accepting any new tasks */
+      m_executor.shutdown();
+      final boolean terminatedWithoutTimeout = m_executor.awaitTermination( 5, TimeUnit.MINUTES );
+      if( !terminatedWithoutTimeout )
+        m_debugOut.format( "%s: timeout waiting for executor service termination, please check if all output data is complete%n", m_name );
+    }
+    catch( final InterruptedException e )
+    {
+      e.printStackTrace();
+    }
+  }
+
   public void kill( )
   {
     if( m_process == null )
@@ -429,4 +439,5 @@ final class HydPyServerStarter
       m_process.destroy();
     }
   }
+
 }

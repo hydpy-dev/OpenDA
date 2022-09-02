@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
@@ -117,8 +118,16 @@ public final class HydPyServerManager
     @Override
     public void run( )
     {
-      /* try to finish gracefully */
-      m_manager.finish();
+      try
+      {
+        /* try to finish gracefully */
+        m_manager.finish();
+      }
+      catch( final Exception e )
+      {
+        /* protect against any exceptions so python processes stil may be killed */
+        e.printStackTrace();
+      }
 
       /* but still kill all processes if that fails */
       m_manager.killAllServers();
@@ -220,35 +229,30 @@ public final class HydPyServerManager
   synchronized void finish( )
   {
     /* let each instance write its conditions */
-    m_instances.forEach( ( id, instance ) -> {
-      try
-      {
-        instance.writeFinalConditions();
-      }
-      catch( final Exception e )
-      {
-        e.printStackTrace();
-      }
-    } );
-
-    /* start shutdown for all servers */
-    final List<Future<Void>> futures = m_starters.values().stream() //
-        .map( HydPyServerStarter::shutdown ) //
-        .filter( f -> f != null ) //
+    System.out.println( "Start HydPy finalization (may take a while if writing conditions is configured)" );
+    final List<Future<Void>> conditionsFutures = m_instances.values().stream() //
+        .map( instance -> {
+          try
+          {
+            return instance.writeFinalConditions();
+          }
+          catch( final Exception e )
+          {
+            e.printStackTrace();
+            return null;
+          }
+        } )//
+        .filter( Objects::nonNull ) //
         .collect( Collectors.toList() );
 
-    /* and wait here for shutdown termination (which has a timeout) */
-    for( final Future<Void> future : futures )
-    {
-      try
-      {
-        future.get();
-      }
-      catch( final Exception e )
-      {
-        e.printStackTrace();
-      }
-    }
+    /* wait until all conditions are written */
+    waitForGetAll( conditionsFutures );
+
+    /* start shutdown for all servers (asynchronous for each server) */
+    m_starters.values().forEach( HydPyServerStarter::closeServerAndWaitForProcessEnd );
+
+    /* shutdown executors and await executor termination (synchronous, waits for termination of all tasks) */
+    m_starters.values().forEach( HydPyServerStarter::terminate );
 
     /* also check a last time for pending futures */
     m_starters.values().forEach( starter -> {
@@ -261,5 +265,20 @@ public final class HydPyServerManager
         e.printStackTrace();
       }
     } );
+  }
+
+  private void waitForGetAll( final List<Future<Void>> futures )
+  {
+    for( final Future<Void> future : futures )
+    {
+      try
+      {
+        future.get();
+      }
+      catch( final Exception e )
+      {
+        e.printStackTrace();
+      }
+    }
   }
 }

@@ -14,6 +14,8 @@ package org.hydpy.openda.server;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import org.openda.interfaces.IExchangeItem;
 
@@ -82,13 +84,24 @@ public final class HydPyModelInstance
 
   public void writeConditions( final File outputConditionsFileOrDir ) throws HydPyServerException
   {
-    m_server.writeConditions( m_instanceId, outputConditionsFileOrDir );
+    try
+    {
+      final Future<Void> future = m_server.writeConditions( m_instanceId, outputConditionsFileOrDir );
+      // REMARK: block until everything is written in this case
+      future.get();
+    }
+    catch( final InterruptedException | ExecutionException e )
+    {
+      throw HydPyUtils.toHydPyServerException( e );
+    }
   }
 
-  public void writeFinalConditions( ) throws HydPyServerException
+  public Future<Void> writeFinalConditions( ) throws HydPyServerException
   {
     final File outputConditionsDir = m_instanceDirs.getOutputConditionsDir();
-    if( outputConditionsDir != null )
-      m_server.writeConditions( m_instanceId, outputConditionsDir );
+    if( outputConditionsDir == null )
+      return null;
+
+    return m_server.writeConditions( m_instanceId, outputConditionsDir );
   }
 }

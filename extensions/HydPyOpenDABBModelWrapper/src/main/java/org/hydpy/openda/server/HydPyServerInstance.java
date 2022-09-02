@@ -154,7 +154,7 @@ final class HydPyServerInstance
 
     final Future<Void> future = HydPyUtils.submitAndLogExceptions( m_executor, callable );
     // REMARK: specially remember task, where get normally is never called.
-    // We will check for exceptions ofthese special tasks, else OpenDA will keep running even if exceptions have occured.
+    // We will check for exceptions of these special tasks, else OpenDA will keep running even if exceptions have occured.
     m_pendingTasks.add( future );
   }
 

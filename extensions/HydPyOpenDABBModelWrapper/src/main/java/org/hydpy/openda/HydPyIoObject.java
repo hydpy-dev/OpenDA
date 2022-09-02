@@ -34,6 +34,8 @@ public final class HydPyIoObject implements IDataObject
 
   private File m_workingDir = null;
 
+  private boolean m_isObserver = false;
+
   @Override
   public void initialize( final File workingDir, final String[] arguments )
   {
@@ -45,6 +47,8 @@ public final class HydPyIoObject implements IDataObject
       /* this case should happen, if used in combination with org.openda.observers.IoObjectStochObserver */
       HydPyServerManager.create( workingDir, filename );
       m_instanceId = HydPyServerManager.ANY_INSTANCE;
+      // REMARK: ugly and hacky....
+      m_isObserver = true;
     }
     else
     {
@@ -113,6 +117,13 @@ public final class HydPyIoObject implements IDataObject
   @Override
   public void finish( )
   {
+    // REMARK: In the case this IOObject is used as observer, OpenDA calls finish in the very end of the life-cycle.
+    // However, ANY_INSTANCE may never have been initialized, so we write
+    // uninitialized values (i.e. nan) ) back to HydPy, which is not always allowed.
+    // In any case, writing back value to ANY_INSTANCE should never be necessary
+    if( m_isObserver )
+      return;
+
     final HydPyModelInstance server = HydPyServerManager.instance().getOrCreateInstance( m_instanceId, null );
     server.setItemValues( m_exchangeItems.values() );
   }

@@ -13,7 +13,9 @@ package org.hydpy.openda.server;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -22,6 +24,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.Future;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
@@ -61,6 +66,9 @@ public final class HydPyServerManager
       throw new IllegalStateException( message );
     }
 
+    final String versionAndTimestamp = findVersionAndTimestamp();
+    System.out.println( versionAndTimestamp );
+
     HydPyRequirements.checkOpenDaVersion( System.out );
 
     final Properties args = readConfiguration( configFile );
@@ -70,6 +78,50 @@ public final class HydPyServerManager
     final HydPyInstanceConfiguration instanceDirs = HydPyInstanceConfiguration.read( workingDir, args );
 
     INSTANCE = new HydPyServerManager( hydPyConfig, instanceDirs, configFile );
+  }
+
+  private static String findVersionAndTimestamp( )
+  {
+    final String className = HydPyServerManager.class.getSimpleName() + ".class";
+    final String classPath = HydPyServerManager.class.getResource( className ).toString();
+    if( !classPath.startsWith( "jar" ) )
+      return "HydPyOpenDABBModelWrapper (Development)";
+
+    final StringBuilder buffer = new StringBuilder();
+
+    final String manifestPath = classPath.substring( 0, classPath.lastIndexOf( "!" ) + 1 ) + "/" + JarFile.MANIFEST_NAME;
+    try( final InputStream is = new URL( manifestPath ).openStream() )
+    {
+      final Manifest manifest = new Manifest( is );
+      final Attributes attr = manifest.getMainAttributes();
+      if( attr != null )
+      {
+        final String name = attr.getValue( "Bundle-Name" );
+        if( name != null )
+        {
+          buffer.append( name );
+          buffer.append( " - " );
+        }
+
+        final String version = attr.getValue( "Bundle-Version" );
+        if( version != null )
+        {
+          buffer.append( version );
+          buffer.append( " - " );
+        }
+
+        final String timestamp = attr.getValue( "Build-Timestamp" );
+        if( timestamp != null )
+          buffer.append( timestamp );
+      }
+    }
+    catch( final Exception e )
+    {
+      buffer.append( "Error opening manifest " + manifestPath );
+      e.printStackTrace();
+    }
+
+    return buffer.toString();
   }
 
   private static Properties readConfiguration( final Path configFile )

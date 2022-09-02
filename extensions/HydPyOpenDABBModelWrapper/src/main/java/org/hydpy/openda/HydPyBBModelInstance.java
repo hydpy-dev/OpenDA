@@ -45,6 +45,9 @@ final class HydPyBBModelInstance extends BBModelInstance
   @Override
   public IModelState saveInternalState( )
   {
+    // See super.saveInternalState but we must do it before we write conditions as well
+    flushAndClearDataObjects( true );
+
     final String instanceId = getInstanceId();
     try
     {
@@ -81,6 +84,22 @@ final class HydPyBBModelInstance extends BBModelInstance
       Files.move( tipFile, targetZipFile, StandardCopyOption.REPLACE_EXISTING );
     else
       HydPyUtils.zipConditionsDirectory( sourceDir, targetZipFile );
+  }
+
+  @Override
+  public void releaseInternalState( final IModelState savedInternalState )
+  {
+    super.releaseInternalState( savedInternalState );
+
+    try
+    {
+      final Path stateConditionsFile = getInternalStateFile();
+      Files.deleteIfExists( stateConditionsFile );
+    }
+    catch( final IOException e )
+    {
+      e.printStackTrace();
+    }
   }
 
   @Override

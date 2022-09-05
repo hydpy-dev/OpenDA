@@ -38,3 +38,13 @@ on behalf of the [German Federal Institute of Hydrology](https://www.bafg.de/EN/
 
 Please refer to the release notes of each individual release for which version of the [wrapper](extensions/HydPyOpenDABBModelWrapper) works 
 with which version of [HydPy](https://github.com/hydpy-dev/hydpy#readme).
+
+## License
+
+The [OpenDA](http://openda.org/) [HydPy](https://github.com/hydpy-dev/hydpy#readme) extension is open source software. It is licensed under:
+
+* [GNU Lesser General Public License v3.0](https://github.com/hydpy-dev/OpenDA/blob/master/LICENSE)
+
+## History
+
+* [**Version History**](https://github.com/hydpy-dev/OpenDA/blob/master/extensions/HydPyOpenDABBModelWrapper/VersionHistory.md)

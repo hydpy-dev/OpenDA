@@ -1,4 +1,20 @@
-# Changes since v0.7.0
+
+HydPyOpenDABBModelWrapper
+=========================
+
+*Version History*
+
+This document lists the change history of release versions of the
+**HydPyOpenDABBModelWrapper**.
+
+* Code repo: [Github hydpy-dev](https://github.com/hydpy-dev/OpenDA)
+* Distribution: [Github hydpy-dev Releases](https://github.com/hydpy-dev/OpenDA/releases)
+
+<!-- ================================================================ -->
+
+# Version 1.0.0
+
+*Release Date: TBD*
 
 This is the first official release of the OpenDA HydPy wrapper after the intermediary release of 0.7.0.
 since then, the supported OpenDA version switched to 3.0.0, and the supported HydPy version to 5.0.0.  
@@ -41,3 +57,9 @@ Please refer to the current documentation on how to set up a wrapper project cor
 * The configuration of the HydPy Server has been moved to a separate file in java properties format. Properties previously defined within the \<arg\> tags of model.xml files must be declared within this separated file.  
 * Similar, the configuration for the instance specific series and condition directories, prior in model.xml, had to be moved to the hydpy.properties configuration..
 * Changed the behavior of the 'instanceDir' argument in wrapped blackBoxStochModel configuration file (i.e. model.xml). InstanceNumber must now be specified. See documentation for new syntax.
+
+# Version 0.7.0
+
+*Release Date: 01/22/2019*
+
+Initial prototype release of the OpenDA HydPy wrapper with basic functionality.  

@@ -217,6 +217,8 @@ You need the Eclipse Gradle integration,
 [Eclipse Buildship](https://projects.eclipse.org/projects/tools.buildship), 
 as well.
 
+The current gradle version is 8.14.6 (lates build compatible with Java 8) used with JDK 25 for building.
+
 ## Debugging
 
 Debugging OpenDA and the wrapper implementation from Eclipse works well, 

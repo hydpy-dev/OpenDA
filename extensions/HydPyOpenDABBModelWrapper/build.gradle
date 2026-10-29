@@ -8,10 +8,6 @@ apply plugin: 'java-library'
 project.version = '1.0.0'
 project.description = 'The HydPy BlackBoxModel wrapper for OpenDA'
 
-// OpenDA 3.0.0 is currrently distributed with Java 1.8
-def javaVersion = JavaVersion.VERSION_1_8;
-sourceCompatibility = javaVersion;
-targetCompatibility = javaVersion; // defaults to sourceCompatibility
 
 eclipse {
     classpath {
@@ -61,11 +57,16 @@ dependencies {
     openDaLibs group: 'org.apache.commons', name: 'commons-math3', version: '3.3'
 }
 
+// OpenDA 3.0.0 is currrently distributed with Java 1.8
+def javaVersion = JavaVersion.VERSION_1_8;
+
 java {
+	sourceCompatibility = javaVersion;
+	targetCompatibility = javaVersion; // defaults to sourceCompatibility
+
     withJavadocJar()
     withSourcesJar()
 }
-
 javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
 jar {
@@ -99,7 +100,6 @@ task printVersionName {
         println project.version
     }
 }
-
 
 // Distribute compilation and non-OpenDA libs into one single zip file
 task buildZip(type: Zip) {
